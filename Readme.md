@@ -4,6 +4,7 @@ Este arquivo contém todas as estruturas de dados fundamentais do projeto. Comec
 
 ##### ESSE MD FOI GERADO POR IA
 
+##### CRIE A PASTA REFERENTE AO SEU MODULO, NOTE QUE TRÊS PASTAS FORAM CRIADAS
 ---
 
 ## 📋 Sobre o Projeto
