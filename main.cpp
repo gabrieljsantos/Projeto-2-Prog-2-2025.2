@@ -1,9 +1,12 @@
+#include "services.h"
 #include <iostream>
 
-using namespace std;
+int main() {
+    identidade pessoa;          // cria a struct
 
-int main()
-{
-    cout << "Hello world!" << endl;
+    register_person(&pessoa);   // passa o endereço
+
+    std::cout << "Nome: " << pessoa.nome << "\n";
+
     return 0;
 }
