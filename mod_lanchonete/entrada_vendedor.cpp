@@ -1,4 +1,7 @@
 #include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <iomanip>
 #include "../headers.h"
 #include "../utilidades.h"
 
@@ -131,51 +134,70 @@ void janela_vendedor(login_info info) {
 
     verificar_banco();
     int escolha = -1;
+
     while (escolha != 0) {
-        cout << "\nGerenciador de Lanchonete\n";
-        cout << "1 - Adicionar Produto\n";
-        cout << "2 - Remover Produto\n";
-        cout << "3 - Visualizar Estoque\n";
-        cout << "4 - Registrar Venda\n";
-        cout << "5 - Visualizar Vendas\n";
-        cout << "0 - Voltar\n";
+        limpar_tela();
+        cout << "----------------------------------------\n";
+        cout << "Navegação: Vendedor/\n";
+        cout << "----------------------------------------\n";
+        cout << "\n";
+
+        cout << "###  GERENCIADOR DE LANCHONETE  #####\n";
+        cout << "########################################\n";
+        cout << "#                                      #\n";
+        cout << "#  1 - Adicionar Produto               #\n";
+        cout << "#  2 - Remover Produto                 #\n";
+        cout << "#  3 - Visualizar Estoque              #\n";
+        cout << "#  4 - Registrar Venda                 #\n";
+        cout << "#  5 - Visualizar Vendas               #\n";
+        cout << "#                                      #\n";
+        cout << "#  0 - Voltar                          #\n";
+        cout << "#                                      #\n";
+        cout << "########################################\n";
         cout << "Escolha uma opção: ";
+
         cin >> escolha;
         cin.ignore();
-        
+
         switch (escolha) {
             case 1:
-                cout << "Adicionar produto...\n";
+                limpar_tela();
+                cout << ">> Adicionar produto...\n\n";
                 adicionar_produto();
-                cout << "\nEnter para voltar...";
+                cout << "\nPressione Enter para voltar...";
                 cin.get();
                 break;
             case 2:
-                cout << "Remover produto...\n";
+                limpar_tela();
+                cout << ">> Remover produto...\n\n";
                 remover_produto();
-                cout << "\nEnter para voltar...";
+                cout << "\nPressione Enter para voltar...";
                 cin.get();
                 break;
             case 3:
-                cout << "Visualizando estoque...\n";
+                limpar_tela();
+                cout << ">> Visualizando estoque...\n\n";
                 visualizar_estoque();
-                cout << "\nEnter para voltar...";
+                cout << "\nPressione Enter para voltar...";
                 cin.get();
                 break;
             case 4:
-                cout << "Registrando venda...\n";
-                cout << "\nEnter para voltar...";
+                limpar_tela();
+                cout << ">> Registrando venda...\n\n";
+                cout << "\nPressione Enter para voltar...";
                 cin.get();
                 break;
             case 5:
-                cout << "Visualizando vendas...\n";
-                cout << "\nEnter para voltar...";
+                limpar_tela();
+                cout << ">> Visualizando vendas...\n\n";
+                cout << "\nPressione Enter para voltar...";
                 cin.get();
                 break;
             case 0:
                 break;
             default:
-                cout << "Opção inválida. Tente novamente.\n";
+                cout << "\nOpção inválida! Tente novamente.";
+                cin.get();
         }
     }
 }
