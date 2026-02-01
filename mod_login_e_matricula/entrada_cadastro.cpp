@@ -1,6 +1,8 @@
 #include <iostream>
 #include <locale.h>
 #include "../utilidades.h"
+#include "../headers.h"
+#include "servico_cadastros.h"
 using namespace std;
 
 void janela_cadastro() {
@@ -31,25 +33,32 @@ void janela_cadastro() {
         
         switch (escolha) {
             case 1:
-                cout << "Cadastrando alunos...\n";
+                // Cadastro de alunos
+                gerenciar_cadastro_usuario(ALUNO);
                 break;
             case 2:
-                cout << "Cadastrando professores...\n";
+                // Cadastro de professores
+                gerenciar_cadastro_usuario(PROFESSOR);
                 break;
             case 3:
-                cout << "Cadastrando administradores...\n";
+                // Cadastro de administradores
+                gerenciar_cadastro_usuario(ADMIN);
                 break;
             case 4:
-                cout << "Cadastrando vendedores...\n";
+                // Cadastro de vendedores
+                gerenciar_cadastro_usuario(VENDEDOR);
                 break;
             case 5:
-                cout << "Cadastrando locadores...\n";
+                // Cadastro de locadores
+                gerenciar_cadastro_usuario(LOCADOR);
                 break;
             case 0:
                 cout << "Voltando ao painel anterior...\n";
                 break;
             default:
                 cout << "Opção inválida. Tente novamente.\n";
+                cout << "Pressione Enter para continuar...";
+                cin.get();
         }
     }
 }
