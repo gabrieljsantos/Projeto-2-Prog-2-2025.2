@@ -94,9 +94,11 @@
 	"../headers.h"
 	"../utilidades.h"
 
-1769882623 source:d:\projects\projeto-2-prog-2-2025.2\mod_lanchonete\entrada_vendedor.cpp
+1769909566 source:d:\projects\projeto-2-prog-2-2025.2\mod_lanchonete\entrada_vendedor.cpp
 	<iostream>
-	<locale.h>
+	<fstream>
+	<cstdlib>
+	<iomanip>
 	"../headers.h"
 	"../utilidades.h"
 
@@ -104,21 +106,26 @@
 	<iostream>
 	"servico_login.h"
 
-1769882697 source:d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\entrada_cadastro.cpp
+1769910397 source:d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\entrada_cadastro.cpp
 	<iostream>
 	<locale.h>
 	"../utilidades.h"
+	"../headers.h"
+	"servico_cadastros.h"
 
 1769886888 d:\projects\projeto-2-prog-2-2025.2\utilidades.h
 	"headers.h"
 
 1769882623 d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\entrada_cadastro.h
 
-1769886935 source:d:\projects\projeto-2-prog-2-2025.2\utilidades.cpp
+1769888512 source:d:\projects\projeto-2-prog-2-2025.2\utilidades.cpp
 	<cstdlib>
 	<cstring>
 	<random>
 	"utilidades.h"
 	"headers.h"
 	<chrono>
+
+1769911382 d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_cadastros.h
+	"../headers.h"
 

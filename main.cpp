@@ -2,6 +2,7 @@
 #include <locale.h>
 #include "headers.h"
 #include "mod_login_e_matricula/servico_login.h"
+#include "mod_login_e_matricula/servico_cadastros.h"
 #include "mod_adminitrativo/entrada_admin.h"
 #include "mod_lanchonete/entrada_vendedor.h"
 #include "mod_instrumentos/entrada_locador.h"
@@ -14,6 +15,10 @@ using namespace std;
 int main() {
 
     setlocale(LC_ALL, "Portuguese_Brazil");
+    
+    // Inicializar banco de dados com usuário ROOT se não existir
+    inicializar_banco_dados();
+    
     while (true)
     {
         limpar_tela();
