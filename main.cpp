@@ -49,26 +49,30 @@ int main() {
 
             limpar_tela();
 
-            switch (info.info_basica.categoria) {
-                case ALUNO:
-                    janela_aluno(info);
-                    break;
-                case PROFESSOR:
-                    janela_professor(info);
-                    break;
-                case ADMIN:
-                    janela_admin(info);
-                    break;
-                case VENDEDOR:
-                    janela_vendedor(info);
-                    break;
-                case LOCADOR:
-                    janela_locador(info);
-                    break;
-                default:
-                    cout << "TIPO DE USUARIO DESCONHECIDO\n";
-                    break;
+            // Apenas prosseguir se o login foi bem-sucedido
+            if (info.status == VALIDO) {
+                switch (info.info_basica.categoria) {
+                    case ALUNO:
+                        janela_aluno(info);
+                        break;
+                    case PROFESSOR:
+                        janela_professor(info);
+                        break;
+                    case ADMIN:
+                        janela_admin(info);
+                        break;
+                    case VENDEDOR:
+                        janela_vendedor(info);
+                        break;
+                    case LOCADOR:
+                        janela_locador(info);
+                        break;
+                    default:
+                        cout << "TIPO DE USUARIO DESCONHECIDO\n";
+                        break;
+                }
             }
+            // Se o login não foi bem-sucedido (opção 0), volta ao menu principal
         } else {
 
             cout << "Opção inválida. Tente novamente.\n";

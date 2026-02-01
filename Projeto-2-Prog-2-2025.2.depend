@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1769911389 source:d:\projects\projeto-2-prog-2-2025.2\main.cpp
+1769963054 source:d:\projects\projeto-2-prog-2-2025.2\main.cpp
 	<iostream>
 	<locale.h>
 	"headers.h"
@@ -32,9 +32,9 @@
 	"../utilidades.h"
 	"../headers.h"
 
-1769911977 d:\projects\projeto-2-prog-2-2025.2\headers.h
+1769962553 d:\projects\projeto-2-prog-2-2025.2\headers.h
 
-1769912157 d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_login.h
+1769961626 d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_login.h
 	"../headers.h"
 
 1769882623 d:\projects\projeto-2-prog-2-2025.2\mod_adminitrativo\entrada_admin.h
@@ -60,8 +60,9 @@
 1769882623 d:\projects\projeto-2-prog-2-2025.2\mod_area_do_professor\entrada_professor.h
 	"../headers.h"
 
-1769882623 d:\projects\projeto-2-prog-2-2025.2\mod_area_do_aluno\entrada_aluno.h
+1769964657 d:\projects\projeto-2-prog-2-2025.2\mod_area_do_aluno\entrada_aluno.h
 	"../headers.h"
+	<iomanip>
 
 1769866189 source:d:\projects\projeto-2-prog-2-2025.2\mod_adminitrativo\entrada_locador.cpp
 	<iostream>
@@ -75,11 +76,14 @@
 
 1769864194 source:d:\projects\projeto-2-prog-2-2025.2\mod_adminitrativo\services.cpp
 
-1769882623 source:d:\projects\projeto-2-prog-2-2025.2\mod_area_do_aluno\entrada_aluno.cpp
+1769964940 source:d:\projects\projeto-2-prog-2-2025.2\mod_area_do_aluno\entrada_aluno.cpp
 	<iostream>
 	<locale.h>
+	<cmath>
+	<iomanip>
 	"../headers.h"
 	"../utilidades.h"
+	"entrada_aluno.h"
 
 1769882623 source:d:\projects\projeto-2-prog-2-2025.2\mod_area_do_professor\entrada_professor.cpp
 	<iostream>
@@ -129,15 +133,28 @@
 	"headers.h"
 	<chrono>
 
-1769911382 d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_cadastros.h
+1769961626 d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_cadastros.h
 	"../headers.h"
 
-1769913294 source:d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_cadastros.cpp
+1769962555 source:d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_cadastros.cpp
 	<iostream>
 	<fstream>
 	<cstring>
 	<locale.h>
 	"servico_cadastros.h"
+	"inicializadores_de_tabela.h"
 	"../utilidades.h"
+	"../headers.h"
+
+1769960437 d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\inicializadores_de_tabela.h
+
+1769962652 source:d:\projects\projeto-2-prog-2-2025.2\inicializacao\inicializadores.cpp
+	<iostream>
+	<fstream>
+	<cstring>
+	"inicializadores.h"
+	"../utilidades.h"
+
+1769962557 d:\projects\projeto-2-prog-2-2025.2\inicializacao\inicializadores.h
 	"../headers.h"
 

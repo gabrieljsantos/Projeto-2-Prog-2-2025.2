@@ -1,324 +1,308 @@
-# 🎓 Sistema de Gerenciamento Escolar - Projeto 2 (Prog 2 - 2025.2)
+# ?? Sistema de Gerenciamento Escolar - Projeto 2 (Prog 2 - 2025.2)
 
-## ⚠️ LEIA O ARQUIVO headers.h ⚠️
+## ?? **LEIA O ARQUIVO headers.h ANTES DE TUDO** ??
 
-Este arquivo contém todas as estruturas de dados fundamentais do projeto. **Comece por lá antes de implementar qualquer módulo!**
+**Este arquivo cont�m TODAS as estruturas de dados fundamentais do projeto. Voc� DEVE entender o fluxo e as estruturas nele definidas antes de implementar qualquer m�dulo ou fun��o!**
 
----
-
-## 📋 Sobre o Projeto
-
-Este é um **Sistema de Gerenciamento Escolar Modular** desenvolvido em C++. Funciona como um portal unificado tipo SIGAA, onde diferentes usuários (alunos, professores, administradores, funcionários) fazem login e acessam funcionalidades conforme seus cargos.
-
-O sistema foi arquitetado em **módulos independentes** que se comunicam entre si, permitindo escalabilidade e manutenção facilitada.
+?? **Abra agora:** [headers.h](headers.h)
 
 ---
 
-## 🔄 Fluxo Principal de Funcionamento
+## ?? **IMPORTANTE: Projetos Separados N�O Funcionam**
+
+Este projeto **N�O pode ser compilado em partes isoladas** (como em CodeBlocks ou m�dulos separados). 
+
+### **Por que?**
+- Todos os m�dulos dependem de `headers.h` (estruturas centralizadas)
+- Todos os m�dulos precisam acessar `database/` (camada de dados)
+- As fun��es s�o chamadas via `servico_*` compartilhados
+- Sem centraliza��o, cada m�dulo teria suas pr�prias estruturas duplicadas
+
+### **Exemplo de Funcionamento ERRADO (Separado):**
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                              main() - Sistema Principal                         │
-└────────────────────────────────────┬─────────────────────────────────────────┘
-                                     │
-                                     ▼
-                    ┌────────────────────────────────────┐
-                    │  mod_login_e_matricula/            │
-                    │  servico_login.cpp                 │
-                    │  ✓ Autentica usuário               │
-                    │  ✓ Retorna person_role             │
-                    │  ✓ Carrega dados do usuário        │
-                    └────────────────┬───────────────────┘
-                                     │
-                    ▼────────────────┴────────────────┬────────────────┬──────────────┬──────────────┐
-                    │                                  │                │              │              │
-                    ▼                                  ▼                ▼              ▼              ▼
-            ┌─────────────┐                   ┌──────────────┐   ┌──────────────┐ ┌────────────┐ ┌──────────┐
-            │   ADMIN     │                   │    ALUNO     │   │  PROFESSOR   │ │  VENDEDOR  │ │ LOCADOR  │
-            │ (Administrador)                 │  (Discente)  │   │   (Docente)  │ │(Lanchonete)│ │(Instru.) │
-            └──────┬──────┘                   └──────┬───────┘   └──────┬───────┘ └────┬───────┘ └────┬─────┘
-                   │                                 │                  │             │             │
-                   ▼                                 ▼                  ▼             ▼             ▼
-        ┌──────────────────────┐      ┌──────────────────────┐  ┌───────────┐  ┌──────────────┐ ┌────────────┐
-        │ mod_adminitrativo/   │      │ mod_area_do_aluno/   │  │ mod_area_ │  │ mod_         │ │ mod_       │
-        │ entrada_admin.cpp    │      │ entrada_aluno.cpp    │  │ do_profe- │  │ lanchonete/  │ │ instrumentos/
-        │                      │      │                      │  │ ssor/     │  │ entrada_     │ │ entrada_   │
-        │ ✓ Gerenciar usuários │      │ ✓ Ver histórico      │  │ entrada_  │  │ vendedor.cpp │ │ locador.cpp│
-        │ ✓ Turmas/horários    │      │ ✓ Ver notas          │  │ professor │  │              │ │            │
-        │ ✓ Movimentar alunos  │      │ ✓ Ver horários       │  │ .cpp      │  │ ✓ Cadastro   │ │ ✓ Cadastro │
-        │ ✓ Operações especiais│      │                      │  │           │  │   produtos   │ │   instru-  │
-        └──────────────────────┘      │ ⚠️ ACESSA             │  │ ⚠️ Criar   │  │ ✓ Preços e   │ │   mentos   │
-                                      │ SERVIÇOS:            │  │   eventos  │  │   qtd        │ │            │
-                │                     │ • servico_venda      │  │            │  │              │ │ ⚠️ ACESSA  │
-                │                     │ • servico_emprestimo │  │ ⚠️ ACESSA  │  │ ⚠️ FORNECE   │ │ SERVIÇO:   │
-                │                     │ • servico_inscricao_ │  │ SERVIÇOS:  │  │ SERVIÇO:     │ │ servico_   │
-                │                     │   evento             │  │ • entrada_ │  │ servico_venda│ │ emprestimo │
-                │                     │                      │  │   eventos  │  │              │ │            │
-                │                     │                      │  │ • servico_ │  │              │ │            │
-                │                     │                      │  │   venda    │  │              │ │            │
-                │                     │                      │  │ • servico_ │  │              │ │            │
-                │                     │                      │  │   emprést. │  │              │ │            │
-                │                     │                      │  │ • servico_ │  │              │ │            │
-                │                     │                      │  │   inscrição│  │              │ │            │
-                │                     └──────────────────────┘  │            │  │              │ │            │
-                │                                                └────────────┘  │              │ │            │
-                │                                                                └──────────────┘ └────────────┘
-                │                                                                                          │
-                └──────────────────────────────────────────────────────────────────────────────────────────┘
-                                              (Todos acessam serviços compartilhados)
+? CodeBlocks Projeto 1 (Aluno):
+   ?? mod_area_do_aluno/
+   ?? headers.h (C�PIA 1)
+   ?? database/
 
-════════════════════════════════════════ SERVIÇOS COMPARTILHADOS ════════════════════════════════════════
-      • mod_lanchonete/servico_venda.cpp - Acessado por ALUNO, PROFESSOR, VENDEDOR, LOCADOR
-      • mod_instrumentos/servico_emprestimo.cpp - Acessado por ALUNO, PROFESSOR, VENDEDOR, LOCADOR  
-      • mod_eventos/servico_inscricao_evento.cpp - Acessado por ALUNO, PROFESSOR, VENDEDOR, LOCADOR
-════════════════════════════════════════════════════════════════════════════════════════════════════════
+? CodeBlocks Projeto 2 (Professor):  
+   ?? mod_area_do_professor/
+   ?? headers.h (C�PIA 2 - CONFLITA COM 1)
+   ?? database/ (DUPLICADO)
+   
+RESULTADO: 
+   ? Duas defini��es de headers.h
+   ? Dois databases separados
+   ? Um aluno n�o consegue comprar na cantina
+   ? Dados fragmentados e inconsistentes
 ```
 
-### **Sequência Detalhada:**
+### **Exemplo de Funcionamento CORRETO (Centralizado):**
 
-1. **`main.cpp`** inicia a aplicação
-2. **`mod_login_e_matricula/servico_login.cpp`** autentica o usuário
-3. Retorna o `person_role` (cargo/identificador)
-4. **`main.cpp`** chama a função adequada baseado no `person_role`:
-   - **ADMIN** → `mod_adminitrativo/entrada_admin.cpp`
-   - **ALUNO** → `mod_area_do_aluno/entrada_aluno.cpp`
-   - **PROFESSOR** → `mod_area_do_professor/entrada_professor.cpp`
-   - **VENDEDOR** → `mod_lanchonete/entrada_vendedor.cpp`
-   - **LOCADOR** → `mod_instrumentos/entrada_locador.cpp`
+```
+? Sistema �nico em VS Code:
+   ?? main.cpp (PONTO DE ENTRADA �NICO)
+   ?? headers.h (ESTRUTURAS CENTRALIZADAS)
+   ?? database/ (BANCO �NICO E COMPARTILHADO)
+   ?? mod_login_e_matricula/
+   ?? mod_area_do_aluno/
+   ?? mod_area_do_professor/
+   ?? mod_adminitrativo/
+   ?? mod_eventos/
+   ?? mod_instrumentos/
+   ?? mod_lanchonete/
 
-5. **Todos os usuários** acessam **serviços compartilhados:**
-   - `mod_lanchonete/servico_venda.cpp` - Compra de produtos
-   - `mod_instrumentos/servico_emprestimo.cpp` - Empréstimo de instrumentos
-   - `mod_eventos/servico_inscricao_evento.cpp` - Inscrição em eventos
+RESULTADO:
+   ? Uma �nica defini��o de headers.h
+   ? Um database compartilhado
+   ? Um aluno pode logar ? comprar ? pegar instrumento
+   ? Todos os dados sincronizados
+```
 
----
-
-## 👥 Tipos de Usuários (Cargos)
-
-O sistema suporta os seguintes cargos com diferentes permissões:
-
-1. **ALUNO** - Discente
-   - Visualiza: histórico, notas, horários, turmas
-   - Acessa: compra de produtos, empréstimo de instrumentos, inscrição em eventos
-
-2. **PROFESSOR** - Docente
-   - Visualiza: turmas, alunos, horários
-   - Funcionalidades: lançar notas, registrar frequência
-   - **Pode criar eventos** via `mod_eventos/entrada_eventos.cpp`
-   - Acessa: compra de produtos, empréstimo de instrumentos
-
-3. **ADMIN** - Administrador
-   - Funcionalidades: gerenciar usuários, turmas, horários
-   - Pode movimentar alunos entre turmas
-   - Acesso a operações especiais
-
-4. **VENDEDOR** - Gerencia Lanchonete
-   - Funcionalidades: cadastro de produtos, preços, quantidades
-   - Fornece: `servico_venda` para todos
-
-5. **LOCADOR** - Gerencia Instrumentos
-   - Funcionalidades: cadastro de instrumentos, quantidades
-   - Fornece: `servico_emprestimo` para todos
-
-⚠️ **IMPORTANTE:** 
-- **EVENTOS NÃO É UM CARGO**, é um sub-módulo acessado por PROFESSOR (criar) e por todos via `servico_inscricao_evento` (se inscrever)
-- Todos os cargos podem acessar os **serviços compartilhados** (venda, empréstimo, inscrição em eventos)
+**N�o tente compilar m�dulos em CodeBlocks separadamente. Use APENAS VS Code com main.cpp como ponto de entrada �nico.**
 
 ---
 
-## 🏗️ Arquitetura dos Módulos
+## ?? Sobre o Projeto
 
-### **1. `mod_login_e_matricula/`**
-**Responsabilidade:** Autenticação e Cadastro de Usuários
+Este � um **Sistema de Gerenciamento Escolar Modular** desenvolvido em C++. Funciona como um portal unificado tipo SIGAA, onde diferentes usu�rios (alunos, professores, administradores, funcion�rios) fazem login e acessam funcionalidades conforme seus cargos.
 
-**Arquivos:**
-- `servico_login.cpp / .h` - Autentica usuários e retorna dados de login
-- `entrada_cadastro.cpp / .h` - Registra novos usuários no sistema
-
-**Funcionalidades:**
-- ✓ Validação de credenciais (CPF/email + senha)
-- ✓ Retorno do esquema de informações do usuário autenticado
-- ✓ Criação de novos usuários (alunos, professores, funcionários)
-- ✓ Atualização de dados pessoais
-
-**Interfaces com:** Todos os outros módulos (via dados de usuário autenticado)
+O sistema foi arquitetado em **m�dulos independentes** que se comunicam entre si, permitindo escalabilidade e manuten��o facilitada.
 
 ---
 
-### **2. `mod_adminitrativo/`**
-**Responsabilidade:** Operações Administrativas e Gerência de Super Usuários
+## ??? Arquitetura: Rela��o Entre M�dulos, Headers, Database e Inicializadores
 
-**Arquivos:**
-- `entrada_admin.cpp / .h` - Interface do administrativo
+### **Estrutura em 4 Camadas:**
 
-**Funcionalidades:**
-- ✓ Aponta para `mod_login_e_matricula/entrada_cadastro.cpp` para criar/editar usuários
-- ✓ Gerenciamento de alunos (movimentação entre turmas, desativação, etc.)
-- ✓ Cadastro e gerenciamento de turmas
-- ✓ Definição de horários de aulas
-- ✓ Operações especiais para super usuários (ADMIN)
-- ✓ Coordenação de outros módulos (administrativamente)
+```
+??????????????????????????????????????????????????????????????????
+?                    CAMADA 1: INTERFACE (Entrada)              ?
+?  mod_login_e_matricula/ ? mod_area_do_aluno/ ? mod_.../ etc   ?
+??????????????????????????????????????????????????????????????????
+?                    CAMADA 2: SERVI�OS (L�gica)                ?
+?  servico_venda.cpp ? servico_emprestimo.cpp ? servico_login.cpp
+??????????????????????????????????????????????????????????????????
+?                    CAMADA 3: ESTRUTURAS (Dados em Mem�ria)    ?
+?                          headers.h                             ?
+?         (Aluno, Professor, Turma, Evento, etc)                ?
+??????????????????????????????????????????????????????????????????
+?                CAMADA 4: PERSIST�NCIA (Arquivo)               ?
+?                          database/                             ?
+?     (registros_notas.dat, saldos_cantina.dat, etc)            ?
+??????????????????????????????????????????????????????????????????
+```
 
-**Interfaces com:** 
-- `mod_login_e_matricula` (cadastro de pessoas)
-- `mod_area_do_professor` (gerenciar professores)
-- `mod_area_do_aluno` (gerenciar alunos)
-- `mod_eventos` (operações gerais)
-- `mod_instrumentos` (gerência)
-- `mod_lanchonete` (gerência)
+### **Fluxo de Dados Completo:**
 
----
+```
+[Usu�rio Interage com Interface]
+        ?
+[entrada_aluno.cpp - CAMADA 1: INTERFACE]
+        ?
+[Chama servico_venda.cpp - CAMADA 2: L�GICA]
+        ?
+[Usa estruturas em headers.h - CAMADA 3: MEM�RIA RAM]
+        ?
+[Chama inicializadores em inicializacao/ - LEITURA/ESCRITA]
+        ?
+[Arquivo em database/ - CAMADA 4: PERSIST�NCIA]
+```
 
-### **3. `mod_area_do_aluno/`**
-**Responsabilidade:** Portal e Funcionalidades do Aluno
+### **Explica��o Detalhada de Cada Camada:**
 
-**Arquivos:**
-- `entrada_aluno.cpp / .h` - Interface do aluno
+#### **CAMADA 1: Interface (entrada_*.cpp)**
+**O que faz:** Exibe menus, coleta entrada do usu�rio, chama servi�os
+- Exemplo: `mod_area_do_aluno/entrada_aluno.cpp`
+- Responsabilidade: Menu do aluno, escolher op��o
+- N�O calcula, apenas exibe e coleta dados
 
-**Funcionalidades:**
-- ✓ Visualizar histórico acadêmico
-- ✓ Consultar notas obtidas
-- ✓ Visualizar horários de aulas
-- ✓ Consultar turmas inscritas
-- ✓ Sistema de compras (aponta para `mod_lanchonete`)
-- ✓ Sistema de empréstimos de instrumentos (aponta para `mod_instrumentos/entrada_locador.cpp`)
-- ✓ Visualizar eventos inscritos
+#### **CAMADA 2: Servi�os (servico_*.cpp)**
+**O que faz:** Implementa a l�gica de neg�cio, processa dados, valida
+- Exemplo: `mod_lanchonete/servico_venda.cpp`
+- Responsabilidade: Validar compra, atualizar saldo, chamar inicializadores
+- N�O exibe (interface faz isso), apenas processa
 
-**Interfaces com:**
-- `mod_lanchonete` (compra de produtos)
-- `mod_instrumentos` (empréstimo de instrumentos)
-- `mod_eventos` (visualizar eventos)
+#### **CAMADA 3: Estruturas (headers.h)**
+**O que faz:** Define tipos de dados que vivem em RAM
+- Exemplo: `struct Aluno { int id; float notas[4]; };`
+- Responsabilidade: Definir campos, tipo de dado
+- Existe APENAS enquanto o programa roda
 
----
-
-### **4. `mod_area_do_professor/`**
-**Responsabilidade:** Portal e Funcionalidades do Professor
-
-**Arquivos:**
-- `entrada_professor.cpp / .h` - Interface do professor
-
-**Funcionalidades:**
-- ✓ Cadastrar e atualizar notas dos alunos
-- ✓ Registrar frequência das aulas
-- ✓ Gerenciar turmas (visualizar alunos, horários)
-- ✓ Criar e gerenciar eventos (provas, atividades, tarefas)
-- ✓ Sistema de compras (aponta para `mod_lanchonete`)
-- ✓ Sistema de empréstimos de instrumentos (aponta para `mod_instrumentos/entrada_locador.cpp`)
-
-**Interfaces com:**
-- `mod_eventos` (criar/gerenciar eventos)
-- `mod_lanchonete` (compra de produtos)
-- `mod_instrumentos` (empréstimo de instrumentos)
-
----
-
-### **5. `mod_eventos/`** ⚠️ SUB-MÓDULO DO PROFESSOR
-**Responsabilidade:** Gerenciamento de Eventos e Inscrições Compartilhadas
-
-**Arquivos:**
-- `entrada_eventos.cpp / .h` - Interface de eventos (chamada por `mod_area_do_professor`)
-- `servico_inscricao_evento.cpp / .h` - **Serviço compartilhado** (acessado por alunos, professores e funcionários)
-
-**Funcionalidades do Módulo de Eventos:**
-- ✓ Criar eventos (provas, atividades, tarefas, apresentações)
-- ✓ Definir datas e horários
-- ✓ Gerenciar vagas e limite de participantes
-- ✓ Cancelar/modificar eventos
-
-**Funcionalidades do Serviço de Inscrição (compartilhado):**
-- ✓ Sistema de inscrição em eventos gerais da escola
-- ✓ Acessível por: ALUNO, PROFESSOR, VENDEDOR, LOCADOR
-- ✓ Validação de vagas disponíveis
-- ✓ Registro de inscrições
-
-**Interfaces com:**
-- `mod_area_do_professor` (criação via `entrada_eventos`)
-- `mod_area_do_aluno` (inscrição via `servico_inscricao_evento`)
-- Funcionários (VENDEDOR, LOCADOR) (inscrição via `servico_inscricao_evento`)
+#### **CAMADA 4: Persist�ncia (database/)**
+**O que faz:** Armazena dados em arquivo bin�rio
+- Exemplo: `database/registros_notas.dat`
+- Responsabilidade: Guardar dados permanentemente
+- Sobrevive ao encerramento do programa
 
 ---
 
-### **6. `mod_instrumentos/`**
-**Responsabilidade:** Gerência de Instrumentos e Serviço de Empréstimos Compartilhado
+## ?? Ciclo de Vida dos Dados: Exemplo Completo
 
-**Arquivos:**
-- `entrada_locador.cpp / .h` - Interface do locador
-- `servico_emprestimo.cpp / .h` - **Serviço compartilhado** (acessado por alunos, professores e funcionários)
+### **Cen�rio: Aluno Comprando na Lanchonete**
 
-**Funcionalidades do Locador:**
-- ✓ Cadastro e gerenciamento de instrumentos
-- ✓ Definição de quantidade disponível
-- ✓ Atualização de informações de instrumentos
-- ✓ Controle de danos/perdas
+```
+???????????????????????????????????????????????????????????????
+? 1?? STARTUP DO PROGRAMA                                      ?
+???????????????????????????????????????????????????????????????
+? database/saldos_cantina.dat (arquivo permanente)            ?
+?    ?                                                         ?
+? [fread() - inicializadores.cpp]                             ?
+?    ?                                                         ?
+? Aluno aluno; aluno.credito = 100.0; (em RAM)               ?
+???????????????????????????????????????????????????????????????
 
-**Funcionalidades do Serviço de Empréstimo (compartilhado):**
-- ✓ Sistema de empréstimos para ALUNO, PROFESSOR, VENDEDOR, LOCADOR
-- ✓ Validação de disponibilidade
-- ✓ Registro de empréstimos
-- ✓ Processamento de devoluções
-- ✓ Controle de limite (máximo 5 itens por pessoa)
+???????????????????????????????????????????????????????????????
+? 2?? USU�RIO INTERAGE (CAMADA 1: INTERFACE)                  ?
+???????????????????????????????????????????????????????????????
+? entrada_aluno.cpp mostra menu:                              ?
+?    "4 - Acessar Lanchonete"                                 ?
+?    Usu�rio escolhe: comprar um refrigerante                ?
+???????????????????????????????????????????????????????????????
 
-**Interfaces com:**
-- `mod_area_do_aluno` (via `servico_emprestimo`)
-- `mod_area_do_professor` (via `servico_emprestimo`)
-- Funcionários (VENDEDOR, LOCADOR) (via `servico_emprestimo`)
-- `mod_adminitrativo` (gerência geral)
+???????????????????????????????????????????????????????????????
+? 3?? L�GICA DE NEG�CIO (CAMADA 2: SERVI�O)                   ?
+???????????????????????????????????????????????????????????????
+? servico_venda.cpp valida:                                  ?
+?    ? Produto existe?                                        ?
+?    ? H� estoque?                                            ?
+?    ? Aluno tem saldo suficiente?                           ?
+?    ? Se tudo ok: aluno.credito -= preco;                  ?
+???????????????????????????????????????????????????????????????
+
+???????????????????????????????????????????????????????????????
+? 4?? ATUALIZAR ARQUIVO (PERSIST�NCIA)                        ?
+???????????????????????????????????????????????????????????????
+? inicializadores.cpp chama:                                  ?
+?    [fwrite() - salvar aluno atualizado]                    ?
+?    ?                                                         ?
+? database/saldos_cantina.dat (arquivo atualizado)           ?
+?    Novo credito: 90.0 (persistido)                         ?
+???????????????????????????????????????????????????????????????
+
+???????????????????????????????????????????????????????????????
+? 5?? CONFIRMA��O AO USU�RIO (CAMADA 1: INTERFACE)            ?
+???????????????????????????????????????????????????????????????
+? entrada_aluno.cpp exibe:                                    ?
+?    "? Compra realizada!"                                    ?
+?    "Saldo atual: R$ 90.00"                                  ?
+???????????????????????????????????????????????????????????????
+
+???????????????????????????????????????????????????????????????
+? 6?? PR�XIMO LOGIN                                            ?
+???????????????????????????????????????????????????????????????
+? Quando o aluno logar novamente:                             ?
+?    [fread() - carrega credito = 90.0]                      ?
+?    Dados persistiram! ?                                     ?
+???????????????????????????????????????????????????????????????
+```
 
 ---
 
-### **7. `mod_lanchonete/`**
-**Responsabilidade:** Gerência de Cantina e Serviço de Vendas Compartilhado
+## ?? Database: Estrutura de Arquivos
 
-**Arquivos:**
-- `entrada_vendedor.cpp / .h` - Interface do vendedor
-- `servico_venda.cpp / .h` - **Serviço compartilhado** (acessado por alunos, professores e funcionários)
+Cada arquivo em `database/` armazena um tipo espec�fico de dado:
 
-**Funcionalidades do Vendedor:**
-- ✓ Cadastro de produtos (alimentos, bebidas, etc.)
-- ✓ Definição de preços
-- ✓ Controle de quantidade em estoque
-- ✓ Atualização de produtos
+| Arquivo | Conte�do | Estrutura em headers.h | Acessado Por |
+|---------|----------|--------|-------------|
+| `identidades.dat` | Usu�rios (ID, nome, CPF, senha) | `Identidade` | servico_login, entrada_cadastro |
+| `registros_notas.dat` | Notas de alunos | `RegistroNotas` | entrada_aluno, servico_notas |
+| `saldos_cantina.dat` | Cr�dito do aluno | `Saldo_Cantina` | entrada_aluno, servico_venda |
+| `vendas_cantina.dat` | Hist�rico de compras | `Venda_Cantina` | entrada_aluno, servico_venda |
+| `atrasos_instrumentos.dat` | Empr�stimos ativos | `Atraso_Instrumento` | entrada_aluno, servico_emprestimo |
+| `inventario_instrumentos.dat` | Instrumentos dispon�veis | `Instrumento` | entrada_locador, servico_emprestimo |
+| `turmas.dat` | Classes/disciplinas | `Class` | mod_adminitrativo, mod_professor |
+| `historicos.dat` | Frequ�ncia e notas por turma | `historic_individual` | entrada_aluno, entrada_professor |
+| `eventos.dat` | Eventos agendados | `EventoAgenda` | entrada_eventos, entrada_aluno |
+| `produtos_cantina.dat` | Produtos � venda | `ProdutoCantina` | entrada_vendedor, servico_venda |
 
-**Funcionalidades do Serviço de Venda (compartilhado):**
-- ✓ Sistema de vendas para todos (ALUNO, PROFESSOR, VENDEDOR, LOCADOR)
-- ✓ Processamento de compras
-- ✓ Atualização de saldo do usuário
-- ❌ Sem relatórios
-- ❌ Sem registro de transações detalhadas
+### **Inicializadores: A Ponte Entre Arquivo e Mem�ria**
 
-**Interfaces com:**
-- `mod_area_do_aluno` (via `servico_venda`)
-- `mod_area_do_professor` (via `servico_venda`)
-- Funcionários (VENDEDOR, LOCADOR) (via `servico_venda`)
-- `mod_adminitrativo` (gerência de produtos)
+O arquivo `inicializacao/inicializadores.cpp` cont�m fun��es que:
+- **L�m** dados do arquivo para mem�ria (fread)
+- **Escrevem** dados da mem�ria para arquivo (fwrite)
+
+Exemplos (A IMPLEMENTAR):
+```cpp
+// ? LER do arquivo PARA mem�ria
+Aluno carregar_aluno_por_id(int id) {
+    FILE *f = fopen("database/registros_notas.dat", "rb");
+    Aluno aluno;
+    fread(&aluno, sizeof(Aluno), 1, f);
+    fclose(f);
+    return aluno;  // Retorna struct em RAM
+}
+
+// ? ESCREVER da mem�ria PARA arquivo
+void salvar_aluno(const Aluno &a) {
+    FILE *f = fopen("database/registros_notas.dat", "ab");
+    fwrite(&a, sizeof(Aluno), 1, f);
+    fclose(f);
+}
+```
 
 ---
 
-##  Configuração de Login (servico_login.cpp)
+## ?? Sistema de Autentica��o e Cadastro
 
-⚠️ **IMPORTANTE:** O arquivo `mod_login_e_matricula/servico_login.cpp` atualmente retorna um login **engessado (hardcoded)** sempre com ADMIN.
+### ?? **Credenciais de Teste**
 
-### **Como Modificar para Testar Diferentes Tipos de Usuário:**
+Para testar o sistema, use:
 
-Edite a função `validar_login()` em `mod_login_e_matricula/servico_login.cpp`:
+| Campo | Valor | Descri��o |
+|-------|-------|-----------|
+| **ID** | `0000` | ID fixo para teste |
+| **Senha** | `0000` | Senha para teste |
+| **Senha Padr�o Usuarios** | `senha` | Padr�o para novos cadastros |
 
-#### **Código Atual (Engessado - Sempre ADMIN):**
+**IMPORTANTE:** A fun��o `validar_login()` em `mod_login_e_matricula/servico_login.cpp` atualmente est� **hardcoded** (engessada). Voc� DEVE implementar a valida��o real com banco de dados.
+
+---
+
+## ?? Como Fazer Login
+
+### **Passo 1: Abra o programa**
+```bash
+# Em VS Code:
+Ctrl + Shift + B  # Compila
+# Ou execute: main.exe
+```
+
+### **Passo 2: Tela de Login**
+```
+??????????????????????????????
+Digite seu ID: 0000
+Digite sua senha: 0000
+??????????????????????????????
+```
+
+### **Passo 3: Resultado**
+- Com os dados atuais, voc� ser� redirecionado para **ADMIN** (painel do administrador)
+- Para testar outros cargos, edite `servico_login.cpp` (veja pr�xima se��o)
+
+---
+
+## ?? Como Cadastrar e Testar Diferentes Tipos de Usu�rio
+
+### **Op��o 1: Modificar servico_login.cpp para Teste R�pido**
+
+**Arquivo:** `mod_login_e_matricula/servico_login.cpp`
+
+**C�digo Atual (Hardcoded - Sempre ADMIN):**
 
 ```cpp
 login_info validar_login(const int* id_usuario, const char* senha) {
     login_info info;
 
-    // ===== Login engessado =====
+    // ? HARDCODED - SEMPRE RETORNA ADMIN
     info.status = VALIDO;
-    info.chave_acesso = ADMIN;  // 👈 Sempre retorna ADMIN
-
-    // ===== Preencher info_basica com dados fixos =====
+    info.chave_acesso = ADMIN;  // ? Sempre ADMIN
+    
     info.info_basica.id = 1;
     info.info_basica.ativo = 1;
-
     std::strcpy(info.info_basica.nome, "Administrador Padrao");
     std::strcpy(info.info_basica.cpf, "00000000000");
-
     info.info_basica.categoria = ADMIN;
     std::strcpy(info.info_basica.especialidade, "Administrador");
 
@@ -326,437 +310,532 @@ login_info validar_login(const int* id_usuario, const char* senha) {
 }
 ```
 
-#### **Para Mudar o Tipo de Usuário:**
-
-Altere apenas 2 campos: `info.chave_acesso` e `info.info_basica.categoria`
+**Para Testar como ALUNO, Modifique para:**
 
 ```cpp
 login_info validar_login(const int* id_usuario, const char* senha) {
     login_info info;
 
+    // ? MODIFICADO PARA TESTAR
     info.status = VALIDO;
-    
-    // 👇 MUDE AQUI para testar diferentes tipos:
-    info.chave_acesso = ALUNO;  // ← Altere este valor
+    info.chave_acesso = ALUNO;  // ?? MUDE AQUI
     
     info.info_basica.id = 1;
     info.info_basica.ativo = 1;
-
-    std::strcpy(info.info_basica.nome, "Aluno Teste");
-    std::strcpy(info.info_basica.cpf, "00000000001");
-
-    info.info_basica.categoria = ALUNO;  // ← E este também
+    std::strcpy(info.info_basica.nome, "Jo�o da Silva");
+    std::strcpy(info.info_basica.cpf, "12345678901");
+    info.info_basica.categoria = ALUNO;  // ?? E AQUI TAMB�M
     std::strcpy(info.info_basica.especialidade, "");
 
     return info;
 }
 ```
 
-### **Valores Disponíveis para `info.chave_acesso`:**
+### **Tabela de Configura��o R�pida:**
+
+| Cargo | `chave_acesso` | `categoria` | `nome` | `especialidade` |
+|-------|---|---|---|---|
+| **ADMIN** | `ADMIN` | `ADMIN` | "Admin Teste" | "Administrador" |
+| **ALUNO** | `ALUNO` | `ALUNO` | "Jo�o Silva" | "" |
+| **PROFESSOR** | `PROFESSOR` | `PROFESSOR` | "Prof. Ana" | "Piano" |
+| **VENDEDOR** | `VENDEDOR` | `VENDEDOR` | "Vendedor Teste" | "Vendedor" |
+| **LOCADOR** | `LOCADOR` | `LOCADOR` | "Locador Teste" | "Locador" |
+
+### **Passos para Testar um Cargo Diferente:**
+
+1. **Abra:** `mod_login_e_matricula/servico_login.cpp`
+2. **Procure** a fun��o `validar_login()`
+3. **Altere** `info.chave_acesso = TIPO_DESEJADO`
+4. **Altere tamb�m** `info.info_basica.categoria = TIPO_DESEJADO`
+5. **Atualize** `nome` e outros campos conforme tabela acima
+6. **Salve:** Ctrl + S
+7. **Compile:** Ctrl + Shift + B
+8. **Execute:** main.exe
+
+---
+
+### **Op��o 2: Cadastro de Novo Usu�rio (Quando Implementado)**
+
+Quando a funcionalidade de cadastro estiver pronta:
+
+1. Selecione **"Novo Cadastro"** no menu principal
+2. Insira dados:
+   - Nome completo
+   - CPF
+   - Email
+   - Senha (padr�o � "senha" se deixar em branco)
+3. Escolha o tipo:
+   - `ALUNO` - Aluno/Discente
+   - `PROFESSOR` - Professor/Docente
+   - `ADMIN` - Administrador
+   - `VENDEDOR` - Gerencia lanchonete
+   - `LOCADOR` - Gerencia instrumentos
+4. Confirme
+
+?? **AINDA N�O IMPLEMENTADO** - Este m�dulo precisa ser criado
+
+---
+
+## ?? O Que Precisa Ser Feito (Roadmap Completo)
+
+### **Fase 1: Inicializadores ? CR�TICO - SEM ISSO NADA FUNCIONA**
+
+Arquivo: `inicializacao/inicializadores.cpp`
+
+**DEVE IMPLEMENTAR:**
 
 ```cpp
-ADMIN      // Administrador
-ALUNO      // Aluno
-PROFESSOR  // Professor (pode acessar mod_eventos para criar eventos)
-VENDEDOR   // Vendedor de lanchonete
-LOCADOR    // Locador de instrumentos
+// ? FUN��ES DE LEITURA (arquivo ? mem�ria)
+Identidade carregar_identidade_por_id(int id);
+Aluno carregar_aluno_por_id(int id);
+Professor carregar_professor_por_id(int id);
+Turma carregar_turma_por_codigo(char *codigo);
+EventoAgenda carregar_evento_por_id(int id);
+ProdutoCantina* carregar_todos_produtos(int &total);
+Instrumento* carregar_todos_instrumentos(int &total);
 
-// ❌ EVENTOS NÃO É CARGO - é sub-módulo do professor
-// Todos acessam eventos via servico_inscricao_evento
+// ? FUN��ES DE ESCRITA (mem�ria ? arquivo)
+void salvar_identidade(const Identidade &id);
+void salvar_aluno(const Aluno &a);
+void salvar_professor(const Professor &p);
+void salvar_turma(const Turma &t);
+void salvar_evento(const EventoAgenda &e);
+
+// ? FUN��ES DE LISTAGEM
+Identidade* carregar_todas_identidades(int &total);
+Aluno* carregar_todos_alunos(int &total);
+Professor* carregar_todos_professores(int &total);
+Turma* carregar_todas_turmas(int &total);
 ```
 
-### **Tabela de Configuração Rápida:**
+**Por que � cr�tico?**
+- ? Sem isso: Dados n�o persistem entre execu��es
+- ? Sem isso: M�dulos n�o conseguem compartilhar dados
+- ? Sem isso: Sistema n�o funciona
 
-| Tipo | `chave_acesso` | `categoria` | `nome` | `especialidade` |
-|------|----------------|-------------|--------|-----------------|
-| **Admin** | `ADMIN` | `ADMIN` | "Administrador Padrao" | "Administrador" |
-| **Aluno** | `ALUNO` | `ALUNO` | "Aluno Teste" | "" (vazio) |
-| **Professor** | `PROFESSOR` | `PROFESSOR` | "Professor Teste" | "Piano" |
-| **Vendedor** | `VENDEDOR` | `VENDEDOR` | "Vendedor Teste" | "Vendedor" |
-| **Locador** | `LOCADOR` | `LOCADOR` | "Locador Teste" | "Locador" |
+---
 
-### **Exemplo Completo para Testar como PROFESSOR:**
+### **Fase 2: Valida��o Real em servico_login.cpp** ? IMPORTANTE
 
+**Problema Atual:**
 ```cpp
-login_info validar_login(const int* id_usuario, const char* senha) {
-    login_info info;
+// ? Sempre retorna ADMIN, ignora senha
+info.chave_acesso = ADMIN;
+```
 
-    info.status = VALIDO;
-    info.chave_acesso = PROFESSOR;  // 👈 Professor
+**Solu��o:**
+```cpp
+// ? Busca no banco e valida
+Identidade id = carregar_identidade_por_id(*id_usuario);
 
-    info.info_basica.id = 2;
-    info.info_basica.ativo = 1;
-
-    std::strcpy(info.info_basica.nome, "Prof. Ana Oliveira");
-    std::strcpy(info.info_basica.cpf, "12345678901");
-
-    info.info_basica.categoria = PROFESSOR;
-    std::strcpy(info.info_basica.especialidade, "Violão");
-
+if (strcmp(id.senha, senha) == 0) {
+    return criar_login_info_de_identidade(id);
+} else {
+    info.status = INVALIDO;
     return info;
 }
 ```
 
-### **Passos Rápidos para Testar:**
-
-1. Abra `mod_login_e_matricula/servico_login.cpp`
-2. Localize a função `validar_login()`
-3. Altere `info.chave_acesso = TIPO_DESEJADO`
-4. Altere `info.info_basica.categoria = TIPO_DESEJADO`
-5. Atualize `nome`, `cpf` e `especialidade` conforme apropriado
-6. Salve (`Ctrl + S`)
-7. Compile (`Ctrl + Shift + B` ou execute build task)
-8. Execute o programa - ele abrirá a área do tipo de usuário escolhido!
-
 ---
 
-## �📦 Estruturas de Dados Principais (em `headers.h`)
+### **Fase 3: Completar M�dulos Incompletos** ? EM PROGRESSO
 
-### **Identidade**
-Representa um usuário no sistema:
-- ID, nome, CPF, senha, email
-- Categoria/cargo
-- Especialidade (para professores: Piano, Canto, etc.)
+#### **mod_area_do_aluno/ - 60% COMPLETO** ?
 
-### **Class (Turma)**
-Representa uma turma/disciplina:
-- Código, ano letivo, nome (ex: "Violão I")
-- Professor responsável e lista de alunos (até 50)
-- Horários (até 4 por semana)
-- Eventos (provas, atividades, etc.)
-- Aulas ministradas (até 100)
+**Funcionando:**
+- ? Menu principal funciona
+- ? Fun��es `mostrarNotas()`, `mostrarExtratoLanchonete()` existem
+- ? Sem erros de compila��o
 
-### **historic_individual (Histórico)**
-Registro acadêmico de um aluno em uma turma:
-- Frequência (presença/ausência em cada aula)
-- Notas obtidas (até 10 notas)
-- Status final (ABERTO, APROVADO, REPROVADO)
+**Faltando:**
+- ? Carregar dados reais do banco via inicializadores
+- ? Op��o 2 (Verificar Frequ�ncia) - fun��o n�o existe
+- ? Op��o 3 (Visualizar Turmas) - fun��o n�o existe
+- ? Op��o 5 (Visualizar Eventos) - fun��o n�o existe
 
-### **RecursosIndividuais (Recursos)**
-Gerencia recursos de um usuário:
-- Saldo (para cantina)
-- Itens emprestados (livros/instrumentos, máximo 5)
-- Ativo/Inativo
-
-### **ProdutoCantina**
-Produtos vendidos na cantina:
-- ID, nome, preço
-- Quantidade em estoque
-
-### **Biblioteca**
-Livros/instrumentos da biblioteca:
-- ID, título, quantidade total
-- Controle de disponibilidade
-
-### **EventoAgenda**
-Eventos agendados na escola:
-- Nome, data, vagas totais
-- Lista de inscritos
-- Status (agendado/cancelado)
-
-### **RegistroNotas**
-Registro de notas de um aluno:
-- Aluno, turma, notas lançadas
-
-## 👥 Tipos de Usuários (Cargos)
-
-O sistema suporta os seguintes cargos com diferentes permissões e acessos:
-
-| Cargo | Acesso | Módulos Associados |
-|-------|--------|-------------------|
-| **ALUNO** | Discente | `mod_area_do_aluno` |
-| **PROFESSOR** | Docente | `mod_area_do_professor` |
-| **ADMIN** | Administrador | `mod_adminitrativo` |
-| **VENDEDOR** | Gerencia cantina | `mod_lanchonete` |
-| **LOCADOR** | Gerencia empréstimos | `mod_instrumentos` |
-
-
----
-
-## 📦 Estruturas de Dados Principais (em `headers.h`)
-
-### **Identidade**
-Representa um usuário no sistema:
-- ID, nome, CPF, senha, email
-- Categoria/cargo (`person_role`)
-- Especialidade (para professores: Piano, Canto, etc.)
-
-### **Class (Turma)**
-Representa uma turma/disciplina:
-- Código, ano letivo, nome (ex: "Violão I")
-- Professor responsável e lista de alunos (até 50)
-- Horários (até 4 por semana)
-- Eventos (provas, atividades, etc.)
-- Aulas ministradas (até 100)
-
-### **historic_individual (Histórico)**
-Registro acadêmico de um aluno em uma turma:
-- Frequência (presença/ausência em cada aula)
-- Notas obtidas (até 10 notas)
-- Status final (ABERTO, APROVADO, REPROVADO)
-
-### **RecursosIndividuais (Recursos)**
-Gerencia recursos de um usuário:
-- Saldo (para cantina)
-- Itens emprestados (instrumentos, máximo 5)
-- Status (Ativo/Inativo)
-
-### **ProdutoCantina**
-Produtos vendidos na lanchonete:
-- ID, nome, preço
-- Quantidade em estoque
-
-### **Instrumentos**
-Instrumentos disponíveis para empréstimo:
-- ID, nome, quantidade total
-- Controle de disponibilidade
-- Registro de empréstimos
-
-### **EventoAgenda**
-Eventos agendados na escola:
-- Nome, data, vagas totais
-- Lista de inscritos
-- Status (agendado/cancelado)
-
----
-
-## 🔐 Sistema de Autenticação
-
-O login verifica o `person_role` (cargo) do usuário e libera acessos conforme:
-
+**O QUE FAZER:**
 ```cpp
-// Em main.cpp após autenticação:
-if (person_role == ALUNO) {
-    entrada_aluno();      // mod_area_do_aluno/entrada_aluno.cpp
-} else if (person_role == PROFESSOR) {
-    entrada_professor();  // mod_area_do_professor/entrada_professor.cpp
-} else if (person_role == ADMIN) {
-    entrada_admin();      // mod_adminitrativo/entrada_admin.cpp
-} else if (person_role == VENDEDOR) {
-    entrada_vendedor();   // mod_lanchonete/entrada_vendedor.cpp
-} else if (person_role == LOCADOR) {
-    entrada_locador();    // mod_instrumentos/entrada_locador.cpp
-} else if (person_role == EVENTOS) {
-    entrada_eventos();    // mod_eventos/entrada_eventos.cpp
+// Dentro de janela_aluno():
+Aluno aluno = carregar_aluno_por_id(info.id);  // ?? ADICIONAR
+Emprestimo emprestimos[100];
+int total = carregar_emprestimos(emprestimos);  // ?? ADICIONAR
+
+// Depois descomentar as fun��es:
+case 1: mostrarNotas(aluno); break;  // Vai exibir dados reais
+case 4: mostrarExtratoLanchonete(aluno); break;
+```
+
+#### **mod_area_do_professor/ - 30% COMPLETO** ?
+
+**Status:**
+- ? Menu n�o funciona
+- ? Op��es vazias
+- ? Sem integra��o com turmas/notas/frequ�ncia
+
+**O QUE FAZER:**
+1. Carregar turmas do professor
+2. Implementar lan�amento de notas
+3. Implementar registro de frequ�ncia
+4. Integrar com `mod_eventos/entrada_eventos.cpp`
+
+#### **mod_adminitrativo/ - 40% COMPLETO** ?
+
+**Status:**
+- ? Menu principal funciona
+- ? Op��es sem funcionalidade
+- ? Sem CRUD de usu�rios
+- ? Sem CRUD de turmas
+
+**O QUE FAZER:**
+1. Criar usu�rios (chamar `entrada_cadastro.cpp`)
+2. Editar usu�rios (atualizar em banco)
+3. Deletar usu�rios (marcar como inativo)
+4. Criar turmas
+5. Editar turmas
+6. Movimentar aluno entre turmas
+
+#### **mod_eventos/ - 20% COMPLETO** ?
+
+**Status:**
+- ? `entrada_eventos.cpp` vazio
+- ? `servico_inscricao_evento.cpp` N�O EXISTE
+- ? Sem cria��o/inscri��o de eventos
+
+**O QUE FAZER:**
+1. Criar `servico_inscricao_evento.cpp` - compartilhado
+2. Implementar `entrada_eventos.cpp` com menu
+3. Validar vagas dispon�veis
+4. Registrar inscri��es no banco
+
+#### **mod_instrumentos/ - 40% COMPLETO** ?
+
+**Status:**
+- ? `entrada_locador.cpp` estrutura existe
+- ? `servico_emprestimo.cpp` n�o implementado
+- ? Sem CRUD de instrumentos
+- ? Sem sistema de empr�stimos
+
+**O QUE FAZER:**
+1. Completar `servico_emprestimo.cpp` - compartilhado
+2. Validar limite de 5 itens por pessoa
+3. Registrar datas de empr�stimo/devolu��o
+4. Controlar danos e perdas
+
+#### **mod_lanchonete/ - 50% COMPLETO** ?
+
+**Status:**
+- ? `entrada_vendedor.cpp` estrutura existe
+- ? `servico_venda.cpp` incompleto
+- ? Sem CRUD de produtos
+- ? Sem controle de estoque
+
+**O QUE FAZER:**
+1. Completar `servico_venda.cpp` - compartilhado
+2. Implementar CRUD de produtos
+3. Validar quantidade em estoque
+4. Atualizar saldo do usu�rio ap�s compra
+
+---
+
+## ?? Como Implementar um M�dulo (Passo a Passo)
+
+### **Exemplo: Completar mod_area_do_aluno/**
+
+#### **Passo 1: Entender headers.h**
+```cpp
+// Abra headers.h e procure por:
+struct Identidade { ... }      // Dados do aluno
+struct RegistroNotas { ... }   // Notas do aluno
+struct Saldo_Cantina { ... }   // Cr�dito do aluno
+struct Atraso_Instrumento { ... }  // Empr�stimos
+```
+
+#### **Passo 2: Implementar Inicializadores**
+```cpp
+// Em inicializacao/inicializadores.cpp, crie:
+Aluno carregar_aluno_por_id(int id) {
+    FILE *f = fopen("database/registros_notas.dat", "rb");
+    Aluno aluno;
+    // Buscar aluno com esse id
+    fread(&aluno, sizeof(Aluno), 1, f);
+    fclose(f);
+    return aluno;
+}
+```
+
+#### **Passo 3: Usar nos Servi�os**
+```cpp
+// Em mod_area_do_aluno/entrada_aluno.cpp:
+void janela_aluno(login_info info) {
+    Aluno aluno = carregar_aluno_por_id(info.id);  // ?? CARREGAR
+    
+    switch(escolha) {
+        case 1:
+            mostrarNotas(aluno);  // J� tem dados reais
+            break;
+    }
+}
+```
+
+#### **Passo 4: Testar**
+```
+1. Compilar com Ctrl + Shift + B
+2. Executar main.exe
+3. Logar como ALUNO
+4. Testar as funcionalidades
+```
+
+---
+
+## ?? Campos Pendentes de Implementa��o
+
+### **EDITOR DE SENHA - AINDA N�O CRIADO** ?
+
+A funcionalidade de **editar/mudar a senha** ainda precisa ser implementada.
+
+**Onde deve existir:**
+- `mod_login_e_matricula/entrada_cadastro.cpp` (usu�rio muda sua pr�pria senha)
+- Ou perfil do usu�rio (cada um muda sua senha)
+
+**C�digo sugerido:**
+```cpp
+void editar_senha(int id_usuario) {
+    char senha_atual[20];
+    char senha_nova[20];
+    
+    cout << "Digite sua senha atual: ";
+    cin >> senha_atual;
+    
+    Identidade id = carregar_identidade_por_id(id_usuario);
+    if (strcmp(id.senha, senha_atual) != 0) {
+        cout << "? Senha incorreta!\n";
+        return;
+    }
+    
+    cout << "Digite a nova senha: ";
+    cin >> senha_nova;
+    
+    strcpy(id.senha, senha_nova);
+    salvar_identidade(id);
+    
+    cout << "? Senha atualizada!\n";
 }
 ```
 
 ---
 
-## 📋 Checklist de Implementação por Módulo
+## ?? Fluxo Principal de Funcionamento
 
-### **mod_login_e_matricula/**
-- [ ] `servico_login.cpp` - Função de autenticação
-- [ ] `entrada_cadastro.cpp` - Interface de cadastro
-- [ ] Validação de credenciais
-- [ ] Persistência de usuários
-
-### **mod_adminitrativo/**
-- [ ] `entrada_admin.cpp` - Interface do admin
-- [ ] Integração com cadastro de usuários
-- [ ] Gerenciamento de turmas e horários
-- [ ] Movimentação de alunos
-- [ ] Operações de super usuário
-
-### **mod_area_do_aluno/**
-- [ ] `entrada_aluno.cpp` - Interface do aluno
-- [ ] Visualização de histórico
-- [ ] Chamar `servico_venda` para compras
-- [ ] Chamar `servico_emprestimo` para empréstimos
-- [ ] Chamar `servico_inscricao_evento` para inscrição
-
-### **mod_area_do_professor/**
-- [ ] `entrada_professor.cpp` - Interface do professor
-- [ ] Lançamento de notas
-- [ ] Registro de frequência
-- [ ] Chamar `entrada_eventos` para criar eventos
-- [ ] Chamar `servico_venda` para compras
-- [ ] Chamar `servico_emprestimo` para empréstimos
-
-### **mod_eventos/**
-- [ ] `entrada_eventos.cpp` - Interface de eventos (sub-módulo de professor)
-- [ ] Criação e gerenciamento de eventos
-- [ ] `servico_inscricao_evento.cpp / .h` - Serviço compartilhado
-- [ ] Sistema de inscrições (via serviço)
-- [ ] Validação de vagas
-
-### **mod_instrumentos/**
-- [ ] `entrada_locador.cpp` - Interface do locador
-- [ ] Cadastro e gerência de instrumentos
-- [ ] `servico_emprestimo.cpp / .h` - Serviço compartilhado
-- [ ] Sistema de empréstimos (via serviço)
-- [ ] Processamento de devoluções
-
-### **mod_lanchonete/**
-- [ ] `entrada_vendedor.cpp` - Interface do vendedor
-- [ ] Cadastro de produtos
-- [ ] Definição de preços e quantidades
-- [ ] `servico_venda.cpp / .h` - Serviço compartilhado
-- [ ] Sistema de vendas (via serviço, acessível a todos)
+```
+???????????????????????????????????????????????????????????????
+? 1. main.cpp inicia                                          ?
+???????????????????????????????????????????????????????????????
+                              ?
+                ??????????????????????????????
+                ? servico_login.cpp          ?
+                ? Autentica usu�rio          ?
+                ? Retorna person_role        ?
+                ??????????????????????????????
+                              ?
+        ????????????????????????????????????????????????????????????????
+        ?         ?           ?           ?             ?              ?
+        ?         ?           ?           ?             ?              ?
+     ADMIN    ALUNO      PROFESSOR     VENDEDOR      LOCADOR       EVENTOS
+        ?         ?           ?           ?             ?              ?
+        ?         ?           ?           ?             ?              ?
+   entrada_   entrada_   entrada_   entrada_   entrada_           entrada_
+   admin      aluno      professor  vendedor   locador            eventos
+        ?         ?           ?           ?             ?              ?
+        ?         ?????????????????????????????????????????????????????
+        ?               ?           ?           ?             ?
+        ?               ?           ?           ?             ?
+       SERVI�OS COMPARTILHADOS
+       ? servico_venda (todos compram)
+       ? servico_emprestimo (todos pegam instrumento)
+       ? servico_inscricao_evento (todos se inscrevem)
+```
 
 ---
 
-## 📁 Estrutura de Diretórios Esperada
+## ?? Estrutura de Diret�rios Esperada
 
 ```
 Projeto-2-Prog-2-2025.2/
-├── main.cpp                              # Ponto de entrada
-├── headers.h                             # Estruturas de dados
-├── Readme.md                             # Este arquivo
-├── database/                             # Camada de dados
-│   └── (arquivos de persistência)
-├── mod_login_e_matricula/
-│   ├── servico_login.cpp / .h
-│   └── entrada_cadastro.cpp / .h
-├── mod_adminitrativo/
-│   └── entrada_admin.cpp / .h
-├── mod_area_do_aluno/
-│   └── entrada_aluno.cpp / .h
-├── mod_area_do_professor/
-│   └── entrada_professor.cpp / .h
-├── mod_eventos/
-│   └── entrada_eventos.cpp / .h
-├── mod_instrumentos/
-│   └── entrada_locador.cpp / .h
-└── mod_lanchonete/
-    └── entrada_vendedor.cpp / .h
+?? main.cpp                                 # Ponto de entrada
+?? headers.h                                # Estruturas centralizadas
+?? Readme.md                                # Este arquivo
+?? database/                                # Camada de persist�ncia
+?  ?? identidades.dat
+?  ?? registros_notas.dat
+?  ?? saldos_cantina.dat
+?  ?? vendas_cantina.dat
+?  ?? atrasos_instrumentos.dat
+?  ?? (outros .dat)
+?? inicializacao/
+?  ?? inicializadores.cpp                   # CR�TICO: L�/escreve arquivo
+?  ?? inicializadores.h
+?? mod_login_e_matricula/
+?  ?? servico_login.cpp / .h                # ? Valida��o hardcoded
+?  ?? entrada_cadastro.cpp / .h             # ? Incompleto
+?  ?? servico_cadastros.cpp / .h
+?  ?? inicializadores_de_tabela.cpp / .h
+?? mod_adminitrativo/
+?  ?? entrada_admin.cpp / .h                # ? Incompleto
+?  ?? (bin/, obj/ - ignorar)
+?? mod_area_do_aluno/
+?  ?? entrada_aluno.cpp / .h                # ? 60% - falta dados
+?  ?? (bin/, obj/ - ignorar)
+?? mod_area_do_professor/
+?  ?? entrada_professor.cpp / .h            # ? 30% - muito incompleto
+?  ?? (bin/, obj/ - ignorar)
+?? mod_eventos/
+?  ?? entrada_eventos.cpp / .h              # ? 20% - vazio
+?  ?? (servico_inscricao_evento.cpp - n�o existe)
+?? mod_instrumentos/
+?  ?? entrada_locador.cpp / .h              # ? 40% - sem servi�o
+?  ?? (servico_emprestimo.cpp - n�o existe)
+?? mod_lanchonete/
+   ?? entrada_vendedor.cpp / .h             # ? 50% - servi�o incompleto
+   ?? (servico_venda.cpp - parcial)
 ```
 
 ---
 
-## 🔧 Compilação
+## ?? Estruturas de Dados Principais (headers.h)
 
-Use o build task configurado no VS Code:
+### **Identidade**
+```cpp
+struct Identidade {
+    int id;
+    char nome[50];
+    char cpf[12];
+    char senha[20];  // PADR�O: "senha"
+    char email[50];
+    person_role categoria;  // ALUNO, PROFESSOR, ADMIN, etc
+    char especialidade[30];  // Ex: "Piano", "Canto"
+    int ativo;
+};
+```
 
+### **Aluno** (em mem�ria)
+```cpp
+struct Aluno {
+    int id;
+    char nome[50];
+    float notas[4];
+    float credito;  // Cr�dito na lanchonete
+    Compra compras[20];  // Hist�rico de compras
+    int quantCompras;
+    Instrumento instrumentos[10];
+    int quantInstrumentos;
+};
+```
+
+### **Class (Turma)**
+```cpp
+struct Class {
+    char codigo[10];  // Ex: "PROG001"
+    char nome[50];    // Ex: "Programa��o II"
+    int ano_letivo;
+    int professor_id;
+    int alunos[50];   // IDs dos alunos
+    int quant_alunos;
+    // ... mais campos
+};
+```
+
+### **RegistroNotas**
+```cpp
+struct RegistroNotas {
+    int aluno_id;
+    int turma_codigo;
+    float notas[10];  // At� 10 avalia��es
+    int quant_notas;
+};
+```
+
+---
+
+## ?? Autentica��o: Login + Senha Padr�o
+
+### **Credenciais para Teste:**
+```
+ID:     0000
+Senha:  0000
+```
+
+### **Senha Padr�o para Novos Usu�rios:**
+```
+"senha"
+```
+
+### **Como Funciona Agora:**
+1. Usu�rio digita qualquer ID e senha
+2. Fun��o `validar_login()` **ignora** tudo
+3. Sempre retorna ADMIN
+4. ? **Isso est� errado!**
+
+### **Como Deveria Funcionar:**
+1. Usu�rio digita ID e senha
+2. Carregar identidade do banco: `Identidade id = carregar_identidade_por_id(id_usuario);`
+3. Comparar senhas: `if (strcmp(id.senha, senha) == 0)`
+4. Se correto: retornar dados do usu�rio
+5. Se errado: retornar `status = INVALIDO`
+
+---
+
+## ?? Compila��o e Execu��o
+
+### **Via VS Code (Recomendado):**
 ```bash
-g++.exe -fdiagnostics-color=always -g ${file} -o ${fileDirname}\\${fileBasenameNoExtension}.exe
+Ctrl + Shift + B    # Compila (usa build task g++.exe)
+# Depois:
+./main.exe          # Ou clique em "Run"
 ```
 
-**Ou compile manualmente:**
+### **Manual com g++:**
 ```bash
-g++ -g main.cpp mod_login_e_matricula/servico_login.cpp mod_login_e_matricula/entrada_cadastro.cpp ... -o main.exe
+cd d:\PROJECTS\Projeto-2-Prog-2-2025.2
+g++ -g main.cpp mod_login_e_matricula/servico_login.cpp \
+    mod_login_e_matricula/entrada_cadastro.cpp \
+    mod_area_do_aluno/entrada_aluno.cpp \
+    ... (adicione todos os .cpp) \
+    -o main.exe
+
+./main.exe
 ```
 
 ---
 
-## 📝 Observações Importantes
+## ?? Observa��es Importantes
 
-- **Máximo 50 alunos por turma**
-- **Máximo 100 aulas por turma**
-- **Máximo 10 eventos por turma**
-- **Máximo 5 itens emprestados por pessoa**
-- **Máximo 4 horários por semana**
-- **Cada função deve validar dados de entrada**
-- **Módulos devem ser independentes e reutilizáveis**
-- **Sempre consultar `headers.h` para estruturas de dados**
-
----
-
-## 🤝 Comunicação Entre Módulos
-
-As chamadas entre módulos devem seguir este padrão:
-
-1. **Aluno compra na lanchonete:** 
-   - `mod_area_do_aluno` → `mod_lanchonete/entrada_vendedor()`
-
-2. **Aluno pega instrumento emprestado:**
-   - `mod_area_do_aluno` → `mod_instrumentos/entrada_locador()`
-
-3. **Admin cria novo usuário:**
-   - `mod_adminitrativo` → `mod_login_e_matricula/entrada_cadastro()`
-
-4. **Professor cria evento:**
-   - `mod_area_do_professor` → `mod_eventos/entrada_eventos()`
+- **M�ximo 50 alunos por turma**
+- **M�ximo 100 aulas por turma**
+- **M�ximo 10 eventos por turma**
+- **M�ximo 5 itens emprestados por pessoa**
+- **M�ximo 4 hor�rios por semana**
+- **Cada fun��o DEVE validar dados de entrada**
+- **M�dulos devem ser independentes e reutiliz�veis**
+- **SEMPRE consultar `headers.h` para estruturas de dados**
+- **Nunca duplicar estruturas em m�ltiplos arquivos**
 
 ---
 
-## 📞 Suporte e Dúvidas
+## ?? Arquivo utilidades.cpp
 
-Antes de implementar:
-1. ✓ Leia `headers.h`
-2. ✓ Entenda o fluxo do seu módulo
-3. ✓ Identifique as integrações necessárias
-4. ✓ Siga a estrutura de pastas
-5. ✓ Use nomes consistentes em arquivos `.cpp` e `.h`
+**O que cont�m:**
+- `void limpar_tela()` - Limpa console (multiplataforma)
+- `const char* enumerado_para_texto(funcao_pessoa f)` - Converte enum para string
+- `void generate_random_cpf(char *cpf_buffer)` - Gera CPF aleat�rio
+- `void generate_random_name(char *name_buffer)` - Gera nome aleat�rio
 
 ---
 
-## 🛠️ Arquivo utilidades.cpp
+## ?? Codifica��o de Caracteres (Acentos)
 
-O arquivo **`utilidades.cpp`** (junto com seu header `utilidades.h`) contém funções utilitárias compartilhadas por todo o projeto.
+Para que acentos funcionem:
 
-### Funções Disponíveis:
-
-#### `void limpar_tela()`
-Limpa a tela do console de forma **multiplataforma**:
-- **Windows:** Usa `system("cls")`
-- **Linux/macOS:** Usa `system("clear")`
-
-É utilizado em todas as funções de navegação para criar uma interface limpa entre os menus.
-
-**Exemplo de uso:**
-```cpp
-#include "utilidades.h"
-
-limpar_tela();  // Limpa a tela do console
-```
-#### `const char* enumerado_para_texto(funcao_pessoa f)`
-Converte um valor enumerado de `funcao_pessoa` para sua representa��o em texto.
-
-**Retorna:**
-- `"ALUNO"` - Para alunos
-- `"PROFESSOR"` - Para professores
-- `"ADMIN"` - Para administradores
-- `"VENDEDOR"` - Para vendedores
-- `"LOCADOR"` - Para locadores
-- `"DESCONHECIDO"` - Para valores inv�lidos
-
-**Exemplo de uso:**
-```cpp
-funcao_pessoa cargo = ADMIN;
-cout << "Categoria: " << enumerado_para_texto(cargo) << endl;  // Sa�da: Categoria: ADMIN
-```
-
-#### `void generate_random_cpf(char *cpf_buffer)`
-Gera um **CPF aleat�rio** de 11 d�gitos e o armazena no buffer fornecido.
-
-**Par�metros:**
-- `cpf_buffer` - Ponteiro para um array de char com tamanho m�nimo 12 (11 d�gitos + null terminator)
-
-**Exemplo de uso:**
-```cpp
-char cpf[12];
-generate_random_cpf(cpf);
-cout << "CPF: " << cpf << endl;  // Sa�da: CPF: 12345678901
-```
-
-#### `void generate_random_name(char *name_buffer)`
-Gera um **nome aleat�rio brasileiro** combinando primeiro nome, nome do meio (85% de probabilidade) e sobrenome.
-
-**Caracter�sticas:**
-- Primeiro nome: Escolhido de uma lista de nomes comuns brasileiros e personagens
-- Nome do meio: Palavras que completam o nome com significado (lugares, sentimentos, natureza, etc.)
-  - **85% de probabilidade** de incluir nome do meio
-  - **15% de probabilidade** de ter apenas primeiro nome + sobrenome
-- Sobrenome: Escolhido de uma lista extensa de sobrenomes brasileiros
-
-**Par�metros:**
-- `name_buffer` - Ponteiro para um array de char com tamanho adequado (recomendado m�nimo 256)
-
-**Exemplo de uso:**
-```cpp
-char nome[256];
-generate_random_name(nome);
-cout << "Nome: " << nome << endl;  // Sa�da: Nome: Gabriel da Paz Silva
-```
----
-
-## 🔤 Configuração de Acentos e Caracteres Especiais
-
-Para que os acentos e caracteres especiais funcionem corretamente, é necessário configurar a codificação em **ISO 8859-1** em ambos os editores:
-
-### VS Code
-Configure no `.vscode/settings.json`:
+**VS Code (`settings.json`):**
 ```json
 {
     "files.encoding": "iso88591",
@@ -764,27 +843,29 @@ Configure no `.vscode/settings.json`:
 }
 ```
 
-### CodeBlocks
-1. **Project → Build options**
-2. **Compiler settings**
-3. Certifique-se de que a codificação está em **ISO 8859-1** (ou Windows-1252)
-
-### Código C++
-Adicione na função `main()`:
+**C�digo C++:**
 ```cpp
 #include <locale.h>
 
 int main() {
     setlocale(LC_ALL, "Portuguese");
-    // ... resto do código
+    // ... resto do c�digo
 }
 ```
 
-O `setlocale(LC_ALL, "Portuguese")` configura o locale do programa para português, permitindo que o console do Windows exiba corretamente os acentos.
+---
+
+## ?? Pr�ximos Passos
+
+1. **?? LEIA headers.h** - Entenda as estruturas
+2. **?? Implemente inicializadores** - Fun��o cr�tica
+3. **?? Teste o login** - Modifique para diferentes cargos
+4. **?? Complete mod_area_do_aluno** - Carregue dados do banco
+5. **?? Implemente os outros m�dulos** - Siga o mesmo padr�o
 
 ---
 
-**Versão:** 2025.2  
-**Data:** Janeiro 2026  
+**Vers�o:** 2025.2  
+**Data:** Fevereiro 2026  
 **Linguagem:** C++  
-**Status:** Em Desenvolvimento
+**Status:** Em Desenvolvimento - Aguardando Implementa��o de Inicializadores

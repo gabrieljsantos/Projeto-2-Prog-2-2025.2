@@ -22,7 +22,6 @@ typedef struct {
     int id;                       // ID único no sistema
     int ativo;                    // 1 = Ativo/Matriculado, 0 = Inativo/Deletado
     char nome[100];               // Nome completo
-    char nome_usuario[50];        // Nome de usuário para login
     char cpf[20];                 // Apenas números ou formatado
     char senha[30];               // Senha de login
     char email[100];              // Email de contato
@@ -125,11 +124,12 @@ typedef struct {
 } Produto_Cantina;
 
 typedef struct {
-    int id;                       // Código único do livro
-    char nome[100];               // Título ou modelo
-    int quantidade;               // Total físico na escola
-    int ativo;                    // 1 = Disponível, 0 = Removido
-} Biblioteca;
+    int id;                       // Código único do instrumento
+    char nome[100];               // Nome do instrumento (Ex: "Violão", "Piano")
+    int quantidade_total;         // Quantidade total disponível
+    int quantidade_emprestada;    // Quantidade em posse de alunos
+    int ativo;                    // 1 = Instrumento disponível, 0 = Removido
+} Inventario_Instrumentos;
 
 typedef struct {
     int id_aluno;                 // ID do aluno (dono da nota)
@@ -149,5 +149,43 @@ typedef struct {
     int qtd_vagas_ocupadas;       // quantidade de vagas ocupadas
     int ativo;                    // 1 = Agendado, 0 = Cancelado
 } EventoAgenda;
+
+typedef struct {
+    int id;                       // Código único da venda
+    int id_vendedor;              // ID do vendedor responsável
+    int id_aluno;                 // ID do aluno/cliente que comprou
+    int id_produto;               // ID do produto vendido
+    int quantidade;               // Quantidade vendida
+    float valor_unitario;         // Preço unitário no momento da venda
+    float valor_total;            // Total da venda (quantidade * valor_unitario)
+    char data_hora[20];           // "DD/MM/AAAA HH:MM"
+    int ativo;                    // 1 = Venda realizada, 0 = Cancelada
+} Venda_Cantina;
+
+typedef struct {
+    int id_vendedor;              // ID do vendedor
+    float total_vendido;          // Total em R$ das vendas do dia/período
+    int quantidade_vendas;        // Quantidade de itens vendidos
+    int qtd_transacoes;           // Quantidade de transações realizadas
+    char data[20];                // "DD/MM/AAAA"
+    int ativo;                    // 1 = Registro válido, 0 = Cancelado
+} Resumo_Vendedor;
+
+typedef struct {
+    int id_aluno;                 // ID do aluno/cliente
+    float saldo_cantina;          // Saldo em R$ (negativo = deve, positivo = crédito)
+    int qtd_compras;              // Total de compras realizadas
+    char ultima_compra[12];       // "DD/MM/AAAA"
+    int ativo;                    // 1 = Conta ativa, 0 = Removida
+} Saldo_Cantina;
+
+typedef struct {
+    int id_aluno;                 // ID do aluno com atraso
+    int id_instrumento;           // ID do instrumento
+    int dias_atraso;              // Quantidade de dias em atraso
+    float multa_total;            // Multa acumulada
+    char data_vencimento[12];     // "DD/MM/AAAA"
+    int ativo;                    // 1 = Atraso ativo, 0 = Regularizado
+} Atraso_Instrumento;
 
 #endif

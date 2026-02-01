@@ -3,38 +3,14 @@
 #include <cstring>
 #include <locale.h>
 #include "servico_cadastros.h"
+#include "inicializadores_de_tabela.h"
 #include "../utilidades.h"
 #include "../headers.h"
 
 using namespace std;
 
 void inicializar_banco_dados() {
-    const char* nome_arquivo = "database/usuarios.dat";
-    ifstream arquivo_verificar(nome_arquivo, ios::binary);
-    
-    // Se o arquivo já existe, não fazer nada
-    if (arquivo_verificar.is_open()) {
-        arquivo_verificar.close();
-        return;
-    }
-    
-    // Arquivo não existe, criar e adicionar usuário ROOT
-    Identidade usuario_root;
-    usuario_root.id = 0;                              // ID = 0000
-    usuario_root.ativo = 1;
-    usuario_root.categoria = ADMIN;
-    strcpy(usuario_root.nome, "USUARIO_ROOT");
-    strcpy(usuario_root.nome_usuario, "root");       // Nome de usuário = "root"
-    strcpy(usuario_root.cpf, "000.000.000-00");
-    strcpy(usuario_root.email, "root@sistema.edu");
-    strcpy(usuario_root.senha, "0000");               // Senha = "0000"
-    strcpy(usuario_root.especialidade, "null");
-    
-    ofstream arquivo(nome_arquivo, ios::binary);
-    if (arquivo.is_open()) {
-        arquivo.write(reinterpret_cast<const char*>(&usuario_root), sizeof(Identidade));
-        arquivo.close();
-    }
+    inicializar_todos_bancos_dados();
 }
 
 void obter_caminho_arquivo(funcao_pessoa categoria, char* caminho) {
@@ -141,9 +117,6 @@ bool gerenciar_cadastro_usuario(funcao_pessoa categoria) {
                 cout << "========== NOVO CADASTRO ==========\n";
                 cout << "Nome completo: ";
                 cin.getline(novo_usuario.nome, sizeof(novo_usuario.nome));
-                
-                cout << "Nome de usuário: ";
-                cin.getline(novo_usuario.nome_usuario, sizeof(novo_usuario.nome_usuario));
                 
                 cout << "CPF: ";
                 cin.getline(novo_usuario.cpf, sizeof(novo_usuario.cpf));
