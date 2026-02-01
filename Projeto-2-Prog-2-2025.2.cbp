@@ -48,6 +48,8 @@
 		<Unit filename="mod_lanchonete/entrada_vendedor.h" />
 		<Unit filename="mod_login_e_matricula/entrada_cadastro.cpp" />
 		<Unit filename="mod_login_e_matricula/entrada_cadastro.h" />
+		<Unit filename="mod_login_e_matricula/servico_cadastros.cpp" />
+		<Unit filename="mod_login_e_matricula/servico_cadastros.h" />
 		<Unit filename="mod_login_e_matricula/servico_login.cpp" />
 		<Unit filename="mod_login_e_matricula/servico_login.h" />
 		<Unit filename="utilidades.cpp" />
