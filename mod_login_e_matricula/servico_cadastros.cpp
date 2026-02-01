@@ -24,10 +24,11 @@ void inicializar_banco_dados() {
     usuario_root.ativo = 1;
     usuario_root.categoria = ADMIN;
     strcpy(usuario_root.nome, "USUARIO_ROOT");
+    strcpy(usuario_root.nome_usuario, "root");       // Nome de usuário = "root"
     strcpy(usuario_root.cpf, "000.000.000-00");
     strcpy(usuario_root.email, "root@sistema.edu");
     strcpy(usuario_root.senha, "0000");               // Senha = "0000"
-    strcpy(usuario_root.especialidade, "");
+    strcpy(usuario_root.especialidade, "null");
     
     ofstream arquivo(nome_arquivo, ios::binary);
     if (arquivo.is_open()) {
@@ -141,6 +142,9 @@ bool gerenciar_cadastro_usuario(funcao_pessoa categoria) {
                 cout << "Nome completo: ";
                 cin.getline(novo_usuario.nome, sizeof(novo_usuario.nome));
                 
+                cout << "Nome de usuário: ";
+                cin.getline(novo_usuario.nome_usuario, sizeof(novo_usuario.nome_usuario));
+                
                 cout << "CPF: ";
                 cin.getline(novo_usuario.cpf, sizeof(novo_usuario.cpf));
                 
@@ -155,7 +159,7 @@ bool gerenciar_cadastro_usuario(funcao_pessoa categoria) {
                     cout << "Especialidade (Ex: Piano, Canto): ";
                     cin.getline(novo_usuario.especialidade, sizeof(novo_usuario.especialidade));
                 } else {
-                    strcpy(novo_usuario.especialidade, "");
+                    strcpy(novo_usuario.especialidade, "null");
                 }
                 
                 if (salvar_identidade(caminho, novo_usuario)) {

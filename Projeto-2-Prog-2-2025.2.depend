@@ -1,9 +1,10 @@
 # depslib dependency file v1.0
-1769882698 source:d:\projects\projeto-2-prog-2-2025.2\main.cpp
+1769911389 source:d:\projects\projeto-2-prog-2-2025.2\main.cpp
 	<iostream>
 	<locale.h>
 	"headers.h"
 	"mod_login_e_matricula/servico_login.h"
+	"mod_login_e_matricula/servico_cadastros.h"
 	"mod_adminitrativo/entrada_admin.h"
 	"mod_lanchonete/entrada_vendedor.h"
 	"mod_instrumentos/entrada_locador.h"
@@ -22,16 +23,18 @@
 1769859771 source:d:\projects\projeto-2-prog-2-2025.2\mod_area_do_professor\main.cpp
 	<iostream>
 
-1769886656 source:d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_login.cpp
+1769913290 source:d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_login.cpp
 	<iostream>
 	<cstring>
+	<fstream>
+	<cstdlib>
 	"servico_login.h"
 	"../utilidades.h"
 	"../headers.h"
 
-1769885405 d:\projects\projeto-2-prog-2-2025.2\headers.h
+1769911977 d:\projects\projeto-2-prog-2-2025.2\headers.h
 
-1769882623 d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_login.h
+1769912157 d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_login.h
 	"../headers.h"
 
 1769882623 d:\projects\projeto-2-prog-2-2025.2\mod_adminitrativo\entrada_admin.h
@@ -127,5 +130,14 @@
 	<chrono>
 
 1769911382 d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_cadastros.h
+	"../headers.h"
+
+1769913294 source:d:\projects\projeto-2-prog-2-2025.2\mod_login_e_matricula\servico_cadastros.cpp
+	<iostream>
+	<fstream>
+	<cstring>
+	<locale.h>
+	"servico_cadastros.h"
+	"../utilidades.h"
 	"../headers.h"
 

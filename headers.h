@@ -22,6 +22,7 @@ typedef struct {
     int id;                       // ID único no sistema
     int ativo;                    // 1 = Ativo/Matriculado, 0 = Inativo/Deletado
     char nome[100];               // Nome completo
+    char nome_usuario[50];        // Nome de usuário para login
     char cpf[20];                 // Apenas números ou formatado
     char senha[30];               // Senha de login
     char email[100];              // Email de contato
