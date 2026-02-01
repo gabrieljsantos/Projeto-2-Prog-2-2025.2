@@ -33,6 +33,8 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Unit filename="headers.h" />
+		<Unit filename="inicializacao/inicializadores.cpp" />
+		<Unit filename="inicializacao/inicializadores.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="mod_adminitrativo/entrada_admin.cpp" />
 		<Unit filename="mod_adminitrativo/entrada_admin.h" />
