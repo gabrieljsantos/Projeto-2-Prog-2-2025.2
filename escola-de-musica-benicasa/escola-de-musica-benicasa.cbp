@@ -5,7 +5,7 @@
 		<Option title="escola-de-musica-benicasa" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="modulo_admin/;modulo_aluno/;modulo_eventos/;modulo_instrumentos/;modulo_login_matricula/;dados/;headers/;modulo_professor/;modulo_lanchonete/" />
+		<Option virtualFolders="modulo_admin/;modulo_aluno/;modulo_eventos/;modulo_instrumentos/;modulo_login_matricula/;dados/;headers/;modulo_professor/;modulo_lanchonete/;modulo_login_matricula/bibliotecas/;modulo_login_matricula/teste/" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/escola-de-musica-benicasa" prefix_auto="1" extension_auto="1" />
@@ -47,6 +47,9 @@
 		</Unit>
 		<Unit filename="cadastros.txt">
 			<Option virtualFolder="dados/" />
+		</Unit>
+		<Unit filename="doctest.h">
+			<Option virtualFolder="modulo_login_matricula/bibliotecas/" />
 		</Unit>
 		<Unit filename="eventos.cpp">
 			<Option virtualFolder="modulo_eventos/" />
@@ -93,6 +96,9 @@
 		</Unit>
 		<Unit filename="professor.h">
 			<Option virtualFolder="modulo_professor/" />
+		</Unit>
+		<Unit filename="teste.cpp">
+			<Option virtualFolder="modulo_login_matricula/teste/" />
 		</Unit>
 		<Extensions>
 			<lib_finder disable_auto="1" />
