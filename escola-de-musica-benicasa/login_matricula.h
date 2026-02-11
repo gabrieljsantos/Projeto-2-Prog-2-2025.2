@@ -3,6 +3,18 @@
 
 #include "headers.h"
 
-int somar(int a, int b);
+namespace login {
+    void inicializarArquivo();
+}
+
+int cadastro(usuario u);
+int verificarUltimoId();
+usuario lerUsuario(int id);
+int login(usuario u);
+bool verificarUsuarioExistente(int id);
+bool verificarUsuarioExistente(char[100] nome);
+void atualizarUsuario(int id, usuario u);
+
+
 
 #endif
