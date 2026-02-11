@@ -10,19 +10,15 @@
 
 using namespace std;
 
-enum TipoUsuario {
-    ADMINISTRADOR = 1,
-    PROFESSOR = 2,
-    ALUNO = 3
-};
+
 
 struct UsuarioLogado {
     int id;
     string nome;
-    int perfil;
+    TipoUsuario tipoUsuario;
     bool logado;
 
-    UsuarioLogado() : id(0), nome(""), perfil(0), logado(false) {}
+    UsuarioLogado() : id(0), nome(""), tipoUsuario(ADMINISTRADOR), logado(false) {}
 };
 
 void pausar();
@@ -47,13 +43,14 @@ int main() {
 
             switch (opcaoLogin) {
                 case 1: {
-                    int id, perfil;
-                    string nome;
+                    int id = 0;
+                    string nome = " ";
+                    TipoUsuario tipoUsuario = ADMINISTRADOR; //Só pra testar por enquanto
 
-                    if (realizarLogin(id, nome, perfil)) {
+                    if (realizarLogin(id, nome, tipoUsuario)) {
                         usuario.id = id;
                         usuario.nome = nome;
-                        usuario.perfil = perfil;
+                        usuario.tipoUsuario = tipoUsuario;
                         usuario.logado = true;
                         cout << "\nBem-vindo(a), " << usuario.nome << "!" << endl;
                         pausar();
@@ -75,7 +72,7 @@ int main() {
                     pausar();
             }
         } else {
-            switch (usuario.perfil) {
+            switch (usuario.tipoUsuario) {
                 case ADMINISTRADOR: {
                     int opcao;
                     exibirMenuAdministrador();
@@ -83,23 +80,24 @@ int main() {
                     cin.ignore();
 
                     switch (opcao) {
-                        case 1: menuCadastroUsuarios(); break;
-                        case 2: menuGerenciarUsuarios(); break;
-                        case 3: menuCadastroCursos(); break;
-                        case 4: consultarRelatoriosAcademicos(); break;
-                        case 5: menuCadastroEventos(); break;
-                        case 6: autorizarEventos(); break;
-                        case 7: listarTodosEventos(); break;
-                        case 8: menuCadastroInstrumentos(); break;
-                        case 9: liberarInstrumentos(); break;
-                        case 10: consultarPendenciasInstrumentos(); break;
-                        case 11: menuCadastroProdutos(); break;
-                        case 12: adicionarCreditosUsuario(); break;
-                        case 13: consultarEstoque(); break;
-                        case 14: gerarRelatorioFinanceiro(); break;
-                        case 15: gerarRelatorioPatrimonial(); break;
-                        case 16: realizarBackup(); break;
-                        case 17: restaurarBackup(); break;
+                        case 1: printf("Teste/n"); break;
+//                        case 1: menuCadastroUsuarios(); break;
+//                        case 2: menuGerenciarUsuarios(); break;
+//                        case 3: menuCadastroCursos(); break;
+//                        case 4: consultarRelatoriosAcademicos(); break;
+//                        case 5: menuCadastroEventos(); break;
+//                        case 6: autorizarEventos(); break;
+//                        case 7: listarTodosEventos(); break;
+//                        case 8: menuCadastroInstrumentos(); break;
+//                        case 9: liberarInstrumentos(); break;
+//                        case 10: consultarPendenciasInstrumentos(); break;
+//                        case 11: menuCadastroProdutos(); break;
+//                        case 12: adicionarCreditosUsuario(); break;
+//                        case 13: consultarEstoque(); break;
+//                        case 14: gerarRelatorioFinanceiro(); break;
+//                        case 15: gerarRelatorioPatrimonial(); break;
+//                        case 16: realizarBackup(); break;
+//                        case 17: restaurarBackup(); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -113,14 +111,14 @@ int main() {
                     cin.ignore();
 
                     switch (opcao) {
-                        case 1: registrarNotas(usuario.id); break;
-                        case 2: registrarAvaliacoes(usuario.id); break;
-                        case 3: consultarAlunosMatriculados(usuario.id); break;
-                        case 4: calcularMediasTurma(usuario.id); break;
-                        case 5: consultarDesempenhoAcademico(usuario.id); break;
-                        case 6: consultarEventosDisponiveis(); break;
-                        case 7: consultarInstrumentosDisponiveis(); break;
-                        case 8: consultarSaldoLanchonete(usuario.id); break;
+//                        case 1: registrarNotas(usuario.id); break;
+//                        case 2: registrarAvaliacoes(usuario.id); break;
+//                        case 3: consultarAlunosMatriculados(usuario.id); break;
+//                        case 4: calcularMediasTurma(usuario.id); break;
+//                        case 5: consultarDesempenhoAcademico(usuario.id); break;
+//                        case 6: consultarEventosDisponiveis(); break;
+//                        case 7: consultarInstrumentosDisponiveis(); break;
+//                        case 8: consultarSaldoLanchonete(usuario.id); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -134,20 +132,20 @@ int main() {
                     cin.ignore();
 
                     switch (opcao) {
-                        case 1: consultarNotas(usuario.id); break;
-                        case 2: consultarMedias(usuario.id); break;
-                        case 3: consultarSituacaoAcademica(usuario.id); break;
-                        case 4: visualizarEventosDisponiveis(); break;
-                        case 5: inscreverEmEvento(usuario.id); break;
-                        case 6: consultarMinhasInscricoes(usuario.id); break;
-                        case 7: visualizarInstrumentosDisponiveis(); break;
-                        case 8: solicitarEmprestimo(usuario.id); break;
-                        case 9: realizarDevolucao(usuario.id); break;
-                        case 10: consultarMeusEmprestimos(usuario.id); break;
-                        case 11: consultarSaldo(usuario.id); break;
-                        case 12: visualizarProdutos(); break;
-                        case 13: realizarCompra(usuario.id); break;
-                        case 14: consultarExtrato(usuario.id); break;
+//                        case 1: consultarNotas(usuario.id); break;
+//                        case 2: consultarMedias(usuario.id); break;
+//                        case 3: consultarSituacaoAcademica(usuario.id); break;
+//                        case 4: visualizarEventosDisponiveis(); break;
+//                        case 5: inscreverEmEvento(usuario.id); break;
+//                        case 6: consultarMinhasInscricoes(usuario.id); break;
+//                        case 7: visualizarInstrumentosDisponiveis(); break;
+//                        case 8: solicitarEmprestimo(usuario.id); break;
+//                        case 9: realizarDevolucao(usuario.id); break;
+//                        case 10: consultarMeusEmprestimos(usuario.id); break;
+//                        case 11: consultarSaldo(usuario.id); break;
+//                        case 12: visualizarProdutos(); break;
+//                        case 13: realizarCompra(usuario.id); break;
+//                        case 14: consultarExtrato(usuario.id); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
