@@ -5,5 +5,11 @@
 
 using namespace std;
 
+void realizarMatricula() {
+    printf("Login");
+}
 
-
+bool realizarLogin(int id, string nome, TipoUsuario tipoUsuario ) {
+    printf("Matricula");
+    return true;
+}

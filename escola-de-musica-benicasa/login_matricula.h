@@ -1,18 +1,21 @@
 #ifndef LOGIN_MATRICULA_H
 #define LOGIN_MATRICULA_H
+#include <string>
 
 #include "headers.h"
+
+using namespace std;
 
 namespace login {
     void inicializarArquivo();
 }
 
-int cadastro(usuario u);
+void realizarMatricula();
 int verificarUltimoId();
 usuario lerUsuario(int id);
-int login(usuario u);
+void realizarLogin(int id, string nome, TipoUsuario tipoUsuario );
 bool verificarUsuarioExistente(int id);
-bool verificarUsuarioExistente(char[100] nome);
+bool verificarUsuarioExistente(string nome);
 void atualizarUsuario(int id, usuario u);
 
 
