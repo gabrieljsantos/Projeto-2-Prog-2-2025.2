@@ -7,14 +7,22 @@ typedef enum {
     ADMINISTRADOR
 } funcao;
 
-typedef struct {
-    int id;                       // ID único no sistema
-    int ativo;                    // 1 = Ativo/Matriculado, 0 = Inativo/Deletado
-    char nome[100];               // Nome completo
-    char email[100];              // Email de contato
-    char senha[30];               // Senha de login
-    funcao categoria;        // Categoria da pessoa (Aluno, Professor, etc.)
+struct Usuario{
+    int id;                       
+    int ativo;                    
+    char nome[100];               
+    char email[100];              
+    char senha[30];                      
     char especialidade[50];
-} usuario;
+    funcao categoria;
+    int Id_instrumento;
+    float saldo;
 
+   Usuario() : id(0), ativo(0), categoria(ALUNO){
+        nome[0] = '\0';
+        email[0] = '\0';
+        senha[0] = '\0';
+        especialidade[0] = '\0';
+    }    
+};
 #endif
