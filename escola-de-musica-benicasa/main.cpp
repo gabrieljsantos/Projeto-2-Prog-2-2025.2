@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include "headers.h"
 #include "login_matricula.h"
 #include "admin.h"
 #include "professor.h"
@@ -9,21 +10,6 @@
 #include "lanchonete.h"
 
 using namespace std;
-
-enum TipoUsuario {
-    ADMINISTRADOR = 1,
-    PROFESSOR = 2,
-    ALUNO = 3
-};
-
-struct UsuarioLogado {
-    int id;
-    string nome;
-    int perfil;
-    bool logado;
-
-    UsuarioLogado() : id(0), nome(""), perfil(0), logado(false) {}
-};
 
 void pausar();
 void exibirCabecalhoSistema();
