@@ -3,12 +3,12 @@
 
 
 bool verificaratividade(Usuario pessoa);//Feito
-void bancodedadoslanchonete();
-void menuCadastroProdutos();
-void adicionarCreditosUsuario();
-void consultarEstoque();
+void bancodedadoslanchonete();//Gabriel
+void menuCadastroProdutos();//Mota
+void adicionarCreditosUsuario();//Mota
+void consultarEstoque();//Gabriel
 void adicionarproduto();//Feito
-void removerproduto();
-void fazercompra();
+void removerproduto();//Mota
+void fazercompra();//gabriel
 void removercredito();//Feito
 void visualizarProdutos();//Feito
