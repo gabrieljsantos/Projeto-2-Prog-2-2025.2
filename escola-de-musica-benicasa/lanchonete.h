@@ -11,3 +11,4 @@ void bancodedadoslanchonete();
 void menuCadastroProdutos();
 void adicionarCreditosUsuario();
 void consultarEstoque();
+void adicionarproduto();
