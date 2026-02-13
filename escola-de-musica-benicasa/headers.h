@@ -15,7 +15,6 @@ struct Usuario{
     char senha[30];                      
     char especialidade[50];
     funcao categoria;
-    int Id_instrumento;
     float saldo;
 
    Usuario() : id(0), ativo(0), categoria(ALUNO){
