@@ -25,9 +25,9 @@ struct Usuario{
     }    
 };
 struct Produto {
+    char nome[50];
     int id;
     int ativo;
-    char nome[50];
     float preco
     int estoque;
 };
