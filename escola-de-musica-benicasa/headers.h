@@ -57,5 +57,30 @@ struct Emprestimo {
     char dataPrevista[11];   // Data prevista para devolução
 
 };
+struct Evento {
+    int id = 0;            // Identificador único
+    int ativo = 0 ;               // 1 = ativo no sistema, 0 = removido
 
+    char nome[50] ="";           // Nome do evento
+    char descricao[100]="";     // Descrição
+    char data[11]="";           // Data (dd/mm/aaaa)
+    char local[50]="";          // Local do evento
+
+    int totalVagas=0;          // Número total de vagas
+    int vagasOcupadas=0;       // Quantidade já inscrita
+
+    int autorizado=0;          // 0 = não autorizado | 1 = autorizado
+    int status=0;              
+    // 0 = inativo
+    // 1 = ativo
+    // 2 = encerrado
+    // 3 = cancelado
+};
+
+struct Credito {
+    int id_opera = 0;
+    int id_user = 0;
+    float saldo = 0; 
+    bool realizado = false
+};
 #endif
