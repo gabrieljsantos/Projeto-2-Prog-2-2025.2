@@ -12,6 +12,19 @@ namespace Lanchonete {
         float saldo;
     };
 
+
+    void menuCadastroProdutos(){
+        system("cls || clear");
+        cout << "Dentro de menuCadastroProdutos" << endl;
+        // Lógica para cadastro de produtos
+    }
+
+    void adicionarCreditosUsuario() {
+        system("cls || clear");
+        cout << "Dentro de adicionarCreditosUsuario" << endl;
+        // Lógica para adicionar créditos ao usuário
+    }
+
     bool bancoExisteProdutos() {
         ifstream arquivo(BANCO_PRODUTOS, ios::binary);
         bool existe = arquivo.is_open();

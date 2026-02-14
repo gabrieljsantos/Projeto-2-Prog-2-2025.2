@@ -1,3 +1,7 @@
+
+#ifndef LANCHONETE_H
+#define LANCHONETE_H
+
 #include "headers.h"
 #include <fstream>
 
@@ -18,3 +22,5 @@ namespace Lanchonete {
     void visualizarProdutos();//Feito
     void consultarSaldo(int id);//Feito
 }
+
+#endif

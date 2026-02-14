@@ -36,10 +36,13 @@ int main() {
                     int id, perfil;
                     string nome;
 
-                    if (realizarLogin(id, nome, perfil)) {
+                    if (Login_mat::realizarLogin(id, nome, perfil)) {
                         usuario.id = id;
                         usuario.nome = nome;
-                        usuario.perfil = perfil;
+                        usuario.perfil = static_cast<funcao>(perfil); // CORREÇÂO QUE NÂO SEI CPLICAR PORQUE, PORFAVOR
+                        // ALGUEM VER UMA OPÇÂO QUE SEJA MELHOR PARA CONVERTER O PERFIL PARA O TIPO ENUMERADO,
+                        // PORQUE EU NÂO SEI EXPLICAR O PORQUE DE USAR STATIC_CAST AQUI, MAS VAI QUE PRECISA DE UM PERFIL
+                        // COM ESPAÇO, ENTÃO VAI STRING
                         usuario.logado = true;
                         cout << "\nBem-vindo(a), " << usuario.nome << "!" << endl;
                         pausar();
@@ -50,7 +53,7 @@ int main() {
                     break;
                 }
                 case 2:
-                    realizarMatricula();
+                    Login_mat::realizarMatricula();
                     pausar();
                     break;
                 case 0:
@@ -69,23 +72,23 @@ int main() {
                     cin.ignore();
 
                     switch (opcao) {
-                        case 1: menuCadastroUsuarios(); break;
-                        case 2: menuGerenciarUsuarios(); break;
-                        case 3: menuCadastroCursos(); break;
-                        case 4: consultarRelatoriosAcademicos(); break;
-                        case 5: menuCadastroEventos(); break;
-                        case 6: autorizarEventos(); break;
-                        case 7: listarTodosEventos(); break;
-                        case 8: menuCadastroInstrumentos(); break;
-                        case 9: liberarInstrumentos(); break;
-                        case 10: consultarPendenciasInstrumentos(); break;
+                        case 1: Admin::menuCadastroUsuarios(); break;
+                        case 2: Admin::menuGerenciarUsuarios(); break;
+                        case 3: Admin::menuCadastroCursos(); break;
+                        case 4: Admin::consultarRelatoriosAcademicos(); break;
+                        case 5: Admin::menuCadastroEventos(); break;
+                        case 6: Admin::autorizarEventos(); break;
+                        case 7: Admin::listarTodosEventos(); break;
+                        case 8: Admin::menuCadastroInstrumentos(); break;
+                        case 9: Admin::liberarInstrumentos(); break;
+                        case 10: Admin::consultarPendenciasInstrumentos(); break;
                         case 11: Lanchonete::menuCadastroProdutos(); break;
                         case 12: Lanchonete::adicionarCreditosUsuario(); break;
                         case 13: Lanchonete::consultarEstoque(); break;
-                        case 14: gerarRelatorioFinanceiro(); break;
-                        case 15: gerarRelatorioPatrimonial(); break;
-                        case 16: realizarBackup(); break;
-                        case 17: restaurarBackup(); break;
+                        case 14: Admin::gerarRelatorioFinanceiro(); break;
+                        case 15: Admin::gerarRelatorioPatrimonial(); break;
+                        case 16: Admin::realizarBackup(); break;
+                        case 17: Admin::restaurarBackup(); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -94,18 +97,20 @@ int main() {
                 }
                 case PROFESSOR: {
                     int opcao;
+                    float notas[10];
+                    int n = 2;
                     exibirMenuProfessor();
                     cin >> opcao;
                     cin.ignore();
 
                     switch (opcao) {
-                        case 1: registrarNotas(usuario.id, float notas[], int n); break;
-                        case 2: registrarAvaliacoes(usuario.id); break;
-                        case 3: consultarAlunosMatriculados(usuario.id); break;
-                        case 4: calcularMediasTurma(usuario.id); break;
-                        case 5: consultarDesempenhoAcademico(usuario.id); break;
-                        case 6: consultarEventosDisponiveis(); break;
-                        case 7: consultarInstrumentosDisponiveis(); break;
+                        case 1: Professor::registrarNotas(usuario.id, notas, n); break;
+                        case 2: Professor::registrarAvaliacoes(usuario.id); break;
+                        case 3: Professor::consultarAlunosMatriculados(usuario.id); break;
+                        case 4: Professor::calcularMediasTurma(usuario.id); break;
+                        case 5: Professor::consultarDesempenhoAcademico(usuario.id); break;
+                        case 6: Professor::consultarEventosDisponiveis(); break;
+                        case 7: Professor::consultarInstrumentosDisponiveis(); break;
                         case 8: Lanchonete::consultarSaldo(usuario.id); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
@@ -120,16 +125,16 @@ int main() {
                     cin.ignore();
 
                     switch (opcao) {
-                        case 1: consultarNotas(usuario.id); break;
-                        case 2: consultarMedias(usuario.id); break;
-                        case 3: consultarSituacaoAcademica(usuario.id); break;
-                        case 4: visualizarEventosDisponiveis(); break;
-                        case 5: inscreverEmEvento(usuario.id); break;
-                        case 6: consultarMinhasInscricoes(usuario.id); break;
-                        case 7: visualizarInstrumentosDisponiveis(); break;
-                        case 8: solicitarEmprestimo(usuario.id); break;
-                        case 9: realizarDevolucao(usuario.id); break;
-                        case 10: consultarMeusEmprestimos(usuario.id); break;
+                        case 1: Aluno::consultarNotas(usuario.id); break;
+                        case 2: Aluno::consultarMedias(usuario.id); break;
+                        case 3: Aluno::consultarSituacaoAcademica(usuario.id); break;
+                        case 4: Aluno::visualizarEventosDisponiveis(); break;
+                        case 5: Aluno::inscreverEmEvento(usuario.id); break;
+                        case 6: Aluno::consultarMinhasInscricoes(usuario.id); break;
+                        case 7: Aluno::visualizarInstrumentosDisponiveis(); break;
+                        case 8: Aluno::solicitarEmprestimo(usuario.id); break;
+                        case 9: Aluno::realizarDevolucao(usuario.id); break;
+                        case 10: Aluno::consultarMeusEmprestimos(usuario.id); break;
                         case 11: Lanchonete::consultarSaldo(usuario.id); break;
                         case 12: Lanchonete::visualizarProdutos(); break;
                         case 13: Lanchonete::realizarCompra(usuario.id); break;
