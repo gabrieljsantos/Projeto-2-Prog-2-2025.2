@@ -17,14 +17,7 @@ struct Usuario {
     char senha[30];                      
     char especialidade[50];
     funcao categoria;
-    double saldo;
-
-   Usuario() : id(0), ativo(0), categoria(ALUNO){
-        nome[0] = '\0';
-        email[0] = '\0';
-        senha[0] = '\0';
-        especialidade[0] = '\0';
-    }    
+    double saldo;  
 };
 struct Produto {
     char nome[50];
@@ -54,10 +47,12 @@ struct Instrumento {
 };
 
 struct Emprestimo {
-    int idEmprestimo;        // Identificador único do empréstimo
-    
+    int idEmprestimo;        // Identificador único do empréstimo   
     int idAluno;             // ID do aluno que realizou o empréstimo
+    char nome_Alu[100];
+   
     int idInstrumento;       // ID do instrumento emprestado
+    char nome_In[15];
 
     char dataEmprestimo[11]; // Data do empréstimo (dd/mm/aaaa)
     char dataPrevista[11];   // Data prevista para devolução
@@ -76,11 +71,6 @@ struct Evento {
     int vagasOcupadas=0;       // Quantidade já inscrita
 
     int autorizado=0;          // 0 = não autorizado | 1 = autorizado
-    int status=0;              
-    // 0 = inativo
-    // 1 = ativo
-    // 2 = encerrado
-    // 3 = cancelado
 };
 
 struct Credito {
