@@ -99,7 +99,7 @@ int main() {
                     cin.ignore();
 
                     switch (opcao) {
-                        case 1: registrarNotas(usuario.id); break;
+                        case 1: registrarNotas(usuario.id, float notas[], int n); break;
                         case 2: registrarAvaliacoes(usuario.id); break;
                         case 3: consultarAlunosMatriculados(usuario.id); break;
                         case 4: calcularMediasTurma(usuario.id); break;
