@@ -3,7 +3,6 @@
 
 
 namespace Admin {
-    void menuCadastroUsuarios();
     void menuGerenciarUsuarios();
     void menuCadastroCursos();
     void consultarRelatoriosAcademicos();
