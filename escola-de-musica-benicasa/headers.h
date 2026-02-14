@@ -25,10 +25,6 @@ struct Produto {
     int ativo;
     double preco;
     int estoque;
-
-    Produto() : id(0), ativo(0), preco(0.0), estoque(0) {
-        nome[0] = '\0';
-    }
 };
 struct Curso {
     int id;
