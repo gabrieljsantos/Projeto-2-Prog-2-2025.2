@@ -1,14 +1,16 @@
 #include "headers.h"
 #include <fstream>
 
-
-bool verificaratividade(Usuario pessoa);//Feito
-void bancodedadoslanchonete();//Gabriel
-void menuCadastroProdutos();//Mota
-void adicionarCreditosUsuario();//Mota
-void consultarEstoque();//Gabriel
-void adicionarproduto();//Feito
-void removerproduto();//Mota
-void fazercompra();//gabriel
-void removercredito();//Feito
-void visualizarProdutos();//Feito
+namespace Lanchonete {
+    void bancoDeDados();//Gabriel
+    bool verificarAtividade(Usuario pessoa);//Feito
+    void menuCadastroProdutos();//Mota
+    void adicionarCreditosUsuario();//Mota
+    void consultarEstoque();//Gabriel
+    void adicionarProduto();//Feito
+    void removerProduto();//Mota
+    void realizarCompra(int id);//gabriel
+    void removerCredito();//Feito
+    void visualizarProdutos();//Feito
+    void consultarSaldo(int id);//Gabriel
+}

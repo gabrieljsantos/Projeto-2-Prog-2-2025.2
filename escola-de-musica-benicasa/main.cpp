@@ -79,9 +79,9 @@ int main() {
                         case 8: menuCadastroInstrumentos(); break;
                         case 9: liberarInstrumentos(); break;
                         case 10: consultarPendenciasInstrumentos(); break;
-                        case 11: menuCadastroProdutos(); break;
-                        case 12: adicionarCreditosUsuario(); break;
-                        case 13: consultarEstoque(); break;
+                        case 11: Lanchonete::menuCadastroProdutos(); break;
+                        case 12: Lanchonete::adicionarCreditosUsuario(); break;
+                        case 13: Lanchonete::consultarEstoque(); break;
                         case 14: gerarRelatorioFinanceiro(); break;
                         case 15: gerarRelatorioPatrimonial(); break;
                         case 16: realizarBackup(); break;
@@ -106,7 +106,7 @@ int main() {
                         case 5: consultarDesempenhoAcademico(usuario.id); break;
                         case 6: consultarEventosDisponiveis(); break;
                         case 7: consultarInstrumentosDisponiveis(); break;
-                        case 8: consultarSaldoLanchonete(usuario.id); break;
+                        case 8: Lanchonete::consultarSaldo(usuario.id); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -130,10 +130,9 @@ int main() {
                         case 8: solicitarEmprestimo(usuario.id); break;
                         case 9: realizarDevolucao(usuario.id); break;
                         case 10: consultarMeusEmprestimos(usuario.id); break;
-                        case 11: consultarSaldo(usuario.id); break;
-                        case 12: visualizarProdutos(); break;
-                        case 13: realizarCompra(usuario.id); break;
-                        case 14: consultarExtrato(usuario.id); break;
+                        case 11: Lanchonete::consultarSaldo(usuario.id); break;
+                        case 12: Lanchonete::visualizarProdutos(); break;
+                        case 13: Lanchonete::realizarCompra(usuario.id); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -229,7 +228,6 @@ void exibirMenuAluno() {
     cout << "11. Consultar Saldo" << endl;
     cout << "12. Ver Produtos" << endl;
     cout << "13. Realizar Compra" << endl;
-    cout << "14. Consultar Extrato" << endl;
     cout << "0. Logout" << endl;
     cout << "Opcao: ";
 }
