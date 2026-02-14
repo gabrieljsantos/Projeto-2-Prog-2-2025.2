@@ -9,7 +9,7 @@ typedef enum {
     ADMINISTRADOR
 } funcao;
 
-struct Usuario{
+struct Usuario {
     int id;                       
     int ativo;                    
     char nome[100];               
@@ -17,7 +17,7 @@ struct Usuario{
     char senha[30];                      
     char especialidade[50];
     funcao categoria;
-    float saldo;
+    double saldo;
 
    Usuario() : id(0), ativo(0), categoria(ALUNO){
         nome[0] = '\0';
@@ -30,7 +30,7 @@ struct Produto {
     char nome[50];
     int id;
     int ativo;
-    float preco;
+    double preco;
     int estoque;
 
     Produto() : id(0), ativo(0), preco(0.0), estoque(0) {
@@ -86,8 +86,8 @@ struct Evento {
 struct Credito {
     int id_opera = 0;
     int id_user = 0;
-    float saldo = 0; 
-    bool realizado = false;
+    double saldo = 0; 
+    bool realizado = false
 };
 
 
