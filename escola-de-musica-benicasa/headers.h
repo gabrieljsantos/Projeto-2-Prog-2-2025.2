@@ -1,23 +1,23 @@
 #ifndef HEADERS_H
 #define HEADERS_H
 
-#include <string>
-
-typedef enum {
+enum Funcao {
+    NENHUMA = -1,
     ALUNO,
     PROFESSOR,
     ADMINISTRADOR
-} funcao;
+};
 
-struct Usuario {
-    int id;                       
-    int ativo;                    
-    char nome[100];               
-    char email[100];              
-    char senha[30];                      
+struct Usuario{
+    int id;
+    bool ativo;
+    char nome[100];
+    char email[100];
+    char senha[30];
     char especialidade[50];
-    funcao categoria;
-    double saldo;  
+    Funcao categoria;
+    double saldo;
+    bool logado;
 };
 struct Produto {
     char nome[50];
@@ -54,6 +54,7 @@ struct Emprestimo {
     char dataPrevista[11];   // Data prevista para devolução
 
 };
+
 struct Evento {
     int id = 0;            // Identificador único
     int ativo = 0 ;               // 1 = ativo no sistema, 0 = removido
@@ -75,15 +76,3 @@ struct Credito {
     double saldo = 0; 
     bool realizado = false;
 };
-
-
-struct UsuarioLogado {
-    int id;
-    std::string nome; //NÂO SEI EXPLICAR O PORQUE DE USAR STRING AQUI, MAS VAI QUE PRECISA DE UM NOME COM ESPAÇO, ENTÃO VAI STRING
-    std::string email; // MESMA RAZÃO DO NOME, VAI QUE PRECISA DE UM EMAIL COM ESPAÇO, ENTÃO VAI STRING
-    bool logado;
-    funcao perfil;
-};
-
-#endif
-
