@@ -1,17 +1,12 @@
 #ifndef ADMIN_H
 #define ADMIN_H
 
-
 namespace Admin {
     void menuGerenciarUsuarios();
     void menuCadastroCursos();
     void consultarRelatoriosAcademicos();
-    void menuCadastroEventos();
-    void autorizarEventos();
-    void listarTodosEventos();
+    void menuEventos();
     void menuCadastroInstrumentos();
-    void liberarInstrumentos();
-    void consultarPendenciasInstrumentos();
     void gerarRelatorioFinanceiro();
     void gerarRelatorioPatrimonial();
     void realizarBackup();
