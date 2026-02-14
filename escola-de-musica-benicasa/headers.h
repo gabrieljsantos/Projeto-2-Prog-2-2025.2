@@ -28,8 +28,12 @@ struct Produto {
     char nome[50];
     int id;
     int ativo;
-    float preco
+    float preco;
     int estoque;
+
+    Produto() : id(0), ativo(0), preco(0.0), estoque(0) {
+        nome[0] = '\0';
+    }
 };
 struct Curso {
     int id;
