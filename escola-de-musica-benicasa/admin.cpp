@@ -5,6 +5,11 @@
 
 using namespace std;
 
+void limparbuffer(){
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
 namespace Admin {
 
     void menuGerenciarUsuarios(std::fstream &file){
@@ -23,7 +28,7 @@ namespace Admin {
         <<"=============================\n"
         <<"[x] - Qualquer tecla (SAIR)\n";
         escolha = std::cin.get();
-        std::cin.ignore();
+        limparbuffer();
 
         switch (escolha)
         {
@@ -43,7 +48,7 @@ namespace Admin {
                 <<"==============================\n"
                 <<"[x] - Qualquer tecla (NAO)\n>>> ";
                 std::cin>>resposta;
-                std::cin.ignore();
+                limparbuffer();
 
                 if(resposta == 'S'|| resposta == 's'){
                     (*usuario_).ativo = 1;
