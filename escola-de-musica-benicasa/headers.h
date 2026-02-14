@@ -1,6 +1,8 @@
 #ifndef HEADERS_H
 #define HEADERS_H
 
+#include <string>
+
 typedef enum {
     ALUNO,
     PROFESSOR,
@@ -85,6 +87,17 @@ struct Credito {
     int id_opera = 0;
     int id_user = 0;
     float saldo = 0; 
-    bool realizado = false
+    bool realizado = false;
 };
+
+
+struct UsuarioLogado {
+    int id;
+    std::string nome; //NÂO SEI EXPLICAR O PORQUE DE USAR STRING AQUI, MAS VAI QUE PRECISA DE UM NOME COM ESPAÇO, ENTÃO VAI STRING
+    std::string email; // MESMA RAZÃO DO NOME, VAI QUE PRECISA DE UM EMAIL COM ESPAÇO, ENTÃO VAI STRING
+    bool logado;
+    funcao perfil;
+};
+
 #endif
+
