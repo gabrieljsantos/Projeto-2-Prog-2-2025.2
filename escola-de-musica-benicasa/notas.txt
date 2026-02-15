@@ -1,1 +1,2 @@
-
+ID     Nota1     Nota2     Media
+001    7.8       6.2       7.0

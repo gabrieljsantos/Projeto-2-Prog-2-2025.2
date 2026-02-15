@@ -12,7 +12,9 @@ void consultarDesempenhoAcademico(int idProfessor); //Função de acesso de alé
 void consultarEventosDisponiveis(); //discutir sobre o modulos de eventos
 void consultarInstrumentosDisponiveis(); //tipo as materias //modulo de instrumentos
 void consultarSaldoLanchonete(int idProfessor); //saldo
-//Função para faltas (arquivo.faltas) 
-//Função para criar recados
+void consultarFaltas(); //Função para faltas (arquivo.faltas)
+void consultarRecados(); //Função para criar recados
+ 
+
 
 #endif

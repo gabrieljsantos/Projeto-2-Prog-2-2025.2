@@ -107,6 +107,8 @@ int main() {
                         case 6: consultarEventosDisponiveis(); break;
                         case 7: consultarInstrumentosDisponiveis(); break;
                         case 8: Lanchonete::consultarSaldo(usuario.id); break;
+                        case 9: consultarFaltas();
+                        case 10: consultarRecados();
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -207,6 +209,8 @@ void exibirMenuProfessor() {
     cout << "6. Consultar Eventos" << endl;
     cout << "7. Consultar Instrumentos" << endl;
     cout << "8. Consultar Saldo Lanchonete" << endl;
+    cout << "9. Consultar Faltas" << endl;
+    cout << "10. Consultar Recados" << endl;
     cout << "0. Logout" << endl;
     cout << "Opcao: ";
 }

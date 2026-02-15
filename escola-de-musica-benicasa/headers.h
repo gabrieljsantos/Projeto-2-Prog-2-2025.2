@@ -28,7 +28,7 @@ struct Produto {
     char nome[50];
     int id;
     int ativo;
-    float preco
+    float preco;
     int estoque;
 };
 struct Curso {
@@ -81,6 +81,6 @@ struct Credito {
     int id_opera = 0;
     int id_user = 0;
     float saldo = 0; 
-    bool realizado = false
+    bool realizado = false;
 };
 #endif
