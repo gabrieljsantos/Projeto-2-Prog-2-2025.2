@@ -1,9 +1,9 @@
-#ifndef PROFESSOR_H
-#define PROFESSOR_H
+#ifndef MODULO_PROFESSOR_H
+#define MODULO_PROFESSOR_H
 
 #include <string>
 
-namespace Professor {
+namespace Modulo_professor {
     void registrarNotas(int idProfessor, float notas[], int n);
     void registrarAvaliacoes(int idProfessor);
     void consultarAlunosMatriculados(int idProfessor);

@@ -37,7 +37,7 @@ bool verificacaoDoUsuario(Usuario u){
     return false;
 }
 
-namespace Professor {
+namespace Modulo_professor {
     void registrarNotas(int idProfessor, float notas[], int n) {
         system("cls || clear");
         cout << "Dentro de registrarNotas - Entrada: " << idProfessor << endl;

@@ -1,8 +1,8 @@
-#ifndef ADMIN_H
-#define ADMIN_H
+#ifndef MODULO_ADMIN_H
+#define MODULO_ADMIN_H
 
 
-namespace Admin {
+namespace Modulo_admin {
     void menuCadastroUsuarios();
     void menuGerenciarUsuarios();
     void menuCadastroCursos();
