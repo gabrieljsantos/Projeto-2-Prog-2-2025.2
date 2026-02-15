@@ -1,5 +1,5 @@
-#ifndef ADMIN_H
-#define ADMIN_H
+#ifndef MODULO_ADMIN_H
+#define MODULO_ADMIN_H
 #include <iostream>
 #include <fstream>
 #include "headers.h"
@@ -9,7 +9,7 @@
     void limparbuffer();
     void openFile(std::fstream &f, const std::string Nome);
 
-namespace adm {
+namespace Modulo_admin {
     void menuCadastroUsuarios();
     void menuGerenciarUsuarios();
     void menuCadastroCursos();
