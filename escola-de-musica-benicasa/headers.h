@@ -26,7 +26,7 @@ struct Produto {
     double preco;
     int estoque;
 };
-struct Curso {
+struct Discipliena {
     int id;
     int ativo;
     char nome[50];
