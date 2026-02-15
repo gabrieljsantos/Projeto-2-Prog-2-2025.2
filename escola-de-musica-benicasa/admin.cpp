@@ -347,11 +347,6 @@ namespace Admin {
 
 //========
 
-    void autorizarEventos() {
-        system("cls || clear");
-        cout << "Dentro de autorizarEventos" << endl;
-        // Lógica para autorizar eventos
-    }
     void listarTodosEventos() {
         system("cls || clear");
         cout << "Dentro de listarTodosEventos" << endl;
