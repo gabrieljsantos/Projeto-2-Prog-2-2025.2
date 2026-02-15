@@ -6,18 +6,19 @@
 
 using namespace std;
 
-namespace login {
+namespace Login_mat {
+
     void inicializarArquivo();
+
+    int realizarMatricula(Usuario novoUsuario);
+    bool realizarLogin(int id, const char senha[30], Usuario &usuario);
+    int verificarUltimoId();
+    Usuario lerUsuario(int id);
+    bool verificarUsuarioExistente(int id);
+    bool verificarUsuarioExistente(const char nome[100]);
+    void atualizarUsuario(int id, Usuario usuarioAtualizado);
+    int tamanhoArquivo(fstream &arquivo);
+    Usuario inicializarUsuarioVazio();
 }
-
-void realizarMatricula();
-int verificarUltimoId();
-usuario lerUsuario(int id);
-void realizarLogin(int id, string nome, TipoUsuario tipoUsuario );
-bool verificarUsuarioExistente(int id);
-bool verificarUsuarioExistente(string nome);
-void atualizarUsuario(int id, usuario u);
-
-
 
 #endif
