@@ -58,10 +58,10 @@ struct Instrumento {
 };
 
 struct Emprestimo {
-    int idEmprestimo;        // Identificador único do empréstimo   
+    int idEmprestimo;        // Identificador único do empréstimo
     int idAluno;             // ID do aluno que realizou o empréstimo
     char nome_Alu[100];
-   
+
     int idInstrumento;       // ID do instrumento emprestado
     char nome_In[15];
 
@@ -87,6 +87,8 @@ struct Evento {
 struct Credito {
     int id_opera = 0;
     int id_user = 0;
-    double saldo = 0; 
+    double saldo = 0;
     bool realizado = false;
 };
+
+#endif
