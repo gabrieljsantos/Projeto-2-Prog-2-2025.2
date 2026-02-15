@@ -1,6 +1,9 @@
 *.layout
 *.depend
 
+escola-de-musica-benicasa/.objs/
+escola-de-musica-benicasa/.vscode/
+
 bin/
 obj/
 
