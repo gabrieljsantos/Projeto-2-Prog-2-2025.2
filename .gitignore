@@ -1,8 +1,13 @@
 *.layout
 *.depend
-obj/
-bin/
+
+**/obj/
+**/bin/
+
 *.o
 *.exe
+
+**/escola-de-musica-benicasa
+
 .DS_Store
 Thumbs.db
