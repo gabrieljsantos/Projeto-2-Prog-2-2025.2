@@ -14,10 +14,24 @@ struct Usuario{
     char nome[100];
     char email[100];
     char senha[30];
-    char especialidade[50];
     Funcao categoria;
     double saldo;
     bool logado;
+};
+
+struct Aluno {
+    Usuario base;
+    int notas[2];
+    int faltas;
+};
+
+struct Professor {
+    Usuario base;
+    char disciplina[50];
+};
+
+struct Admin {
+    Usuario base;
 };
 
 struct Produto {

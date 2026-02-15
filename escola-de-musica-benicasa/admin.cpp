@@ -5,7 +5,7 @@
 
 using namespace std;
 
-namespace Admin {
+namespace Modulo_admin {
     void menuCadastroUsuarios() {
         system("cls || clear");
         cout << "Dentro de menuCadastroUsuarios" << endl;
