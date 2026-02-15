@@ -5,6 +5,10 @@
 
 using namespace std;
 
+// Observação: sempre que comparamos a posicao com o máximo,
+// como posicaoProduto == MAX_PRODUTOS, quer dizer que não
+// foi possivel encontrá-lo, pois o ultimo valor é MAX_PRODUTOS - 1
+
 namespace Lanchonete {
 
     void menuCadastroProdutos(){
