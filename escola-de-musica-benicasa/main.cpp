@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <iomanip>
+#include "headers.h"
 #include "login_matricula.h"
 #include "admin.h"
 #include "professor.h"
@@ -10,17 +12,6 @@
 
 using namespace std;
 
-
-
-struct UsuarioLogado {
-    int id;
-    string nome;
-    TipoUsuario tipoUsuario;
-    bool logado;
-
-    UsuarioLogado() : id(0), nome(""), tipoUsuario(ADMINISTRADOR), logado(false) {}
-};
-
 void pausar();
 void exibirCabecalhoSistema();
 void exibirMenuLogin();
@@ -29,9 +20,11 @@ void exibirMenuProfessor();
 void exibirMenuAluno();
 
 int main() {
-    UsuarioLogado usuario;
+    Usuario usuario;
     int opcaoLogin;
     bool executando = true;
+
+    Login_mat::inicializarArquivo();
 
     exibirCabecalhoSistema();
 
@@ -43,15 +36,16 @@ int main() {
 
             switch (opcaoLogin) {
                 case 1: {
-                    int id = 0;
-                    string nome = " ";
-                    TipoUsuario tipoUsuario = ADMINISTRADOR; //Só pra testar por enquanto
+                    int id;
+                    char senha[30];
 
-                    if (realizarLogin(id, nome, tipoUsuario)) {
-                        usuario.id = id;
-                        usuario.nome = nome;
-                        usuario.tipoUsuario = tipoUsuario;
-                        usuario.logado = true;
+                    cout << "ID: ";
+                    cin >> id;
+                    cin.ignore();
+                    cout << "Senha: ";
+                    cin.getline(senha, 30);
+
+                    if (Login_mat::realizarLogin(id, senha, usuario)) {
                         cout << "\nBem-vindo(a), " << usuario.nome << "!" << endl;
                         pausar();
                     } else {
@@ -60,10 +54,43 @@ int main() {
                     }
                     break;
                 }
-                case 2:
-                    realizarMatricula();
+                case 2: {
+                    Usuario novoUsuario = Login_mat::inicializarUsuarioVazio();
+
+                    cout << "Nome: ";
+                    cin.getline(novoUsuario.nome, 100);
+
+                    cout << "Email: ";
+                    cin.getline(novoUsuario.email, 100);
+
+                    cout << "Senha: ";
+                    cin.getline(novoUsuario.senha, 30);
+
+                    cout << "Especialidade: ";
+                    cin.getline(novoUsuario.especialidade, 50);
+
+                    int opcaoCategoria;
+
+                    cout << "Categoria:\n";
+                    cout << "0 - Aluno\n";
+                    cout << "1 - Professor\n";
+                    cout << "2 - Administrador\n";
+                    cout << "Opcao: ";
+                    cin >> opcaoCategoria;
+
+                    if (opcaoCategoria >= 0 && opcaoCategoria <= 2)
+                        novoUsuario.categoria = static_cast<Funcao>(opcaoCategoria);
+                    else
+                        novoUsuario.categoria = NENHUMA;
+
+                    novoUsuario.logado = false;
+
+                    int idNovoUsuario = Login_mat::realizarMatricula(novoUsuario);
+
+                    cout << "Matricula realizada com sucesso!\nID: " << idNovoUsuario << endl;
                     pausar();
                     break;
+                }
                 case 0:
                     executando = false;
                     break;
@@ -72,7 +99,7 @@ int main() {
                     pausar();
             }
         } else {
-            switch (usuario.tipoUsuario) {
+            switch (usuario.categoria) {
                 case ADMINISTRADOR: {
                     int opcao;
                     exibirMenuAdministrador();
@@ -80,24 +107,23 @@ int main() {
                     cin.ignore();
 
                     switch (opcao) {
-                        case 1: printf("Teste/n"); break;
-//                        case 1: menuCadastroUsuarios(); break;
-//                        case 2: menuGerenciarUsuarios(); break;
-//                        case 3: menuCadastroCursos(); break;
-//                        case 4: consultarRelatoriosAcademicos(); break;
-//                        case 5: menuCadastroEventos(); break;
-//                        case 6: autorizarEventos(); break;
-//                        case 7: listarTodosEventos(); break;
-//                        case 8: menuCadastroInstrumentos(); break;
-//                        case 9: liberarInstrumentos(); break;
-//                        case 10: consultarPendenciasInstrumentos(); break;
-//                        case 11: menuCadastroProdutos(); break;
-//                        case 12: adicionarCreditosUsuario(); break;
-//                        case 13: consultarEstoque(); break;
-//                        case 14: gerarRelatorioFinanceiro(); break;
-//                        case 15: gerarRelatorioPatrimonial(); break;
-//                        case 16: realizarBackup(); break;
-//                        case 17: restaurarBackup(); break;
+                        case 1: Admin::menuCadastroUsuarios(); break;
+                        case 2: Admin::menuGerenciarUsuarios(); break;
+                        case 3: Admin::menuCadastroCursos(); break;
+                        case 4: Admin::consultarRelatoriosAcademicos(); break;
+                        case 5: Admin::menuCadastroEventos(); break;
+                        case 6: Admin::autorizarEventos(); break;
+                        case 7: Admin::listarTodosEventos(); break;
+                        case 8: Admin::menuCadastroInstrumentos(); break;
+                        case 9: Admin::liberarInstrumentos(); break;
+                        case 10: Admin::consultarPendenciasInstrumentos(); break;
+                        case 11: Lanchonete::menuCadastroProdutos(); break;
+                        case 12: Lanchonete::adicionarCreditosUsuario(); break;
+                        case 13: Lanchonete::consultarEstoque(); break;
+                        case 14: Admin::gerarRelatorioFinanceiro(); break;
+                        case 15: Admin::gerarRelatorioPatrimonial(); break;
+                        case 16: Admin::realizarBackup(); break;
+                        case 17: Admin::restaurarBackup(); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -106,19 +132,21 @@ int main() {
                 }
                 case PROFESSOR: {
                     int opcao;
+                    float notas[10];
+                    int n = 2;
                     exibirMenuProfessor();
                     cin >> opcao;
                     cin.ignore();
 
                     switch (opcao) {
-//                        case 1: registrarNotas(usuario.id); break;
-//                        case 2: registrarAvaliacoes(usuario.id); break;
-//                        case 3: consultarAlunosMatriculados(usuario.id); break;
-//                        case 4: calcularMediasTurma(usuario.id); break;
-//                        case 5: consultarDesempenhoAcademico(usuario.id); break;
-//                        case 6: consultarEventosDisponiveis(); break;
-//                        case 7: consultarInstrumentosDisponiveis(); break;
-//                        case 8: consultarSaldoLanchonete(usuario.id); break;
+                        case 1: Professor::registrarNotas(usuario.id, notas, n); break;
+                        case 2: Professor::registrarAvaliacoes(usuario.id); break;
+                        case 3: Professor::consultarAlunosMatriculados(usuario.id); break;
+                        case 4: Professor::calcularMediasTurma(usuario.id); break;
+                        case 5: Professor::consultarDesempenhoAcademico(usuario.id); break;
+                        case 6: Professor::consultarEventosDisponiveis(); break;
+                        case 7: Professor::consultarInstrumentosDisponiveis(); break;
+                        case 8: Lanchonete::consultarSaldo(usuario.id); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -132,20 +160,19 @@ int main() {
                     cin.ignore();
 
                     switch (opcao) {
-//                        case 1: consultarNotas(usuario.id); break;
-//                        case 2: consultarMedias(usuario.id); break;
-//                        case 3: consultarSituacaoAcademica(usuario.id); break;
-//                        case 4: visualizarEventosDisponiveis(); break;
-//                        case 5: inscreverEmEvento(usuario.id); break;
-//                        case 6: consultarMinhasInscricoes(usuario.id); break;
-//                        case 7: visualizarInstrumentosDisponiveis(); break;
-//                        case 8: solicitarEmprestimo(usuario.id); break;
-//                        case 9: realizarDevolucao(usuario.id); break;
-//                        case 10: consultarMeusEmprestimos(usuario.id); break;
-//                        case 11: consultarSaldo(usuario.id); break;
-//                        case 12: visualizarProdutos(); break;
-//                        case 13: realizarCompra(usuario.id); break;
-//                        case 14: consultarExtrato(usuario.id); break;
+                        case 1: Aluno::consultarNotas(usuario.id); break;
+                        case 2: Aluno::consultarMedias(usuario.id); break;
+                        case 3: Aluno::consultarSituacaoAcademica(usuario.id); break;
+                        case 4: Aluno::visualizarEventosDisponiveis(); break;
+                        case 5: Aluno::inscreverEmEvento(usuario.id); break;
+                        case 6: Aluno::consultarMinhasInscricoes(usuario.id); break;
+                        case 7: Aluno::visualizarInstrumentosDisponiveis(); break;
+                        case 8: Aluno::solicitarEmprestimo(usuario.id); break;
+                        case 9: Aluno::realizarDevolucao(usuario.id); break;
+                        case 10: Aluno::consultarMeusEmprestimos(usuario.id); break;
+                        case 11: Lanchonete::consultarSaldo(usuario.id); break;
+                        case 12: Lanchonete::visualizarProdutos(); break;
+                        case 13: Lanchonete::realizarCompra(usuario.id); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -164,7 +191,7 @@ int main() {
 }
 
 void pausar() {
-    cout << "\nPressione ENTER para continuar...";
+    cout << "\nPressione ENTER para continuar..." << endl;
     cin.get();
 }
 
@@ -178,7 +205,7 @@ void exibirMenuLogin() {
     cout << "\nMENU DE ACESSO" << endl;
     cout << "============================================" << endl;
     cout << "1. Fazer Login" << endl;
-    cout << "2. Realizar Matricula (Novo Aluno)" << endl;
+    cout << "2. Realizar Matricula" << endl;
     cout << "0. Sair do Sistema" << endl;
     cout << "Opcao: ";
 }
@@ -241,7 +268,6 @@ void exibirMenuAluno() {
     cout << "11. Consultar Saldo" << endl;
     cout << "12. Ver Produtos" << endl;
     cout << "13. Realizar Compra" << endl;
-    cout << "14. Consultar Extrato" << endl;
     cout << "0. Logout" << endl;
     cout << "Opcao: ";
 }
