@@ -9,7 +9,16 @@ void limparbuffer(){
     std::cin.clear();
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
+void openFile(std::fstream &f, const std::string Nome){
+    f.open(Nome, std::ios::in | std::ios::out | std::ios::binary);
 
+    if (!f)
+    {
+        f.open(Nome, std::ios::out | std::ios::binary);
+        f.close();
+        f.open(Nome, std::ios::in | std::ios::out | std::ios::binary);
+    }
+}
 namespace Admin {
 
     void menuGerenciarUsuarios(std::fstream &file){
