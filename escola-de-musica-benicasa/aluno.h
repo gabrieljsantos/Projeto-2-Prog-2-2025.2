@@ -1,8 +1,8 @@
-#ifndef ALUNO_H
-#define ALUNO_H
+#ifndef MODULO_ALUNO_H
+#define MODULO_ALUNO_H
 
 
-namespace Aluno {
+namespace Modulo_aluno {
     void consultarNotas(int idAluno);
     void consultarMedias(int idAluno);
     void consultarSituacaoAcademica(int idAluno);

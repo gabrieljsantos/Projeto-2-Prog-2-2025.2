@@ -19,7 +19,7 @@ void openFile(std::fstream &f, const std::string Nome){
         f.open(Nome, std::ios::in | std::ios::out | std::ios::binary);
     }
 }
-namespace Admin {
+namespace Modulo_admin {
 
     void menuGerenciarUsuarios(std::fstream &file){
     char escolha;

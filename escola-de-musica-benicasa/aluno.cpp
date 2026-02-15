@@ -5,7 +5,7 @@
 
 using namespace std;
 
-namespace Aluno {
+namespace Modulo_aluno {
     void consultarNotas(int valor){
         system("cls || clear");
         cout << "Dentro de consultarNotas - Entrada: " << valor << endl;
