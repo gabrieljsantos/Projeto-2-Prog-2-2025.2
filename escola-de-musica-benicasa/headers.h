@@ -1,24 +1,36 @@
 #ifndef HEADERS_H
 #define HEADERS_H
 
-enum Funcao {
-    NENHUMA = -1,
+enum {
+    NEHUMA = -1,
     ALUNO,
     PROFESSOR,
     ADMINISTRADOR
-};
+} Funcao;
 
-struct Usuario{
+struct UsuarioBase {
     int id;
-    bool ativo;
     char nome[100];
-    char email[100];
-    char senha[30];
-    char especialidade[50];
-    Funcao categoria;
+    char senha[50];
     double saldo;
+    Funcao tipo; // 0=Aluno, 1=Professor, 2=Admin
     bool logado;
 };
+
+struct Aluno {
+    UsuarioBase base;
+    int notas[2];
+    int faltas;
+};
+
+struct Professor {
+    UsuarioBase base;
+    char disciplina[50];
+};
+
+struct Admin {
+    UsuarioBase base;
+};;
 struct Produto {
     char nome[50];
     int id;
@@ -26,14 +38,6 @@ struct Produto {
     double preco;
     int estoque;
 };
-struct Discipliena {
-    int id;
-    int ativo;
-    char nome[50];
-    int cargaHoraria;
-    int vagas;
-};
-
 struct Instrumento {
     int id;
     int ativo;          // 1 = ativo, 0 = removido
