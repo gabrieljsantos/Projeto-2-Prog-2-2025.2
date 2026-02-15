@@ -43,7 +43,8 @@ struct Instrumento {
     int ativo;          // 1 = ativo, 0 = removido
     int autorizado;     // 0 = não autorizado, 1 = autorizado
     char nome[30];
-    int disponivel;     // 1 = disponível, 0 = indisponível
+    bool disponivel;     // 1 = disponível, 0 = indisponível
+    int estoque;
 };
 
 struct Emprestimo {
