@@ -15,7 +15,7 @@ namespace Login_mat {
     int verificarUltimoId();
     Usuario lerUsuario(int id);
     bool verificarUsuarioExistente(int id);
-    bool verificarUsuarioExistente(const char nome[100]);
+    bool verificarUsuarioExistente(const char nome[30]);
     void atualizarUsuario(int id, Usuario usuarioAtualizado);
     int tamanhoArquivo(fstream &arquivo);
     Usuario inicializarUsuarioVazio();
