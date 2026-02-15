@@ -33,7 +33,14 @@ struct Professor {
 struct Admin {
     Usuario base;
 };
-
+struct Disciplina {
+    int id;
+    int ativo;
+    char nome[50];
+    int cargaHoraria;
+    int idProfessor;
+    int vagas;
+};
 struct Produto {
     char nome[50];
     int id;
