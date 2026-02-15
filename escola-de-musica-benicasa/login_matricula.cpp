@@ -36,6 +36,17 @@ int realizarMatricula(Usuario novoUsuario){
 
     cout<< "Nome: " << endl;
     cin.getline(usuario.nome, 30);
+
+    //Feito por Jhones
+    cout<< "Nome: " << endl;
+    cin.getline(usuario.nome, 30);
+
+    if (verificarUsuarioExistente(usuario.nome)) {
+        cout << "Nome ja cadastrado!\n";
+        registroDeUsuariosNovos.close();
+        return -1; // código de erro
+    }
+
     cout<< "Email: " << endl;
     cin.getline(usuario.email, 100);
     cout<< "Função: " << endl;
@@ -111,6 +122,31 @@ int verificarUltimoId() {
     inUsuarios.close();
 
     return ultimoId;
+}
+
+//Feito por Jhones
+bool verificarUsuarioExistente(const char nome[30]) {
+    ifstream inUsuarios;
+    inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary);
+
+    if (inUsuarios.fail()) {
+        cout << "A abertura do arquivo falhou.\n";
+        return false;
+    }
+
+    Usuario u;
+    while (inUsuarios.read((char*)(&u), sizeof(Usuario))) {
+        // ignora registros vazios
+        if (u.id != 0) {
+            if (strncmp(u.nome, nome, 30) == 0) {
+                inUsuarios.close();
+                return true;
+            }
+        }
+    }
+
+    inUsuarios.close();
+    return false;
 }
 
 //Feito por Jeanderson
