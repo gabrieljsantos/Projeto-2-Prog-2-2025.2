@@ -229,7 +229,7 @@ namespace Lanchonete {
             return;
         }
 
-        Credito creditos[MAX_CREDITOS];
+        Credito *creditos = new Credito[MAX_CREDITOS];
         lerTodosCreditos(creditos);
 
         int posicaoCreditoUsuario = acharCreditoPorId(creditos, idUsuario);
@@ -237,6 +237,7 @@ namespace Lanchonete {
             int vaga = acharVagaCredito(creditos);
             if (vaga == MAX_CREDITOS) {
                 cout << "Não há espaço para adicionar mais créditos!\n";
+                delete[] creditos;
                 return;
             }
 
@@ -250,10 +251,12 @@ namespace Lanchonete {
 
         if (!escreverTodosCreditos(creditos)) {
             cout << "Erro ao salvar saldo!\n";
+            delete[] creditos;
             return;
         }
 
         cout << "Crédito adicionado!\n";
+        delete[] creditos;
     }
 
     void adicionarProduto() {
@@ -262,7 +265,7 @@ namespace Lanchonete {
             return;
         }
 
-        Produto lista[MAX_PRODUTOS];
+        Produto *lista = new Produto[MAX_PRODUTOS];
         lerTodosProdutos(lista);
 
         Produto novo;
@@ -272,11 +275,13 @@ namespace Lanchonete {
 
         if (novo.id <= 0) {
             cout << "ID inválido!\n";
+            delete[] lista;
             return;
         }
 
         if (acharProdutoPorId(lista, novo.id) != MAX_PRODUTOS) {
             cout << "Já existe produto com esse ID!\n";
+            delete[] lista;
             return;
         }
 
@@ -295,6 +300,7 @@ namespace Lanchonete {
         int posicaoVagaProduto = acharVagaProduto(lista);
         if (posicaoVagaProduto == MAX_PRODUTOS) {
             cout << "Não há espaço para adicionar mais produtos!\n";
+            delete[] lista;
             return;
         }
 
@@ -302,10 +308,12 @@ namespace Lanchonete {
 
         if (!escreverTodosProdutos(lista)) {
             cout << "Erro ao salvar no arquivo!\n";
+            delete[] lista;
             return;
         }
 
         cout << "Produto salvo com sucesso!\n";
+        delete[] lista;
     }
 
     void removerProduto() {
@@ -314,7 +322,7 @@ namespace Lanchonete {
             return;
         }
 
-        Produto lista[MAX_PRODUTOS];
+        Produto *lista = new Produto[MAX_PRODUTOS];
         lerTodosProdutos(lista);
 
         int idProduto;
@@ -325,12 +333,14 @@ namespace Lanchonete {
 
         if (idProduto <= 0) {
             cout << "ID inválido!\n";
+            delete[] lista;
             return;
         }
 
         int posicaoProduto = acharProdutoPorId(lista, idProduto);
         if (posicaoProduto == MAX_PRODUTOS) {
             cout << "Produto não encontrado!\n";
+            delete[] lista;
             return;
         }
 
@@ -346,14 +356,17 @@ namespace Lanchonete {
 
             if (!escreverTodosProdutos(lista)) {
                 cout << "Erro ao salvar no arquivo!\n";
+                delete[] lista;
                 return;
             }
 
             cout << "Produto removido!\n";
+            delete[] lista;
             return;
         }
 
         cout << "Operação cancelada!\n";
+        delete[] lista;
     }
 
     void visualizarProdutos() {
@@ -362,7 +375,7 @@ namespace Lanchonete {
             return;
         }
 
-        Produto lista[MAX_PRODUTOS];
+        Produto *lista = new Produto[MAX_PRODUTOS];
         lerTodosProdutos(lista);
 
         int temProduto = 0;
@@ -375,10 +388,12 @@ namespace Lanchonete {
 
         if (temProduto == 0) {
             cout << "Nenhum produto cadastrado.\n";
+            delete[] lista;
             return;
         }
 
         mostrarProdutosRec(lista, 0);
+        delete[] lista;
     }
 
     void consultarEstoque() {
@@ -387,7 +402,7 @@ namespace Lanchonete {
             return;
         }
 
-        Produto lista[MAX_PRODUTOS];
+        Produto *lista = new Produto[MAX_PRODUTOS];
         lerTodosProdutos(lista);
 
         int temProduto = 0;
@@ -403,6 +418,8 @@ namespace Lanchonete {
 
         if (temProduto == 0)
             cout << "Nenhum produto cadastrado.\n";
+
+        delete[] lista;
     }
 
     void consultarSaldo(int idUsuario) {
@@ -411,16 +428,18 @@ namespace Lanchonete {
             return;
         }
 
-        Credito creditos[MAX_CREDITOS];
+        Credito *creditos = new Credito[MAX_CREDITOS];
         lerTodosCreditos(creditos);
 
         int posicaoCreditoUsuario = acharCreditoPorId(creditos, idUsuario);
         if (posicaoCreditoUsuario == MAX_CREDITOS) {
             cout << "Saldo: 0\n";
+            delete[] creditos;
             return;
         }
 
         cout << "Saldo: " << creditos[posicaoCreditoUsuario].saldo << "\n";
+        delete[] creditos;
     }
 
     void removerCredito() {
@@ -448,17 +467,19 @@ namespace Lanchonete {
             return;
         }
 
-        Credito creditos[MAX_CREDITOS];
+        Credito *creditos = new Credito[MAX_CREDITOS];
         lerTodosCreditos(creditos);
 
         int posicaoCreditoUsuario = acharCreditoPorId(creditos, idUsuario);
         if (posicaoCreditoUsuario == MAX_CREDITOS) {
             cout << "Saldo insuficiente!\n";
+            delete[] creditos;
             return;
         }
 
         if (creditos[posicaoCreditoUsuario].saldo < valor) {
             cout << "Saldo insuficiente!\n";
+            delete[] creditos;
             return;
         }
 
@@ -467,10 +488,12 @@ namespace Lanchonete {
 
         if (!escreverTodosCreditos(creditos)) {
             cout << "Erro ao salvar saldo!\n";
+            delete[] creditos;
             return;
         }
 
         cout << "Crédito removido!\n";
+        delete[] creditos;
     }
 
     void realizarCompra(int idUsuario) {
@@ -493,33 +516,39 @@ namespace Lanchonete {
             return;
         }
 
-        Produto produtos[MAX_PRODUTOS];
+        Produto *produtos = new Produto[MAX_PRODUTOS];
         lerTodosProdutos(produtos);
 
         int posicaoProduto = acharProdutoPorId(produtos, idProduto);
         if (posicaoProduto == MAX_PRODUTOS) {
             cout << "Produto não encontrado!\n";
+            delete[] produtos;
             return;
         }
 
         if (produtos[posicaoProduto].estoque < qtd) {
             cout << "Estoque insuficiente!\n";
+            delete[] produtos;
             return;
         }
 
         float total = produtos[posicaoProduto].preco * qtd;
 
-        Credito creditos[MAX_CREDITOS];
+        Credito *creditos = new Credito[MAX_CREDITOS];
         lerTodosCreditos(creditos);
 
         int posicaoCreditoUsuario = acharCreditoPorId(creditos, idUsuario);
         if (posicaoCreditoUsuario == MAX_CREDITOS) {
             cout << "Saldo insuficiente!\n";
+            delete[] produtos;
+            delete[] creditos;
             return;
         }
 
         if (creditos[posicaoCreditoUsuario].saldo < total) {
             cout << "Saldo insuficiente!\n";
+            delete[] produtos;
+            delete[] creditos;
             return;
         }
 
@@ -529,14 +558,20 @@ namespace Lanchonete {
 
         if (!escreverTodosCreditos(creditos)) {
             cout << "Erro ao salvar saldo!\n";
+            delete[] produtos;
+            delete[] creditos;
             return;
         }
 
         if (!escreverTodosProdutos(produtos)) {
             cout << "Erro ao salvar produtos!\n";
+            delete[] produtos;
+            delete[] creditos;
             return;
         }
 
         cout << "Compra realizada!\n";
+        delete[] produtos;
+        delete[] creditos;
     }
 }
