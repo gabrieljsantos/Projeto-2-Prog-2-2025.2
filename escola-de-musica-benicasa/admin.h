@@ -4,6 +4,7 @@
 #include <fstream>
 #include "headers.h"
 #include <limits>
+#include <cstring>
 
     void pausar();
     void limparbuffer();
