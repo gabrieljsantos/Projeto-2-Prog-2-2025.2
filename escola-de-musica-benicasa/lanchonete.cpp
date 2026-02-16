@@ -11,6 +11,11 @@ using namespace std;
 
 namespace Lanchonete {
 
+    void limparBuffer(){
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+
     void menuCadastroProdutos(){
         char opcao;
 
@@ -25,6 +30,7 @@ namespace Lanchonete {
             cout << "[0] Voltar\n";
             cout << "Opção: ";
             cin >> opcao;
+            limparBuffer();
 
             switch (opcao) {
                 case '1':
@@ -48,7 +54,7 @@ namespace Lanchonete {
 
             if(opcao!='0'){
                 cout << "\nAperte ENTER para continuar..."; // pausa simples pra ver o resultado
-                if (cin.rdbuf()->in_avail() > 0) cin.ignore(10000, '\n');
+                limparBuffer();
                 cin.get();
             }
 
