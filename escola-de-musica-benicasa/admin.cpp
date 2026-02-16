@@ -575,23 +575,13 @@ void menuCadastroCursos(){
     evento_ = nullptr;
 }
 
-//========
 
-    void listarTodosEventos() {
-        system("cls || clear");
-        cout << "Dentro de listarTodosEventos" << endl;
-        // Lógica para listar todos os eventos
-    }
     void menuCadastroInstrumentos() {
         system("cls || clear");
         cout << "Dentro de menuCadastroInstrumentos" << endl;
         // Lógica para cadastro de instrumentos
     }
-    void liberarInstrumentos() {
-        system("cls || clear");
-        cout << "Dentro de liberarInstrumentos" << endl;
-        // Lógica para liberar instrumentos
-    }
+ 
     void consultarPendenciasInstrumentos() {
         system("cls || clear");
         cout << "Dentro de consultarPendenciasInstrumentos" << endl;
