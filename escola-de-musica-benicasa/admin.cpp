@@ -19,6 +19,57 @@ void openFile(std::fstream &f, const std::string Nome){
         f.open(Nome, std::ios::in | std::ios::out | std::ios::binary);
     }
 }
+Professor buscaProf(std::fstream &file,int buscaId){
+    Professor prof{};
+    file.clear();
+    file.seekg(0, std::ios::end);
+    int tamanho = file.tellg();
+    int total = tamanho / sizeof(Professor);
+    
+    if(buscaId <= 0 || buscaId > total){
+        std::cout<<"ID invalido!\n";
+        return prof;
+    }
+    file.seekg((buscaId-1)*sizeof(Professor));
+    file.read((char*)&prof,sizeof(Professor));
+    if(prof.base.id == buscaId&&prof.base.ativo){
+        std::cout
+        <<"================================\n"
+        <<"Nome: "<<prof.base.nome<<"\n"
+        <<"E-mail: "<<prof.base.email<<"\n";
+        return prof;
+    }
+    else{
+        std::cout<<"Nenhum professor com esse ID ou Inativo!\n";
+        return prof;
+    }
+}
+
+Disciplina buscaDisciplina(std::fstream &file, int buscaId){
+    Disciplina disc{};
+    file.clear();
+    file.seekg(0, std::ios::end);
+    int tamanho = file.tellg();
+    int total = tamanho / sizeof(Disciplina);
+    if (buscaId <= 0 || buscaId > total){
+        std::cout << "ID invalido!\n";
+        return disc;
+    }
+    file.seekg((buscaId - 1) * sizeof(Disciplina));
+    file.read((char*)&disc, sizeof(Disciplina));
+    if (disc.id == buscaId){
+        std::cout
+        <<"================================\n"
+        <<"Nome: "<<disc.nome<<"\n";
+      
+        return disc;
+    }
+    else{
+        std::cout << "Nenhuma disciplina com esse ID!\n";
+        return disc;
+    }
+}
+
 namespace Modulo_admin {
 
     void menuGerenciarUsuarios(std::fstream &file){
@@ -158,11 +209,190 @@ namespace Modulo_admin {
     
 }
 
-    void menuCadastroCursos() {
-        system("cls || clear");
-        cout << "Dentro de menuCadastroCursos" << endl;
-        // Lógica para cadastro de cursos
-    }
+  
+void menuCadastroCursos(){
+    Disciplina disciplina_;
+    char escolha;
+    std::fstream file;
+    openFile(file,"disciplinas.dat");
+    
+    do {
+        system("cls");
+        std::cout
+        <<"======== Geraciar Disciplina ========\n"
+        <<"[1]- Cadastrar Disciplina\n"
+        <<"[2]- Autorizar Disciplina\n"
+        <<"[3]- Inativar Disciplina\n"
+        <<"[4]- Vincular Professor ao Disciplina\n"
+        <<"[5]- Mostrar Disciplinas\n"
+        <<"======================================\n"
+        <<"[x]- Sair\n";
+        std::cin>>escolha;
+        limparbuffer();
+        switch (escolha)
+        {
+        case '1':{
+            system("cls");
+            std::cout<<"==== Cadastrar Disciplina ====\n\n"
+            <<"Nome: ";
+            std::cin.getline(disciplina_.nome,30);
+            std::cout<<"vagas: ";
+            std::cin>>disciplina_.vagas;
+            limparbuffer();
+            std::cout<<"Carga horaria: ";
+            std::cin>>disciplina_.cargaHoraria;
+            limparbuffer();
+            
+            file.seekp(0,std::ios::end);
+            disciplina_.id = 1 + file.tellp() / sizeof(Disciplina);
+            disciplina_.ativo = 1;
+            disciplina_.idProfessor = 0;
+            file.write((char*)&disciplina_,sizeof(Disciplina));
+            
+            std::cout<<"Id da disciplina: "<<disciplina_.id<<"\n";
+            std::cout<<"Disciplina cadastrada com sucesso\n";
+            file.clear();
+            break;
+        }
+        case '2':{
+            system("cls");
+            std::cout<<"===== Autorizar Disciplina =====\n";
+
+                int buscaId;
+                std::cout<<"Digite o id da disciplina\n: ";
+                std::cin>>buscaId;
+                limparbuffer();
+
+                
+                disciplina_ = buscaDisciplina(file,buscaId);
+
+                if(disciplina_.ativo == 0){
+
+                disciplina_.ativo = 1;
+
+                
+                file.seekp((buscaId-1)*sizeof(Disciplina));
+                file.write((char*)&disciplina_,sizeof(Disciplina));
+                file.clear();   
+                std::cout<<"Disciplina autorizada com sucesso!\n";
+                }
+                else if(disciplina_.ativo==1&&disciplina_.id!=0)
+                    std::cout<<"Disciplina se encontra ativa!\n";
+
+                break;
+            }
+
+        case '3':{
+            system("cls");
+            std::cout<<"===== Inativar Disciplina =====\n";
+
+            int buscaId;
+            std::cout<<"Digite o id da disciplina\n: ";
+            std::cin>>buscaId;
+            limparbuffer();
+
+            disciplina_ = buscaDisciplina(file,buscaId);
+
+            if(disciplina_.ativo == 1){
+
+                disciplina_.ativo = 0;
+
+                file.seekp((buscaId-1)*sizeof(Disciplina));
+                file.write((char*)&disciplina_,sizeof(Disciplina));
+                file.clear();
+                std::cout<<"Disciplina inativada com sucesso!\n";
+            }
+            else if(disciplina_.ativo==0&&disciplina_.id!=0){
+                std::cout<<"Disciplina se encontra inativa!\n";
+            }
+
+                break;
+            }
+        
+
+        case '4':{
+            system("cls");
+            std::cout
+                <<"===== Vincular Professor =====\n";
+
+            std::fstream File_Prof;
+            openFile(File_Prof,"professores.dat");
+            int buscaId;
+            int prof_Id;
+            std::cout<<"Digite o id da disciplina\n: ";
+            std::cin>>buscaId;
+            limparbuffer();
+            
+            disciplina_ = buscaDisciplina(file,buscaId);
+
+            if(disciplina_.ativo == 0 && disciplina_.id != 0)
+                std::cout<<"Disciplina nao pode ser inativa!\n";
+
+            else if(disciplina_.ativo  && disciplina_.idProfessor == 0){
+                std::cout
+                <<"Digite o Id do professor\n: ";
+                std::cin>>prof_Id;
+                limparbuffer();
+                Professor prof = buscaProf(File_Prof,prof_Id);
+                if(prof.base.id!=0 && prof.disciplina[0]!='\0'){
+                    disciplina_.idProfessor = prof.base.id;
+                  strcpy(prof.disciplina,disciplina_.nome);
+
+                  file.seekp((buscaId-1)*sizeof(Disciplina));
+                  file.write((char*)&disciplina_,sizeof(Disciplina));
+
+                  File_Prof.seekp((prof_Id-1)*sizeof(Professor));
+                  File_Prof.write((char*)&prof,sizeof(Professor));
+                  std::cout<<"Prof: "<<prof.base.nome<<std::endl;
+                  std::cout<<"Vinculado a disciplina: "<<disciplina_.nome<<std::endl;
+                  file.clear();
+                  File_Prof.clear();
+                }
+
+                else if(prof.base.id!=0) std::cout<<"professor ja possui disciplina\n";
+            }
+            else std::cout<<"Tente novamente!\n";
+
+
+            File_Prof.close(); 
+            break;}
+
+        case '5': {
+            system("cls");
+            std::cout << "\n===== LISTA DE DISCIPLINAS =====\n\n";  
+           
+            file.seekg(0);
+            while (file.read((char*)&disciplina_, sizeof(Disciplina))) {   
+
+                if (disciplina_.id!=0) {
+                    std::cout << "ID: " << disciplina_.id << "\n"
+                     << "Nome: " << disciplina_.nome << "\n"
+                    << "Ativa: " << (disciplina_.ativo == 0? "nao": "sim") << "\n"
+                     << "Carga Horaria: " << disciplina_.cargaHoraria << "h\n"
+                     << "ID Professor: "
+                     << (disciplina_.idProfessor == 0 ? "Sem professor" : std::to_string(disciplina_.idProfessor))<<"\n"
+                     << "Vagas: " << disciplina_.vagas << "\n"
+                     << "-----------------------------\n";
+                }
+            }
+            file.clear();
+
+            break;
+            }
+            case 'x':
+                break;
+
+            default:std::cout<<"Invalido!";
+            break;
+
+        }
+        pausar();
+        system("cls");
+
+    }while(escolha != 'X' && escolha != 'x');
+    file.close();
+}
+
     void consultarRelatoriosAcademicos() {
         system("cls || clear");
         cout << "Dentro de consultarRelatoriosAcademicos" << endl;
