@@ -8,6 +8,8 @@
     void pausar();
     void limparbuffer();
     void openFile(std::fstream &f, const std::string Nome);
+    Professor buscaProf(std::fstream &file,int buscaId);
+    Disciplina buscaDisciplina(std::fstream &file, int buscaId);
 
 namespace Modulo_admin {
     void menuCadastroUsuarios();
