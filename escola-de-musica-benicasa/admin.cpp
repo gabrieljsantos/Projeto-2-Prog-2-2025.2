@@ -69,6 +69,52 @@ Disciplina buscaDisciplina(std::fstream &file, int buscaId){
         return disc;
     }
 }
+void consultarPendenciasInstrumentos() {
+    system("cls");
+    std::fstream fileEmprestimo;
+    std::fstream fileUsuarios;
+    openFile(fileEmprestimo,"emprestimos.dat");
+    openFile(fileUsuarios,"usuarios.dat");
+
+    Emprestimo emp;
+    Usuario user;
+
+    bool encontrou = false;
+
+    fileEmprestimo.clear();
+    fileEmprestimo.seekg(0);
+
+    while(fileEmprestimo.read((char*)&emp, sizeof(Emprestimo))) {
+
+        fileUsuarios.clear();
+        fileUsuarios.seekg((emp.idAluno - 1) * sizeof(Usuario));
+
+        if(!fileUsuarios.read((char*)&user, sizeof(Usuario)))
+            continue;
+
+        if(user.categoria == ALUNO && user.ativo) {
+
+            encontrou = true;
+
+            std::cout
+            << "===== Pendencia de Aluno =====\n"
+            << "Aluno: " << user.nome << "\n"
+            << "Email: " << user.email << "\n"
+            << "Instrumento: " << emp.nome_In << "\n"
+            << "Data emprestimo: " << emp.dataEmprestimo << "\n"
+            << "Data prevista devolucao: " << emp.dataPrevista << "\n";
+
+            std::cout << "====================================\n\n";
+        }
+    }
+
+    if(!encontrou)
+        std::cout << "Nenhuma pendencia encontrada.\n";
+
+    fileEmprestimo.close();
+    fileUsuarios.close();
+}
+
 
 namespace Modulo_admin {
 
@@ -582,11 +628,6 @@ void menuCadastroCursos(){
         // Lógica para cadastro de instrumentos
     }
  
-    void consultarPendenciasInstrumentos() {
-        system("cls || clear");
-        cout << "Dentro de consultarPendenciasInstrumentos" << endl;
-        // Lógica para consultar pendências de instrumentos
-    }
     void gerarRelatorioFinanceiro() {
         system("cls || clear");
         cout << "Dentro de gerarRelatorioFinanceiro" << endl;
