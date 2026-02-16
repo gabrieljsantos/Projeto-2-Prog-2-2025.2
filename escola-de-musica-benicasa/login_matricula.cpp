@@ -15,6 +15,7 @@ namespace Login_mat {
 //======================================================================
 // Arquivos
 //======================================================================
+    // Feito por Luiz Felipe
     void inicializarArquivoUsuario() {
         Usuario usuarioVazio = inicializarUsuarioVazio();
 
@@ -32,6 +33,7 @@ namespace Login_mat {
         outUsuarios.close();
     }
 
+    // Feito por Luiz Felipe
     void inicializarArquivoAluno() {
         Aluno alunoVazio = inicializarAlunoVazio();
 
@@ -49,9 +51,29 @@ namespace Login_mat {
         outAlunos.close();
     }
 
+    // Feito por Clara
+    void inicializarArquivoProfessor() {
+        Professor professorVazio = inicializarProfessorVazio();
+
+        ofstream outProfessores;
+        outProfessores.open(ARQUIVO_PROFESSORES, ios::out|ios::binary);
+
+        if(outProfessores.fail()){
+            cout << "A abertura do aquivo falhou!\n";
+            exit(1);
+        }
+
+        for(int i=0; i<100; i++) {
+            outProfessores.write((const char*)(&professorVazio), sizeof(Professor));
+        }
+
+        outProfessores.close();
+    }
+
     void inicializarArquivos() {
         inicializarArquivoUsuario();
         inicializarArquivoAluno();
+        inicializarArquivoProfessor();
     }
 
 //======================================================================
@@ -111,9 +133,36 @@ namespace Login_mat {
         return novoId;
     }
 
-    int realizarCadastroProfessor() {
-        // Implementar fun��o
-        return 0;
+    // Feito por Clara
+    int realizarCadastroProfessor(Professor novoProfessor){
+        int novoId = verificarUltimoIdUsuario() + 1;
+        novoProfessor.base.id = novoId;
+        novoProfessor.base.categoria = PROFESSOR;
+        fstream arquivoCadastro;
+
+        arquivoCadastro.open(ARQUIVO_USUARIOS, ios::in | ios::out | ios::binary);
+
+         if (arquivoCadastro.fail()){
+            cout << "A abertura do arquivo falhou!\n";
+            exit(1);
+        }
+
+        arquivoCadastro.seekp((novoId - 1) * sizeof(Usuario));
+        arquivoCadastro.write((const char*)(&novoProfessor.base), sizeof(Usuario));
+        arquivoCadastro.close();
+
+        arquivoCadastro.open(ARQUIVO_PROFESSORES, ios::in|ios::out|ios::binary);
+
+        if (arquivoCadastro.fail()) {
+            cout << "A abertura do arquivo falhou!\n";
+            exit(1);
+        }
+
+        arquivoCadastro.seekp((novoId - 1) * sizeof(Professor));
+        arquivoCadastro.write((const char*)(&novoProfessor), sizeof(Professor));
+        arquivoCadastro.close();
+
+        return novoId;
     }
 
     int realizarCadastroAdmin() {
@@ -213,6 +262,24 @@ namespace Login_mat {
         return aluno;
     }
 
+    // Feito por Clara
+    Professor lerProfessor(int id) {
+        Professor professor = inicializarProfessorVazio();
+        ifstream inProfessores;
+        inProfessores.open(ARQUIVO_PROFESSORES, ios::in|ios::binary);
+
+        if(inProfessores.fail()){
+            cout << "A abertura do arquivo falhou!\n";
+            exit(1);
+        }
+
+        inProfessores.seekg((id - 1)* sizeof(Professor));
+        inProfessores.read((char*)(&professor), sizeof(Professor));
+        inProfessores.close();
+
+        return professor;
+    }
+
 //======================================================================
 // Verificar quantos X (usuarios, alunos, professores ou admin)
 //======================================================================
@@ -239,6 +306,27 @@ namespace Login_mat {
 
         inAlunos.close();
 
+        return contador;
+    }
+
+    // Feito por Clara
+    int verificarQuantosProfessores() {
+        int contador = 0;
+        Professor professor;
+        ifstream inProfessores;
+        inProfessores.open(ARQUIVO_PROFESSORES, ios::in | ios::binary);
+
+        if(inProfessores.fail()){
+            cout << "A abertura do arquivo falhou!\n";
+            exit(1);
+        }
+
+        while (inProfessores.read((char*)(&professor), sizeof(Professor))) {
+            if(professor.base.id != 0){
+                contador++;
+            }
+        }
+        inProfessores.close();
         return contador;
     }
 
@@ -306,6 +394,15 @@ namespace Login_mat {
         alunoVazio.notas[1] = 0;
         alunoVazio.faltas = 0;
         return alunoVazio;
+    }
+
+    // Feito por Clara
+    Professor inicializarProfessorVazio(){
+        Professor professorVazio;
+        professorVazio.base = inicializarUsuarioVazio();
+        professorVazio.base.categoria = PROFESSOR;
+        strcpy(professorVazio.disciplina, ""); //deixa vazio
+        return professorVazio;
     }
 
 }
