@@ -69,15 +69,16 @@ Disciplina buscaDisciplina(std::fstream &file, int buscaId){
         return disc;
     }
 }
+
 void consultarPendenciasInstrumentos() {
     system("cls");
     std::fstream fileEmprestimo;
-    std::fstream fileUsuarios;
+    std::fstream fileAlunos;
     openFile(fileEmprestimo,"emprestimos.dat");
-    openFile(fileUsuarios,"usuarios.dat");
+    openFile(fileAlunos,"alunos.dat");
 
     Emprestimo emp;
-    Usuario user;
+    Aluno user;
 
     bool encontrou = false;
 
@@ -86,21 +87,23 @@ void consultarPendenciasInstrumentos() {
 
     while(fileEmprestimo.read((char*)&emp, sizeof(Emprestimo))) {
 
-        fileUsuarios.clear();
-        fileUsuarios.seekg((emp.idAluno - 1) * sizeof(Usuario));
+        fileAlunos.clear();
+        fileAlunos.seekg((emp.idAluno - 1) * sizeof(Aluno));
 
-        if(!fileUsuarios.read((char*)&user, sizeof(Usuario)))
+        if(!fileAlunos.read((char*)&user, sizeof(Aluno)))
             continue;
 
-        if(user.categoria == ALUNO && user.ativo) {
+        if(user.base.categoria ==ALUNO && user.base.ativo) {
 
             encontrou = true;
 
             std::cout
             << "===== Pendencia de Aluno =====\n"
-            << "Aluno: " << user.nome << "\n"
-            << "Email: " << user.email << "\n"
+            << "Cod emprestimo: " << emp.idEmprestimo << "\n"
+            << "Aluno: " << user.base.nome << "\n"
+            << "Email: " << user.base.email << "\n"
             << "Instrumento: " << emp.nome_In << "\n"
+            << "id Instrumento: " << emp.idInstrumento << "\n"
             << "Data emprestimo: " << emp.dataEmprestimo << "\n"
             << "Data prevista devolucao: " << emp.dataPrevista << "\n";
 
@@ -112,8 +115,8 @@ void consultarPendenciasInstrumentos() {
         std::cout << "Nenhuma pendencia encontrada.\n";
 
     fileEmprestimo.close();
-    fileUsuarios.close();
-}
+    fileAlunos.close();
+} 
 
 
 namespace Modulo_admin {
