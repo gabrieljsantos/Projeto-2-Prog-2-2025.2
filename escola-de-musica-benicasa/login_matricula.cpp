@@ -1,14 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <iomanip>
 #include "login_matricula.h"
 #include "headers.h"
-
-//Feito por Luiz Felipe
-const char* ARQUIVO_USUARIOS = "usuarios.dat";
-const char* ARQUIVO_ALUNOS = "alunos.dat";
-const char* ARQUIVO_PROFESSORES = "professores.dat";
-const char* ARQUIVO_ADMINISTRADORES = "administradores.dat";
 
 namespace Login_mat {
 
@@ -80,6 +75,47 @@ namespace Login_mat {
 // Cadastro
 //======================================================================
 
+    void realizarCadastro() {
+        int opcaoCategoria = -1;
+        int idNovoUsuario;
+
+        cout << "\n┌─────────── CATEGORIA ───────────┐\n";
+        cout << "│                                 │\n";
+        cout << "│ [0] Aluno                       │\n";
+        cout << "│ [1] Professor                   │\n";
+        cout << "│ [2] Administrador               │\n";
+        cout << "│                                 │\n";
+        cout << "└─────────────────────────────────┘\n";
+
+        do {
+            cout << "\nEscolha: ";
+            cin >> opcaoCategoria;
+            cin.ignore();
+        } while (opcaoCategoria < 0 || opcaoCategoria > 2);
+
+        switch (opcaoCategoria) {
+            case 0: {
+                idNovoUsuario = realizarCadastroAluno();
+                break;
+            }
+            case 1: {
+                idNovoUsuario = realizarCadastroProfessor();
+                break;
+            }
+            case 2: {
+                idNovoUsuario = realizarCadastroAdmin();
+                break;
+            }
+        }
+
+        cout << "\n┌──────────── SUCESSO ─────────────┐\n";
+        cout << "│                                  │\n";
+        cout << "│ Matricula realizada com sucesso! │\n";
+        cout << "│ ID: " << left << setw(29) << idNovoUsuario << "│\n";
+        cout << "│                                  │\n";
+        cout << "└──────────────────────────────────┘\n";
+    }
+
     //Feito por Jeanderson, auxiliado por Luiz Felipe
     int realizarCadastroAluno() {
         Aluno* alunoPtr = new Aluno;
@@ -87,6 +123,7 @@ namespace Login_mat {
         int novoId = verificarUltimoIdUsuario() + 1;
         (*alunoPtr).base.id = novoId;
 
+        cout << "\n───────── CADASTRO ALUNO ─────────\n";
         cout << "\nNome: ";
         cin.getline((*alunoPtr).base.nome, 100);
 
@@ -97,6 +134,7 @@ namespace Login_mat {
         cin.getline((*alunoPtr).base.senha, 30);
 
         fstream arquivoCadastro;
+
         //======================================================================
         // Cadastrando no arquivo de usuarios
         //======================================================================
@@ -134,10 +172,24 @@ namespace Login_mat {
     }
 
     // Feito por Clara
-    int realizarCadastroProfessor(Professor novoProfessor){
+    int realizarCadastroProfessor(){
+        Professor novoProfessor = inicializarProfessorVazio();
         int novoId = verificarUltimoIdUsuario() + 1;
         novoProfessor.base.id = novoId;
-        novoProfessor.base.categoria = PROFESSOR;
+
+        cout << "\n──────── CADASTRO PROFESSOR ────────\n";
+        cout << "\nNome: ";
+        cin.getline(novoProfessor.base.nome, 100);
+
+        cout << "Email: ";
+        cin.getline(novoProfessor.base.email, 100);
+
+        cout << "Senha: ";
+        cin.getline(novoProfessor.base.senha, 30);
+
+        cout << "Disciplina: ";
+        cin.getline(novoProfessor.disciplina, 50);
+
         fstream arquivoCadastro;
 
         arquivoCadastro.open(ARQUIVO_USUARIOS, ios::in | ios::out | ios::binary);
@@ -173,19 +225,29 @@ namespace Login_mat {
 //======================================================================
 // Login
 //======================================================================
-    bool realizarLogin(int id, const char senha[30], Usuario &usuario) {
-        usuario = inicializarUsuarioVazio();
+    bool realizarLogin(Usuario &usuario) {
+        Usuario** usuarios = new Usuario*[2];
+        for (int i = 0; i < 2; i++) {
+            usuarios[i] = new Usuario;
+        }
 
-        if (verificarUsuarioExistente(id) == false)
+        cout << "\n───────────── LOGIN ──────────────\n";
+        cout << "\nID: ";
+        cin >> (*usuarios[0]).id;
+        cin.ignore();
+        cout << "Senha: ";
+        cin.getline((*usuarios[0]).senha, 30);
+
+        if (verificarUsuarioExistente((*usuarios[0]).id) == false)
             return false;
 
-        Usuario usuarioDeTeste = lerUsuario(id);
+        *usuarios[1] = lerUsuario((*usuarios[0]).id);
 
-        if (usuarioDeTeste.ativo == false)
+        if ((*usuarios[1]).ativo == false)
             return false;
 
-        if (strcmp(senha, usuarioDeTeste.senha) == 0) {
-            usuario = usuarioDeTeste;
+        if (strcmp((*usuarios[0]).senha, (*usuarios[1]).senha) == 0) {
+            usuario = *usuarios[1];
             usuario.logado = true;
             return true;
         }

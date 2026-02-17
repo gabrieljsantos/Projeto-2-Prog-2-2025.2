@@ -22,6 +22,7 @@ void openFile(std::fstream &f, const std::string Nome){
 namespace Modulo_admin {
 
     void menuGerenciarUsuarios(std::fstream &file){
+/*
     char escolha;
     int Id;
     Usuario *usuario_ = new Usuario;
@@ -51,7 +52,7 @@ namespace Modulo_admin {
             file.seekg((Id-1) * sizeof(Usuario));
             file.read((char*)(usuario_), sizeof(Usuario));
 
-           if(!(*usuario_).ativo && (*usuario_).id !=0){    
+           if(!(*usuario_).ativo && (*usuario_).id !=0){
                 std::cout<<"Nome: "<< (*usuario_).nome<<"\n"
                 <<"[S] - Confirma\n"
                 <<"==============================\n"
@@ -72,7 +73,7 @@ namespace Modulo_admin {
                 else
                     std::cout<<"Usuario se encontra ativo!";
             }
-            
+
             break;
          case '2':
             std::cout<<"Para inativar o cadastro do usuario\ninsira o Id da conta a ser inativada\n>>> ";
@@ -84,7 +85,7 @@ namespace Modulo_admin {
             file.seekg((Id-1) * sizeof(Usuario));
             file.read((char*)(usuario_), sizeof(Usuario));
 
-           if((*usuario_).ativo && (*usuario_).id !=0){  
+           if((*usuario_).ativo && (*usuario_).id !=0){
                 std::cout<<"Nome: "<< (*usuario_).nome<<"\n"
                 <<"[OBS: Usuario nao podera acessar o sistema]\n"
                 <<"[S] - Confirma\n"
@@ -100,16 +101,16 @@ namespace Modulo_admin {
                     std::cout<<"Usuario: "<<(*usuario_).nome<<" Inativo.\n";
                 }
            }
-           else{ 
+           else{
                 if(usuario_->id==0)
                     std::cout<<"Usuario nao existete";
                 else
                     std::cout<<"Usuario se encontra inativo!\n";
            }
-           
+
              break;
          case '3':
-         
+
          std::cout<<"Lista de usuarios ativos\n"
          <<"======================================\n";
 
@@ -128,7 +129,7 @@ namespace Modulo_admin {
         file.clear();
              break;
          case '4':
-                    
+
          std::cout<<"Lista de usuarios Inativos\n"
          <<"======================================\n";
 
@@ -147,7 +148,7 @@ namespace Modulo_admin {
         }
         file.clear();
             break;
-        
+
         }
         pausar();
         system("cls");
@@ -155,7 +156,8 @@ namespace Modulo_admin {
     } while (escolha == '1' || escolha== '2' || escolha== '3'|| escolha== '4');
     delete usuario_;
     usuario_= nullptr;
-    
+
+*/
 }
 
     void menuCadastroCursos() {
@@ -244,7 +246,7 @@ namespace Modulo_admin {
 
                     else if (evento_->id == idBusca && evento_->ativo == 1) {
                         achado = true;
-                        std::cout 
+                        std::cout
                         << "\nID: " << evento_->id << "\n"
                         << "Nome: " << evento_->nome << "\n"
                         << "Local: " << evento_->local << "\n"
@@ -256,7 +258,7 @@ namespace Modulo_admin {
                         file.write((char*)evento_, sizeof(Evento));
                         std::cout<< "Evento autorizado com sucesso.\n";
                     }
-                
+
                 file.clear();
 
                 if (!achado)
@@ -321,12 +323,12 @@ namespace Modulo_admin {
                             << "Autorizado: " << (evento_->autorizado ? "Sim" : "Nao") << "\n"
                             << "================================\n";
                         }
-                    }                                           
-                    file.clear();   
+                    }
+                    file.clear();
                     if (vazio)
                         std::cout << "Nenhum evento cadastrado.\n";
                     break;
-                    
+
                     case 'x':
                         std::cout << "Voltando...\n";
                         break;

@@ -1,8 +1,12 @@
 #ifndef LOGIN_MATRICULA_H
 #define LOGIN_MATRICULA_H
-#include <string>
 
 #include "headers.h"
+
+#define ARQUIVO_USUARIOS "usuarios.dat"
+#define ARQUIVO_ALUNOS "alunos.dat"
+#define ARQUIVO_PROFESSORES "professores.dat"
+#define ARQUIVO_ADMINISTRADORES "administradores.dat"
 
 using namespace std;
 
@@ -15,12 +19,13 @@ namespace Login_mat {
     void inicializarArquivos(); // Junção de todos inicializadores
 
     // Cadastro
+    void realizarCadastro();
     int realizarCadastroAluno();
     int realizarCadastroProfessor();
     int realizarCadastroAdmin();
 
     // Login
-    bool realizarLogin(int id, const char senha[30], Usuario &usuario);
+    bool realizarLogin(Usuario &usuario);
 
     // Gera novo ID baseado no arquivo "usuarios.txt"
     int verificarUltimoIdUsuario();
