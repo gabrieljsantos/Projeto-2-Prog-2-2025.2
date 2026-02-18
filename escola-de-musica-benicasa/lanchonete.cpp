@@ -17,6 +17,38 @@ namespace Lanchonete {
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 
+    int proximoIdOperacao(Credito lista[MAX_CREDITOS]){
+        int maior = 0;
+        for (int i = 0; i < MAX_CREDITOS; i++) {
+            if (lista[i].id_opera > maior) maior = lista[i].id_opera;
+        }
+        return maior + 1;
+    }
+
+    double saldoUsuario(Credito lista[MAX_CREDITOS], int idUsuario){
+        double saldo = 0;
+        for (int i = 0; i < MAX_CREDITOS; i++) {
+            if (lista[i].id_user == idUsuario && lista[i].realizado) {
+                saldo = saldo + lista[i].saldo;
+            }
+        }
+        return saldo;
+    }
+
+    Funcao tipoUsuario(Credito lista[MAX_CREDITOS], int idUsuario){
+        for (int i = 0; i < MAX_CREDITOS; i++) {
+            if (lista[i].id_user == idUsuario && lista[i].tipo_user != NENHUMA) return lista[i].tipo_user;
+        }
+        return NENHUMA;
+    }
+
+    int acharCreditoPorOperacao(Credito lista[MAX_CREDITOS], int idOpera) {
+        for (int i = 0; i < MAX_CREDITOS; i++) {
+            if (lista[i].id_opera == idOpera && lista[i].id_opera != 0) return i;
+        }
+        return MAX_CREDITOS;
+    }
+
     void menuCadastroProdutos(){
         char opcao;
 
@@ -27,6 +59,8 @@ namespace Lanchonete {
             cout << "[2] Remover produto\n";
             cout << "[3] Visualizar produtos\n";
             cout << "[4] Consultar estoque\n";
+            cout << "[5] Alterar preço\n";
+            cout << "[6] Ativar créditos pendentes\n";
             cout << "===============================\n";
             cout << "[0] Voltar\n";
             cout << "Opção: ";
@@ -45,6 +79,12 @@ namespace Lanchonete {
                     break;
                 case '4':
                     consultarEstoque();
+                    break;
+                case '5':
+                    alterarPrecoProduto();
+                    break;
+                case '6':
+                    ativarCreditosPendentes();
                     break;
                 case '0':
                     break;
@@ -111,7 +151,8 @@ namespace Lanchonete {
 
     void lerTodosCreditos(Credito lista[MAX_CREDITOS]) {
         ifstream arquivo(BANCO_CREDITOS, ios::binary);
-        Credito vazio;
+        Credito vazio = {};
+        vazio.tipo_user = NENHUMA;
 
         if (!arquivo.is_open()) {
             for (int i = 0; i < MAX_CREDITOS; i++) {
@@ -201,7 +242,8 @@ namespace Lanchonete {
             ofstream arquivo(BANCO_CREDITOS, ios::binary | ios::trunc);
             if (!arquivo.is_open()) return false;
 
-            Credito credito_vazio;
+            Credito credito_vazio = {};
+            credito_vazio.tipo_user = NENHUMA;
             for (int i = 0; i < MAX_CREDITOS; i++) {
                 arquivo.write((char*)&credito_vazio, sizeof(Credito)); // deixa o arquivo préalocado
             }
@@ -215,7 +257,7 @@ namespace Lanchonete {
         return pessoa.ativo == 1;
     }
 
-    void adicionarCreditosUsuario() {
+    void solicitarCreditosUsuario() {
         if (!bancoDeDados()) {
             cout << "Erro ao abrir o banco!\n";
             return;
@@ -243,22 +285,18 @@ namespace Lanchonete {
         Credito *creditos = new Credito[MAX_CREDITOS];
         lerTodosCreditos(creditos);
 
-        int posicaoCreditoUsuario = acharCreditoPorId(creditos, idUsuario);
-        if (posicaoCreditoUsuario == MAX_CREDITOS) {
-            int vaga = acharVagaCredito(creditos);
-            if (vaga == MAX_CREDITOS) {
-                cout << "Não há espaço para adicionar mais créditos!\n";
-                delete[] creditos;
-                return;
-            }
-
-            creditos[vaga].id_user = idUsuario;
-            creditos[vaga].saldo = valor;
-            creditos[vaga].realizado = true;
-        } else {
-            creditos[posicaoCreditoUsuario].saldo = creditos[posicaoCreditoUsuario].saldo + valor;
-            creditos[posicaoCreditoUsuario].realizado = true;
+        int vaga = acharVagaCredito(creditos);
+        if (vaga == MAX_CREDITOS) {
+            cout << "Não há espaço para adicionar mais créditos!\n";
+            delete[] creditos;
+            return;
         }
+
+        creditos[vaga].id_opera = proximoIdOperacao(creditos);
+        creditos[vaga].id_user = idUsuario;
+        creditos[vaga].tipo_user = tipoUsuario(creditos, idUsuario);
+        creditos[vaga].saldo = valor;
+        creditos[vaga].realizado = false;
 
         if (!escreverTodosCreditos(creditos)) {
             cout << "Erro ao salvar saldo!\n";
@@ -266,7 +304,123 @@ namespace Lanchonete {
             return;
         }
 
-        cout << "Crédito adicionado!\n";
+        cout << "Solicitação enviada!\n";
+        delete[] creditos;
+    }
+
+    void solicitarCreditosUsuario(int idUsuario, Funcao tipo_user) {
+        if (!bancoDeDados()) {
+            cout << "Erro ao abrir o banco!\n";
+            return;
+        }
+
+        double valor;
+
+        if (idUsuario <= 0) {
+            cout << "ID inválido!\n";
+            return;
+        }
+
+        cout << "Valor: ";
+        cin >> valor;
+
+        if (valor <= 0) {
+            cout << "Valor inválido!\n";
+            return;
+        }
+
+        Credito *creditos = new Credito[MAX_CREDITOS];
+        lerTodosCreditos(creditos);
+
+        int vaga = acharVagaCredito(creditos);
+        if (vaga == MAX_CREDITOS) {
+            cout << "Não há espaço para adicionar mais créditos!\n";
+            delete[] creditos;
+            return;
+        }
+
+        creditos[vaga].id_opera = proximoIdOperacao(creditos);
+        creditos[vaga].id_user = idUsuario;
+        creditos[vaga].tipo_user = tipo_user;
+        creditos[vaga].saldo = valor;
+        creditos[vaga].realizado = false;
+
+        if (!escreverTodosCreditos(creditos)) {
+            cout << "Erro ao salvar saldo!\n";
+            delete[] creditos;
+            return;
+        }
+
+        cout << "Solicitação enviada!\n";
+        delete[] creditos;
+    }
+
+    void ativarCreditosPendentes() {
+        if (!bancoDeDados()) {
+            cout << "Erro ao abrir o banco!\n";
+            return;
+        }
+
+        Credito *creditos = new Credito[MAX_CREDITOS];
+        lerTodosCreditos(creditos);
+
+        int temPendente = 0;
+        for (int i = 0; i < MAX_CREDITOS; i++) {
+            if (creditos[i].id_user != 0 && creditos[i].realizado == false) {
+                cout << "Operação: " << creditos[i].id_opera
+                     << " | ID: " << creditos[i].id_user
+                     << " | Valor: " << creditos[i].saldo << "\n";
+                temPendente = 1;
+            }
+        }
+
+        if (!temPendente) {
+            cout << "Nenhum crédito pendente.\n";
+            delete[] creditos;
+            return;
+        }
+
+        int idOpera;
+        char resposta;
+
+        cout << "\nID da operação para ativar (0 para sair): ";
+        cin >> idOpera;
+
+        if (idOpera == 0) {
+            delete[] creditos;
+            return;
+        }
+
+        int posicao = acharCreditoPorOperacao(creditos, idOpera);
+        if (posicao == MAX_CREDITOS || creditos[posicao].realizado) {
+            cout << "Operação não encontrada!\n";
+            delete[] creditos;
+            return;
+        }
+
+        cout << "Operação: " << creditos[posicao].id_opera << "\n";
+        cout << "ID: " << creditos[posicao].id_user << "\n";
+        cout << "Valor: " << creditos[posicao].saldo << "\n";
+        cout << "[S] - Confirmar\n";
+        cout << "[x] - Cancelar\n";
+        cout << ">>> ";
+        cin >> resposta;
+
+        if (resposta == 'S' || resposta == 's') {
+            creditos[posicao].realizado = true;
+
+            if (!escreverTodosCreditos(creditos)) {
+                cout << "Erro ao salvar!\n";
+                delete[] creditos;
+                return;
+            }
+
+            cout << "Crédito ativado!\n";
+            delete[] creditos;
+            return;
+        }
+
+        cout << "Operação cancelada!\n";
         delete[] creditos;
     }
 
@@ -324,6 +478,56 @@ namespace Lanchonete {
         }
 
         cout << "Produto salvo com sucesso!\n";
+        delete[] lista;
+    }
+
+    void alterarPrecoProduto() {
+        if (!bancoDeDados()) {
+            cout << "Erro ao abrir o banco!\n";
+            return;
+        }
+
+        Produto *lista = new Produto[MAX_PRODUTOS];
+        lerTodosProdutos(lista);
+
+        int idProduto;
+        double novoPreco;
+
+        cout << "ID do produto: ";
+        cin >> idProduto;
+
+        if (idProduto <= 0) {
+            cout << "ID inválido!\n";
+            delete[] lista;
+            return;
+        }
+
+        int posicaoProduto = acharProdutoPorId(lista, idProduto);
+        if (posicaoProduto == MAX_PRODUTOS) {
+            cout << "Produto não encontrado!\n";
+            delete[] lista;
+            return;
+        }
+
+        cout << "Preço atual: " << lista[posicaoProduto].preco << "\n";
+        cout << "Novo preço: ";
+        cin >> novoPreco;
+
+        if (novoPreco <= 0) {
+            cout << "Preço inválido!\n";
+            delete[] lista;
+            return;
+        }
+
+        lista[posicaoProduto].preco = novoPreco;
+
+        if (!escreverTodosProdutos(lista)) {
+            cout << "Erro ao salvar no arquivo!\n";
+            delete[] lista;
+            return;
+        }
+
+        cout << "Preço alterado!\n";
         delete[] lista;
     }
 
@@ -442,14 +646,7 @@ namespace Lanchonete {
         Credito *creditos = new Credito[MAX_CREDITOS];
         lerTodosCreditos(creditos);
 
-        int posicaoCreditoUsuario = acharCreditoPorId(creditos, idUsuario);
-        if (posicaoCreditoUsuario == MAX_CREDITOS) {
-            cout << "Saldo: 0\n";
-            delete[] creditos;
-            return;
-        }
-
-        cout << "Saldo: " << creditos[posicaoCreditoUsuario].saldo << "\n";
+        cout << "Saldo: " << saldoUsuario(creditos, idUsuario) << "\n";
         delete[] creditos;
     }
 
@@ -481,21 +678,25 @@ namespace Lanchonete {
         Credito *creditos = new Credito[MAX_CREDITOS];
         lerTodosCreditos(creditos);
 
-        int posicaoCreditoUsuario = acharCreditoPorId(creditos, idUsuario);
-        if (posicaoCreditoUsuario == MAX_CREDITOS) {
+        double saldoAtual = saldoUsuario(creditos, idUsuario);
+        if (saldoAtual < valor) {
             cout << "Saldo insuficiente!\n";
             delete[] creditos;
             return;
         }
 
-        if (creditos[posicaoCreditoUsuario].saldo < valor) {
-            cout << "Saldo insuficiente!\n";
+        int vaga = acharVagaCredito(creditos);
+        if (vaga == MAX_CREDITOS) {
+            cout << "Não há espaço para registrar operação!\n";
             delete[] creditos;
             return;
         }
 
-        creditos[posicaoCreditoUsuario].saldo = creditos[posicaoCreditoUsuario].saldo - valor;
-        creditos[posicaoCreditoUsuario].realizado = true;
+        creditos[vaga].id_opera = proximoIdOperacao(creditos);
+        creditos[vaga].id_user = idUsuario;
+        creditos[vaga].tipo_user = tipoUsuario(creditos, idUsuario);
+        creditos[vaga].saldo = -valor;
+        creditos[vaga].realizado = true;
 
         if (!escreverTodosCreditos(creditos)) {
             cout << "Erro ao salvar saldo!\n";
@@ -543,28 +744,33 @@ namespace Lanchonete {
             return;
         }
 
-        float total = produtos[posicaoProduto].preco * qtd;
+        double total = produtos[posicaoProduto].preco * qtd;
 
         Credito *creditos = new Credito[MAX_CREDITOS];
         lerTodosCreditos(creditos);
 
-        int posicaoCreditoUsuario = acharCreditoPorId(creditos, idUsuario);
-        if (posicaoCreditoUsuario == MAX_CREDITOS) {
+        double saldoAtual = saldoUsuario(creditos, idUsuario);
+        if (saldoAtual < total) {
             cout << "Saldo insuficiente!\n";
             delete[] produtos;
             delete[] creditos;
             return;
         }
 
-        if (creditos[posicaoCreditoUsuario].saldo < total) {
-            cout << "Saldo insuficiente!\n";
+        int vaga = acharVagaCredito(creditos);
+        if (vaga == MAX_CREDITOS) {
+            cout << "Não há espaço para registrar operação!\n";
             delete[] produtos;
             delete[] creditos;
             return;
         }
 
-        creditos[posicaoCreditoUsuario].saldo = creditos[posicaoCreditoUsuario].saldo - total;
-        creditos[posicaoCreditoUsuario].realizado = true;
+        creditos[vaga].id_opera = proximoIdOperacao(creditos);
+        creditos[vaga].id_user = idUsuario;
+        creditos[vaga].tipo_user = tipoUsuario(creditos, idUsuario);
+        creditos[vaga].saldo = -total;
+        creditos[vaga].realizado = true;
+
         produtos[posicaoProduto].estoque = produtos[posicaoProduto].estoque - qtd;
 
         if (!escreverTodosCreditos(creditos)) {
