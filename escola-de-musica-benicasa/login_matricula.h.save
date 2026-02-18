@@ -33,7 +33,7 @@ namespace Login_mat {
     void salvarUsuario(Usuario usuario);
     void salvarAluno(Aluno aluno); // Salva e sincroniza com "usuarios.dat"
     void salvarProfessor(Professor professor); // Salva e sincroniza com "usuarios.dat"
-    void salvarAdmin(Admin admin);
+    void salvarAdministrador(Admin admin);
 
     // Gera novo ID baseado no arquivo "usuarios.dat"
     int gerarNovoId();

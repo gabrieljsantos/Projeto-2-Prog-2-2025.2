@@ -30,66 +30,62 @@ namespace Login_mat {
         outUsuarios.close();
     }
 
-    // Feito por Luiz Felipe
-    void inicializarArquivoAluno() {
-        ifstream teste(ARQUIVO_ALUNOS, ios::binary);
-        if (teste.good()) return;
-        teste.close();
+// Feito por Luiz Felipe
+void inicializarArquivoAluno() {
+    ifstream teste(ARQUIVO_ALUNOS, ios::binary);
+    if (teste.good()) return;
+    teste.close();
 
-        Aluno alunoVazio = inicializarAlunoVazio();
+    Aluno alunoVazio = inicializarAlunoVazio();
 
-        ofstream outAlunos(ARQUIVO_ALUNOS, ios::out | ios::binary);
+    ofstream outAlunos(ARQUIVO_ALUNOS, ios::out | ios::binary);
 
-        if (outAlunos.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
-            exit(1);
-        }
-
-        for (int i = 0; i < 100; i++)
-            outAlunos.write((const char*)(&alunoVazio), sizeof(Aluno));
-
-        outAlunos.close();
+    if (outAlunos.fail()) {
+        cout << "A abertura do arquivo falhou.\n";
+        exit(1);
     }
+
+    for (int i = 0; i < 100; i++)
+        outAlunos.write((const char*)(&alunoVazio), sizeof(Aluno));
+
+    outAlunos.close();
+}
 
     // Feito por Clara
     void inicializarArquivoProfessor() {
-        ifstream teste(ARQUIVO_PROFESSORES, ios::binary);
-        if (teste.good()) return;
-        teste.close();
-
         Professor professorVazio = inicializarProfessorVazio();
 
-        ofstream outProfessores(ARQUIVO_PROFESSORES, ios::out | ios::binary);
+        ofstream outProfessores;
+        outProfessores.open(ARQUIVO_PROFESSORES, ios::out|ios::binary);
 
-        if (outProfessores.fail()) {
+        if(outProfessores.fail()){
             cout << "A abertura do aquivo falhou!\n";
             exit(1);
         }
 
-        for (int i = 0; i < 100; i++)
+        for(int i=0; i<100; i++) {
             outProfessores.write((const char*)(&professorVazio), sizeof(Professor));
+        }
 
         outProfessores.close();
     }
 
     // Feito por Clara
     void inicializarArquivoAdmin() {
-        ifstream teste(ARQUIVO_ADMINISTRADORES, ios::binary);
-        if (teste.good()) return;
-        teste.close();
-
         Admin adminVazio;
         adminVazio.base = inicializarUsuarioVazio();
 
-        ofstream outAdmin(ARQUIVO_ADMINISTRADORES, ios::out | ios::binary);
+        ofstream outAdmin;
+        outAdmin.open(ARQUIVO_ADMINISTRADORES, ios::out|ios::binary);
 
-        if (outAdmin.fail()) {
+        if(outAdmin.fail()){
             cout << "A abertura do aquivo falhou!\n";
             exit(1);
         }
 
-        for (int i = 0; i < 100; i++)
+        for(int i=0; i<100; i++) {
             outAdmin.write((const char*)(&adminVazio), sizeof(Admin));
+        }
 
         outAdmin.close();
     }

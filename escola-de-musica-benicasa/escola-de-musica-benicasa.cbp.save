@@ -15,9 +15,6 @@
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
-				<Linker>
-					<Add library="ncurses" />
-				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="bin/Release/escola-de-musica-benicasa" prefix_auto="1" extension_auto="1" />
@@ -36,6 +33,9 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Linker>
+			<Add library="ncurses" />
+		</Linker>
 		<Unit filename="admin.cpp">
 			<Option virtualFolder="modulo_admin/" />
 		</Unit>
