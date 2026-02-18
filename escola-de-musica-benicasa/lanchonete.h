@@ -5,21 +5,26 @@
 #include <fstream>
 
 #define MAX_PRODUTOS 50
+#define MAX_CREDITOS 300
+
 #define BANCO_PRODUTOS "lanchonete_produtos.dat"
-#define BANCO_SALDO "lanchonete_saldo.dat"
+#define BANCO_CREDITOS "lanchonete_creditos.dat"
 
 namespace Lanchonete {
-    bool bancoDeDados();//Feito
-    bool verificarAtividade(Usuario pessoa);//Feito
-    void menuCadastroProdutos();//Pra fazer
-    void adicionarCreditosUsuario();//Pra fazer
-    void consultarEstoque();//Feito
-    void adicionarProduto();//Feito
-    void removerProduto();//Pra fazer
-    void realizarCompra(int id);//Feito
-    void removerCredito();//Pra fazer
-    void visualizarProdutos();//Feito
-    void consultarSaldo(int id);//Feito
+    bool bancoDeDados();
+    bool verificarAtividade(Usuario pessoa);
+    void menuCadastroProdutos();
+    void solicitarCreditosUsuario();
+    void solicitarCreditosUsuario(int idUsuario, Funcao tipo_user);
+    void ativarCreditosPendentes();
+    void consultarEstoque();
+    void adicionarProduto();
+    void alterarPrecoProduto();
+    void removerProduto();
+    void realizarCompra(int id);
+    void removerCredito();
+    void visualizarProdutos();
+    void consultarSaldo(int id);
 }
 
 #endif

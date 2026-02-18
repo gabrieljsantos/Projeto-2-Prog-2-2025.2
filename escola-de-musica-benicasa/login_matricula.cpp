@@ -588,6 +588,9 @@ namespace Login_mat {
         alunoVazio.notas[0] = 0;
         alunoVazio.notas[1] = 0;
         alunoVazio.faltas = 0;
+        alunoVazio.instrumento = 0;
+        for (int i = 0; i < 10; i++) 
+            alunoVazio.turmasId[i] = 0;
         return alunoVazio;
     }
 
@@ -597,6 +600,9 @@ namespace Login_mat {
         professorVazio.base = inicializarUsuarioVazio();
         professorVazio.base.categoria = PROFESSOR;
         professorVazio.saldo = 0.0;
+        professorVazio.disciplina[0] = '\0';
+        for (int i = 0; i < 5; i++) 
+            professorVazio.turmasId[i] = 0;
         return professorVazio;
     }
 
