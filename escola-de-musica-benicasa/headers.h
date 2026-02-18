@@ -15,24 +15,29 @@ struct Usuario{
     char email[100];
     char senha[30];
     Funcao categoria;
-    double saldo;
     bool logado;
 };
 
 struct Aluno {
     Usuario base;
+    double saldo;
     int notas[2];
     int faltas;
+    int instrumento;
+    int turmasId[10];
 };
 
 struct Professor {
     Usuario base;
+    double saldo;
     char disciplina[50];
+    int turmasId[5];
 };
 
 struct Admin {
     Usuario base;
 };
+
 struct Disciplina {
     int id;
     int ativo;

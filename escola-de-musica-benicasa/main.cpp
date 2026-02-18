@@ -36,16 +36,9 @@ int main() {
 
             switch (opcaoLogin) {
                 case 1: {
-                    int id;
-                    char senha[30];
+                    bool login = Login_mat::realizarLogin(usuario);
 
-                    cout << "\nID: ";
-                    cin >> id;
-                    cin.ignore();
-                    cout << "Senha: ";
-                    cin.getline(senha, 30);
-
-                    if (Login_mat::realizarLogin(id, senha, usuario)) {
+                    if (login) {
                         cout << "\nBem-vindo(a), " << usuario.nome << "!" << endl;
                         pausar();
                     } else {
@@ -55,36 +48,7 @@ int main() {
                     break;
                 }
                 case 2: {
-                    int opcaoCategoria = -1;
-                    int idNovoUsuario;
-
-                    cout << "\nCategoria:\n";
-                    cout << "0 - Aluno\n";
-                    cout << "1 - Professor\n";
-                    cout << "2 - Administrador\n";
-
-                    do {
-                        cout << "Opcao: ";
-                        cin >> opcaoCategoria;
-                        cin.ignore();
-                    } while (opcaoCategoria < 0 || opcaoCategoria > 2);
-
-                    switch (opcaoCategoria) {
-                        case 0: {
-                            idNovoUsuario = Login_mat::realizarCadastroAluno();
-                            break;
-                        }
-                        case 1: {
-                            idNovoUsuario = Login_mat::realizarCadastroProfessor();
-                            break;
-                        }
-                        case 2: {
-                            idNovoUsuario = Login_mat::realizarCadastroAdmin();
-                            break;
-                        }
-                    }
-
-                    cout << "Matricula realizada com sucesso!\nID: " << idNovoUsuario << endl;
+                    Login_mat::realizarCadastro();
                     pausar();
                     break;
                 }
@@ -104,6 +68,7 @@ int main() {
                     cin.ignore();
 
                     switch (opcao) {
+                        /*
                         case 1: Modulo_admin::menuCadastroUsuarios(); break;
                         case 2: Modulo_admin::menuGerenciarUsuarios(); break;
                         case 3: Modulo_admin::menuCadastroCursos(); break;
@@ -114,6 +79,7 @@ int main() {
                         case 8: Modulo_admin::menuCadastroInstrumentos(); break;
                         case 9: Modulo_admin::liberarInstrumentos(); break;
                         case 10: Modulo_admin::consultarPendenciasInstrumentos(); break;
+                        */
                         case 11: Lanchonete::menuCadastroProdutos(); break;
                         case 12: Lanchonete::adicionarCreditosUsuario(); break;
                         case 13: Lanchonete::consultarEstoque(); break;
@@ -202,7 +168,7 @@ void exibirMenuLogin() {
     cout << "\nMENU DE ACESSO" << endl;
     cout << "============================================" << endl;
     cout << "1. Fazer Login" << endl;
-    cout << "2. Realizar Matricula" << endl;
+    cout << "2. Realizar Cadastro" << endl;
     cout << "0. Sair do Sistema" << endl;
     cout << "Opcao: ";
 }
