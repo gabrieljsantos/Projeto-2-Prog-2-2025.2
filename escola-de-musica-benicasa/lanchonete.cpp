@@ -2,6 +2,7 @@
 #include <fstream>
 #include "lanchonete.h"
 #include "headers.h"
+#include <limits>
 
 using namespace std;
 
