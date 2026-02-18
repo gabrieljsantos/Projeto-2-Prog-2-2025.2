@@ -159,6 +159,7 @@ namespace Login_mat {
         *alunoPtr = inicializarAlunoVazio();
         int novoId = gerarNovoId();
         (*alunoPtr).base.id = novoId;
+        (*alunoPtr).base.ativo = true;
 
         cout << "\n───────── CADASTRO ALUNO ─────────\n";
         cout << "\nNome: ";
@@ -574,7 +575,7 @@ namespace Login_mat {
 //======================================================================
     //Feito por Luiz Felipe
      Usuario inicializarUsuarioVazio() {
-        Usuario usuarioVazio = {20260000, true, "", "", "", NENHUMA, false};
+        Usuario usuarioVazio = {20260000, false, "", "", "", NENHUMA, false};
         return usuarioVazio;
     }
 
@@ -594,7 +595,6 @@ namespace Login_mat {
     Professor inicializarProfessorVazio(){
         Professor professorVazio;
         professorVazio.base = inicializarUsuarioVazio();
-        professorVazio.base.ativo = false;
         professorVazio.base.categoria = PROFESSOR;
         professorVazio.saldo = 0.0;
         return professorVazio;
