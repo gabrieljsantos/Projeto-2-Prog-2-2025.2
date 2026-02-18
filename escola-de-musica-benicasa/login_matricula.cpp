@@ -1,14 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <iomanip>
 #include "login_matricula.h"
 #include "headers.h"
-
-//Feito por Luiz Felipe
-const char* ARQUIVO_USUARIOS = "usuarios.dat";
-const char* ARQUIVO_ALUNOS = "alunos.dat";
-const char* ARQUIVO_PROFESSORES = "professores.dat";
-const char* ARQUIVO_ADMINISTRADORES = "administradores.dat";
 
 namespace Login_mat {
 
@@ -80,13 +75,50 @@ namespace Login_mat {
 // Cadastro
 //======================================================================
 
+    void realizarCadastro() {
+        int opcaoCategoria = -1;
+        int idNovoUsuario;
+
+        cout << "\n┌─────────── CATEGORIA ───────────┐\n";
+        cout << "│                                 │\n";
+        cout << "│ [0] Aluno                       │\n";
+        cout << "│ [1] Professor                   │\n";
+        cout << "│                                 │\n";
+        cout << "└─────────────────────────────────┘\n";
+
+        do {
+            cout << "\nEscolha: ";
+            cin >> opcaoCategoria;
+            cin.ignore();
+        } while (opcaoCategoria < 0 || opcaoCategoria > 2);
+
+        switch (opcaoCategoria) {
+            case 0: {
+                idNovoUsuario = realizarCadastroAluno();
+                break;
+            }
+            case 1: {
+                idNovoUsuario = realizarCadastroProfessor();
+                break;
+            }
+        }
+
+        cout << "\n┌──────────── SUCESSO ─────────────┐\n";
+        cout << "│                                  │\n";
+        cout << "│ Cadastro realizada com sucesso!  │\n";
+        cout << "│ ID: " << left << setw(29) << idNovoUsuario << "│\n";
+        cout << "│                                  │\n";
+        cout << "└──────────────────────────────────┘\n";
+    }
+
     //Feito por Jeanderson, auxiliado por Luiz Felipe
     int realizarCadastroAluno() {
         Aluno* alunoPtr = new Aluno;
         *alunoPtr = inicializarAlunoVazio();
-        int novoId = verificarUltimoIdUsuario() + 1;
+        int novoId = gerarNovoId();
         (*alunoPtr).base.id = novoId;
 
+        cout << "\n───────── CADASTRO ALUNO ─────────\n";
         cout << "\nNome: ";
         cin.getline((*alunoPtr).base.nome, 100);
 
@@ -96,106 +128,139 @@ namespace Login_mat {
         cout << "Senha: ";
         cin.getline((*alunoPtr).base.senha, 30);
 
-        fstream arquivoCadastro;
-        //======================================================================
-        // Cadastrando no arquivo de usuarios
-        //======================================================================
-        arquivoCadastro.open(ARQUIVO_USUARIOS, ios::in | ios::out | ios::binary);
-
-        if (arquivoCadastro.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
-            exit(1);
-        }
-
-        arquivoCadastro.seekp((novoId - 1) * sizeof(Usuario));
-        arquivoCadastro.write((const char *)(&(*alunoPtr).base), sizeof(Usuario));
-
-        arquivoCadastro.close();
-
-        //======================================================================
-        // Sincronizando com o arquivo de alunos
-        //======================================================================
-        arquivoCadastro.open(ARQUIVO_ALUNOS, ios::in | ios::out | ios::binary);
-
-        if (arquivoCadastro.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
-            exit(1);
-        }
-
-        arquivoCadastro.seekp((novoId - 1) * sizeof(Aluno));
-        arquivoCadastro.write((const char *)(&(*alunoPtr)), sizeof(Aluno));
-
-        arquivoCadastro.close();
+        salvarAluno(*alunoPtr);
 
         delete alunoPtr;
-        alunoPtr = NULL;
+        alunoPtr = nullptr;
 
         return novoId;
     }
 
     // Feito por Clara
-    int realizarCadastroProfessor(Professor novoProfessor){
-        int novoId = verificarUltimoIdUsuario() + 1;
+    int realizarCadastroProfessor(){
+        Professor novoProfessor = inicializarProfessorVazio();
+        int novoId = gerarNovoId();
         novoProfessor.base.id = novoId;
-        novoProfessor.base.categoria = PROFESSOR;
-        fstream arquivoCadastro;
 
-        arquivoCadastro.open(ARQUIVO_USUARIOS, ios::in | ios::out | ios::binary);
+        cout << "\n──────── CADASTRO PROFESSOR ────────\n";
+        cout << "\nNome: ";
+        cin.getline(novoProfessor.base.nome, 100);
 
-         if (arquivoCadastro.fail()){
-            cout << "A abertura do arquivo falhou!\n";
-            exit(1);
-        }
+        cout << "Email: ";
+        cin.getline(novoProfessor.base.email, 100);
 
-        arquivoCadastro.seekp((novoId - 1) * sizeof(Usuario));
-        arquivoCadastro.write((const char*)(&novoProfessor.base), sizeof(Usuario));
-        arquivoCadastro.close();
+        cout << "Senha: ";
+        cin.getline(novoProfessor.base.senha, 30);
 
-        arquivoCadastro.open(ARQUIVO_PROFESSORES, ios::in|ios::out|ios::binary);
+        cout << "Disciplina: ";
+        cin.getline(novoProfessor.disciplina, 50);
 
-        if (arquivoCadastro.fail()) {
-            cout << "A abertura do arquivo falhou!\n";
-            exit(1);
-        }
-
-        arquivoCadastro.seekp((novoId - 1) * sizeof(Professor));
-        arquivoCadastro.write((const char*)(&novoProfessor), sizeof(Professor));
-        arquivoCadastro.close();
+        salvarProfessor(novoProfessor);
 
         return novoId;
     }
 
-    int realizarCadastroAdmin() {
-        // Implementar fun��o
-        return 0;
-    }
 
 //======================================================================
 // Login
 //======================================================================
-    bool realizarLogin(int id, const char senha[30], Usuario &usuario) {
-        usuario = inicializarUsuarioVazio();
-
-        if (verificarUsuarioExistente(id) == false)
-            return false;
-
-        Usuario usuarioDeTeste = lerUsuario(id);
-
-        if (usuarioDeTeste.ativo == false)
-            return false;
-
-        if (strcmp(senha, usuarioDeTeste.senha) == 0) {
-            usuario = usuarioDeTeste;
-            usuario.logado = true;
-            return true;
+    bool realizarLogin(Usuario &usuario) {
+        bool sucesso = false;
+        Usuario** usuarios = new Usuario*[2];
+        for (int i = 0; i < 2; i++) {
+            usuarios[i] = new Usuario;
         }
-        return false;
+
+        cout << "\n───────────── LOGIN ──────────────\n";
+        cout << "\nID: ";
+        cin >> (*usuarios[0]).id;
+        cin.ignore();
+        cout << "Senha: ";
+        cin.getline((*usuarios[0]).senha, 30);
+
+        if (verificarUsuarioExistente((*usuarios[0]).id)) {
+
+            *usuarios[1] = lerUsuario((*usuarios[0]).id);
+
+            if (strcmp((*usuarios[0]).senha, (*usuarios[1]).senha) == 0 && (*usuarios[1]).ativo) {
+                usuario = *usuarios[1];
+                usuario.logado = true;
+                sucesso = true;
+            }
+        }
+
+        for (int i = 0; i < 2; i++)
+            delete usuarios[i];
+
+        delete[] usuarios;
+        usuarios = nullptr;
+
+        return sucesso;
+    }
+
+
+//======================================================================
+// Salvar
+//======================================================================
+
+    void salvarUsuario(Usuario usuario) {
+        fstream arquivo;
+
+        arquivo.open(ARQUIVO_USUARIOS, ios::in | ios::out | ios::binary);
+
+         if (arquivo.fail()){
+            cout << "A abertura do arquivo falhou!\n";
+            exit(1);
+        }
+
+        arquivo.seekp((usuario.id - 1) * sizeof(Usuario));
+        arquivo.write((const char*)(&usuario), sizeof(Usuario));
+        arquivo.close();
+    }
+
+    void salvarAluno(Aluno aluno) {
+        salvarUsuario(aluno.base);
+
+        fstream arquivo;
+
+        arquivo.open(ARQUIVO_ALUNOS, ios::in | ios::out| ios::binary);
+
+        if (arquivo.fail()) {
+            cout << "A abertura do arquivo falhou!\n";
+            exit(1);
+        }
+
+        arquivo.seekp((aluno.base.id - 1) * sizeof(Aluno));
+        arquivo.write((const char*)(&aluno), sizeof(Aluno));
+        arquivo.close();
+    }
+
+    void salvarProfessor(Professor professor) {
+        salvarUsuario(professor.base);
+
+        fstream arquivo;
+
+        arquivo.open(ARQUIVO_PROFESSORES, ios::in | ios::out| ios::binary);
+
+        if (arquivo.fail()) {
+            cout << "A abertura do arquivo falhou!\n";
+            exit(1);
+        }
+
+        arquivo.seekp((professor.base.id - 1) * sizeof(Professor));
+        arquivo.write((const char*)(&professor), sizeof(Professor));
+        arquivo.close();
     }
 
 
 //======================================================================
 // Gerar novo ID
 //======================================================================
+
+    int gerarNovoId() {
+        return verificarUltimoIdUsuario() + 1;
+    }
+
     //Feito por Luiz Felipe
     int verificarUltimoIdUsuario() {
         int ultimoId = 0;
@@ -266,7 +331,7 @@ namespace Login_mat {
     Professor lerProfessor(int id) {
         Professor professor = inicializarProfessorVazio();
         ifstream inProfessores;
-        inProfessores.open(ARQUIVO_PROFESSORES, ios::in|ios::binary);
+        inProfessores.open(ARQUIVO_PROFESSORES, ios::in | ios::binary);
 
         if(inProfessores.fail()){
             cout << "A abertura do arquivo falhou!\n";
@@ -279,6 +344,26 @@ namespace Login_mat {
 
         return professor;
     }
+
+//======================================================================
+// Atualizar
+//======================================================================
+    void atualizar(int id, Professor professor){
+
+        if (verificarUsuarioExistente(id) == true) {
+            cout<< "usuário existente!";
+        }
+        else {
+            cout<< "O usuário não existe";
+            return;
+        }
+        professor.base.id = id;
+        professor.base.categoria = PROFESSOR;
+
+        salvarProfessor(professor);
+        cout<< "Usuário atualizado com sucesso!";
+    }
+
 
 //======================================================================
 // Verificar quantos X (usuarios, alunos, professores ou admin)
@@ -334,8 +419,35 @@ namespace Login_mat {
 //======================================================================
 // Verificar se usuario existe
 //======================================================================
+    //Feito por Jeanderson
+    bool verificarUsuarioExistente(int id) {
+
+        if (id > verificarUltimoIdUsuario() || id <= 0)
+            return false;
+
+        ifstream inUsuarios;
+        inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary );
+
+        if (inUsuarios.fail()) {
+            cout << "A abertura do arquivo falhou.\n";
+            return false;
+        }
+
+        inUsuarios.seekg((id - 1) * sizeof(Usuario));
+
+        Usuario verificaId = inicializarUsuarioVazio();
+
+        if (inUsuarios.read((char *)&verificaId, sizeof(Usuario))){
+            inUsuarios.close();
+            return verificaId.id == id;
+        }
+
+        inUsuarios.close();
+        return false;
+    }
+
     //Feito por Jhones
-    bool verificarUsuarioExistente(const char nome[30]) {
+    bool verificarUsuarioExistente(const char nome[100]) {
         ifstream inUsuarios;
         inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary);
 
@@ -348,7 +460,7 @@ namespace Login_mat {
         while (inUsuarios.read((char*)(&u), sizeof(Usuario))) {
             // ignora registros vazios
             if (u.id != 0) {
-                if (strncmp(u.nome, nome, 30) == 0) {
+                if (strncmp(u.nome, nome, 100) == 0) {
                     inUsuarios.close();
                     return true;
                 }
@@ -359,21 +471,6 @@ namespace Login_mat {
         return false;
     }
 
-    //Feito por Jeanderson
-    bool verificarUsuarioExistente(int id){
-        fstream registroDeUsuariosNovos;
-        registroDeUsuariosNovos.open(ARQUIVO_USUARIOS, ios:: in | ios:: binary );
-        registroDeUsuariosNovos.seekg((id - 1) * sizeof(Usuario));
-
-        Usuario verificaId;
-
-        if (registroDeUsuariosNovos.read((char *)&verificaId, sizeof(Usuario))){
-            registroDeUsuariosNovos.close();
-            return verificaId.id == id;
-        }
-        registroDeUsuariosNovos.close();
-        return false;
-    }
 
 
 //======================================================================
@@ -381,7 +478,7 @@ namespace Login_mat {
 //======================================================================
     //Feito por Luiz Felipe
      Usuario inicializarUsuarioVazio() {
-        Usuario usuarioVazio = {0, true, "", "", "", NENHUMA, .0, false};
+        Usuario usuarioVazio = {0, true, "", "", "", NENHUMA, false};
         return usuarioVazio;
     }
 
@@ -390,6 +487,7 @@ namespace Login_mat {
         Aluno alunoVazio;
         alunoVazio.base = inicializarUsuarioVazio();
         alunoVazio.base.categoria = ALUNO;
+        alunoVazio.saldo = 0.0;
         alunoVazio.notas[0] = 0;
         alunoVazio.notas[1] = 0;
         alunoVazio.faltas = 0;
@@ -401,7 +499,7 @@ namespace Login_mat {
         Professor professorVazio;
         professorVazio.base = inicializarUsuarioVazio();
         professorVazio.base.categoria = PROFESSOR;
-        strcpy(professorVazio.disciplina, ""); //deixa vazio
+        professorVazio.saldo = 0.0;
         return professorVazio;
     }
 

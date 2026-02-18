@@ -1,57 +1,62 @@
 #ifndef LOGIN_MATRICULA_H
 #define LOGIN_MATRICULA_H
-#include <string>
 
 #include "headers.h"
+
+#define ARQUIVO_USUARIOS "usuarios.dat"
+#define ARQUIVO_ALUNOS "alunos.dat"
+#define ARQUIVO_PROFESSORES "professores.dat"
+#define ARQUIVO_ADMINISTRADORES "administradores.dat"
 
 using namespace std;
 
 namespace Login_mat {
 
+    // Inicializadores de arquivos
     void inicializarArquivoUsuario();
     void inicializarArquivoAluno();
     void inicializarArquivoProfessor();
-    void inicializarArquivoAdmin();
     void inicializarArquivos(); // Junção de todos inicializadores
 
     // Cadastro
+    void realizarCadastro();
     int realizarCadastroAluno();
     int realizarCadastroProfessor();
     int realizarCadastroAdmin();
 
     // Login
-    bool realizarLogin(int id, const char senha[30], Usuario &usuario);
+    bool realizarLogin(Usuario &usuario);
 
-    // Gera novo ID baseado no arquivo "usuarios.txt"
+    // Salvar
+    void salvarUsuario(Usuario usuario);
+    void salvarAluno(Aluno aluno); // Salva e sincroniza com "usuarios.dat"
+    void salvarProfessor(Professor professor); // Salva e sincroniza com "usuarios.dat"
+
+    // Gera novo ID baseado no arquivo "usuarios.dat"
+    int gerarNovoId();
     int verificarUltimoIdUsuario();
+
+    // Ler X (usuario, aluno, professor)
+    Usuario lerUsuario(int id);
+    Aluno lerAluno(int id);
+    Professor lerProfessor(int id);
+
+    // Atualizar
+    void atualizar(int id, Professor professor);
 
     // Verificar quantas pessoas tem em cada arquivo
     int verificarQuantosUsuarios();
     int verificarQuantosAlunos();
     int verificarQuantosProfessores();
-    int verificarQuantosAdministradores();
 
-    // Ler X (usuario, aluno, professor ou administrador)
-    Usuario lerUsuario(int id);
-    Aluno lerAluno(int id);
-    Professor lerProfessor(int id);
-    Admin lerAdministrador(int id);
-
-    // Verificação em "usuarios.txt" apenas
+    // Verificação em "usuarios.dat" apenas
     bool verificarUsuarioExistente(int id);
-    bool verificarUsuarioExistente(const char nome[30]);
-
-    // Sobrecarga da função atualizar, o parametro define qual o tipo de usuario atualizar
-    // OBS.: Todos eles alteram o arquivo "usuarios.txt"
-    void atualizar(int id, Aluno Aluno);
-    void atualizar(int id, Professor Professor);
-    void atualizar(int id, Admin novoAdmin);
+    bool verificarUsuarioExistente(const char nome[100]);
 
     // Inicializadores de variaveis vazias
     Usuario inicializarUsuarioVazio();
     Aluno inicializarAlunoVazio();
     Professor inicializarProfessorVazio();
-    Admin inicializarAdminVazio();
 }
 
 #endif
