@@ -4,12 +4,16 @@
 #include <fstream>
 #include "headers.h"
 #include <limits>
+#include <cstring>
 
     void pausar();
     void limparbuffer();
     void openFile(std::fstream &f, const std::string Nome);
+    Professor buscaProf(std::fstream &file,int buscaId);
+    Disciplina buscaDisciplina(std::fstream &file, int buscaId);
+    void consultarPendenciasInstrumentos();
 
-namespace Modulo_admin {
+namespace mod_ADM {
     void menuCadastroUsuarios();
     void menuGerenciarUsuarios();
     void menuCadastroCursos();

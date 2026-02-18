@@ -70,24 +70,24 @@ int main() {
 
                     switch (opcao) {
                         /*
-                        case 1: Modulo_admin::menuCadastroUsuarios(); break;
-                        case 2: Modulo_admin::menuGerenciarUsuarios(); break;
-                        case 3: Modulo_admin::menuCadastroCursos(); break;
-                        case 4: Modulo_admin::consultarRelatoriosAcademicos(); break;
-                        case 5: Modulo_admin::menuCadastroEventos(); break;
-                        case 6: Modulo_admin::autorizarEventos(); break;
-                        case 7: Modulo_admin::listarTodosEventos(); break;
-                        case 8: Modulo_admin::menuCadastroInstrumentos(); break;
-                        case 9: Modulo_admin::liberarInstrumentos(); break;
-                        case 10: Modulo_admin::consultarPendenciasInstrumentos(); break;
+                        case 1: mod_ADM::menuCadastroUsuarios(); break;
+                        case 2: mod_ADM::menuGerenciarUsuarios(); break;
+                        case 3: mod_ADM::menuCadastroCursos(); break;
+                        case 4: mod_ADM::consultarRelatoriosAcademicos(); break;
+                        case 5: mod_ADM::menuCadastroEventos(); break;
+                        case 6: mod_ADM::autorizarEventos(); break;
+                        case 7: mod_ADM::listarTodosEventos(); break;
+                        case 8: mod_ADM::menuCadastroInstrumentos(); break;
+                        case 9: mod_ADM::liberarInstrumentos(); break;
+                        case 10: mod_ADM::consultarPendenciasInstrumentos(); break;
                         */
                         case 11: Lanchonete::menuCadastroProdutos(); break;
-                        case 12: Lanchonete::adicionarCreditosUsuario(); break;
+                        case 12: Lanchonete::ativarCreditosPendentes(); break;
                         case 13: Lanchonete::consultarEstoque(); break;
-                        case 14: Modulo_admin::gerarRelatorioFinanceiro(); break;
-                        case 15: Modulo_admin::gerarRelatorioPatrimonial(); break;
-                        case 16: Modulo_admin::realizarBackup(); break;
-                        case 17: Modulo_admin::restaurarBackup(); break;
+                        case 14: mod_ADM::gerarRelatorioFinanceiro(); break;
+                        case 15: mod_ADM::gerarRelatorioPatrimonial(); break;
+                        case 16: mod_ADM::realizarBackup(); break;
+                        case 17: mod_ADM::restaurarBackup(); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -111,6 +111,7 @@ int main() {
                         case 6: Modulo_professor::consultarEventosDisponiveis(); break;
                         case 7: Modulo_professor::consultarInstrumentosDisponiveis(); break;
                         case 8: Lanchonete::consultarSaldo(usuario.id); break;
+                        case 9: Lanchonete::solicitarCreditosUsuario(usuario.id, usuario.categoria); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -137,6 +138,7 @@ int main() {
                         case 11: Lanchonete::consultarSaldo(usuario.id); break;
                         case 12: Lanchonete::visualizarProdutos(); break;
                         case 13: Lanchonete::realizarCompra(usuario.id); break;
+                        case 14: Lanchonete::solicitarCreditosUsuario(usuario.id, usuario.categoria); break;
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -189,7 +191,7 @@ void exibirMenuAdministrador() {
     cout << "9. Liberar Instrumentos" << endl;
     cout << "10. Consultar Pendencias" << endl;
     cout << "11. Cadastrar Produtos" << endl;
-    cout << "12. Adicionar Creditos" << endl;
+    cout << "12. Ativar Creditos Pendentes" << endl;
     cout << "13. Consultar Estoque" << endl;
     cout << "14. Relatorio Financeiro" << endl;
     cout << "15. Relatorio Patrimonial" << endl;
@@ -211,6 +213,7 @@ void exibirMenuProfessor() {
     cout << "6. Consultar Eventos" << endl;
     cout << "7. Consultar Instrumentos" << endl;
     cout << "8. Consultar Saldo Lanchonete" << endl;
+    cout << "9. Solicitar Creditos" << endl;
     cout << "0. Logout" << endl;
     cout << "Opcao: ";
 }
@@ -232,6 +235,7 @@ void exibirMenuAluno() {
     cout << "11. Consultar Saldo" << endl;
     cout << "12. Ver Produtos" << endl;
     cout << "13. Realizar Compra" << endl;
+    cout << "14. Solicitar Creditos" << endl;
     cout << "0. Logout" << endl;
     cout << "Opcao: ";
 }
