@@ -13,7 +13,7 @@
     Disciplina buscaDisciplina(std::fstream &file, int buscaId);
     void consultarPendenciasInstrumentos();
 
-namespace Modulo_admin {
+namespace Mod_adm {
     void menuCadastroUsuarios();
     void menuGerenciarUsuarios();
     void menuCadastroCursos();
