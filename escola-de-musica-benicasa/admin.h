@@ -13,7 +13,11 @@
     Disciplina buscaDisciplina(std::fstream &file, int buscaId);
     void consultarPendenciasInstrumentos();
 
+void exibirMenuAdministrador();
+void abrir_menu_admin(Usuario* usuario);
+
 namespace Modulo_admin {
+    int listar_usuarios_especificos(Funcao tipo_usuario, int ativo, std::string dados[100][6]);
     void menuCadastroUsuarios();
     void menuGerenciarUsuarios();
     void menuCadastroCursos();

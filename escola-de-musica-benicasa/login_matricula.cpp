@@ -181,7 +181,7 @@ namespace Login_mat {
     // Feito por Clara
     void realizarCadastroAdmin(){
         Admin novoAdmin;
-        novoAdmin.base = {1, true, "admin", "admin@gmail.com", "1234567", ADMINISTRADOR, false};
+        novoAdmin.base = Usuario{1, true, "admin", "admin@gmail.com", "1234567", ADMINISTRADOR, false};
 
         salvarAdmin(novoAdmin);
     }
