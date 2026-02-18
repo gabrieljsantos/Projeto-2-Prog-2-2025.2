@@ -25,7 +25,7 @@ Professor buscaProf(std::fstream &file,int buscaId){
     file.seekg(0, std::ios::end);
     int tamanho = file.tellg();
     int total = tamanho / sizeof(Professor);
-
+    
     if(buscaId <= 0 || buscaId > total){
         std::cout<<"ID invalido!\n";
         return prof;
@@ -61,7 +61,7 @@ Disciplina buscaDisciplina(std::fstream &file, int buscaId){
         std::cout
         <<"================================\n"
         <<"Nome: "<<disc.nome<<"\n";
-
+      
         return disc;
     }
     else{
@@ -116,7 +116,7 @@ void consultarPendenciasInstrumentos() {
 
     fileEmprestimo.close();
     fileAlunos.close();
-}
+} 
 
 
 namespace Modulo_admin {
@@ -260,14 +260,14 @@ namespace Modulo_admin {
 */
 }
 
-
+  
 void menuCadastroCursos(){
     /*
     Disciplina disciplina_;
     char escolha;
     std::fstream file;
     openFile(file,"disciplinas.dat");
-
+    
     do {
         system("cls");
         std::cout
@@ -294,13 +294,13 @@ void menuCadastroCursos(){
             std::cout<<"Carga horaria: ";
             std::cin>>disciplina_.cargaHoraria;
             limparbuffer();
-
+            
             file.seekp(0,std::ios::end);
             disciplina_.id = 1 + file.tellp() / sizeof(Disciplina);
             disciplina_.ativo = 1;
             disciplina_.idProfessor = 0;
             file.write((char*)&disciplina_,sizeof(Disciplina));
-
+            
             std::cout<<"Id da disciplina: "<<disciplina_.id<<"\n";
             std::cout<<"Disciplina cadastrada com sucesso\n";
             file.clear();
@@ -315,17 +315,17 @@ void menuCadastroCursos(){
                 std::cin>>buscaId;
                 limparbuffer();
 
-
+                
                 disciplina_ = buscaDisciplina(file,buscaId);
 
                 if(disciplina_.ativo == 0){
 
                 disciplina_.ativo = 1;
 
-
+                
                 file.seekp((buscaId-1)*sizeof(Disciplina));
                 file.write((char*)&disciplina_,sizeof(Disciplina));
-                file.clear();
+                file.clear();   
                 std::cout<<"Disciplina autorizada com sucesso!\n";
                 }
                 else if(disciplina_.ativo==1&&disciplina_.id!=0)
@@ -360,7 +360,7 @@ void menuCadastroCursos(){
 
                 break;
             }
-
+        
 
         case '4':{
             system("cls");
@@ -374,7 +374,7 @@ void menuCadastroCursos(){
             std::cout<<"Digite o id da disciplina\n: ";
             std::cin>>buscaId;
             limparbuffer();
-
+            
             disciplina_ = buscaDisciplina(file,buscaId);
 
             if(disciplina_.ativo == 0 && disciplina_.id != 0)
@@ -406,15 +406,15 @@ void menuCadastroCursos(){
             else std::cout<<"Tente novamente!\n";
 
 
-            File_Prof.close();
+            File_Prof.close(); 
             break;}
 
         case '5': {
             system("cls");
-            std::cout << "\n===== LISTA DE DISCIPLINAS =====\n\n";
-
+            std::cout << "\n===== LISTA DE DISCIPLINAS =====\n\n";  
+           
             file.seekg(0);
-            while (file.read((char*)&disciplina_, sizeof(Disciplina))) {
+            while (file.read((char*)&disciplina_, sizeof(Disciplina))) {   
 
                 if (disciplina_.id!=0) {
                     std::cout << "ID: " << disciplina_.id << "\n"
@@ -443,7 +443,6 @@ void menuCadastroCursos(){
 
     }while(escolha != 'X' && escolha != 'x');
     file.close();
-*/
 }
 
     void consultarRelatoriosAcademicos() {
@@ -634,7 +633,7 @@ void menuCadastroCursos(){
         cout << "Dentro de menuCadastroInstrumentos" << endl;
         // Lógica para cadastro de instrumentos
     }
-
+ 
     void gerarRelatorioFinanceiro() {
         system("cls || clear");
         cout << "Dentro de gerarRelatorioFinanceiro" << endl;
