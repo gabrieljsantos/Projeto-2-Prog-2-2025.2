@@ -2,6 +2,8 @@
 #include <fstream>
 #include "admin.h"
 #include "headers.h"
+#include "interface_grafica.h"
+#include "lanchonete.h"
 
 using namespace std;
 
@@ -121,7 +123,240 @@ void consultarPendenciasInstrumentos() {
 
 namespace Modulo_admin {
 
-    void menuGerenciarUsuarios(std::fstream &file){
+
+    int listar_usuarios_especificos(Funcao tipo_usuario, int ativo, string dados[100][6]){
+            int contador = 0;
+            switch (tipo_usuario)
+            {
+            case ALUNO: {
+                std::fstream file;
+                openFile(file, "alunos.dat");
+                Aluno aluno;
+                file.seekg(0);
+                while(file.read((char*)&aluno, sizeof(Aluno)) && contador < 100) {
+                    if((aluno.base.ativo == ativo || ativo == 2) && aluno.base.id != 0 ) {
+                        dados[contador][0] = to_string(aluno.base.id); 
+                        dados[contador][1] = aluno.base.nome;
+                        dados[contador][2] = aluno.base.email;
+                        dados[contador][3] = to_string(aluno.base.categoria);
+                        dados[contador][4] = aluno.base.ativo ? "Ativo" : "Inativo";
+                        contador++;
+                    }
+                }
+                file.close();
+                break;
+            }
+            case PROFESSOR: {
+                std::fstream file;
+                openFile(file, "professores.dat");
+                Professor prof;
+                file.seekg(0);
+                while(file.read((char*)&prof, sizeof(Professor)) && contador < 100) {
+                    if((prof.base.ativo == ativo || ativo == 2) && prof.base.id != 0) {
+                        dados[contador][0] = to_string(prof.base.id); 
+                        dados[contador][1] = prof.base.nome;
+                        dados[contador][2] = prof.base.email;
+                        dados[contador][3] = to_string(prof.base.categoria);
+                        dados[contador][4] = prof.base.ativo ? "Ativo" : "Inativo";
+                        contador++;
+                    }
+                }
+                file.close();
+                break;
+            }
+            case ADMINISTRADOR: {
+                std::fstream file;
+                openFile(file, "admin.dat");
+                Admin admin;
+                file.seekg(0);
+                while(file.read((char*)&admin, sizeof(Admin)) && contador < 100) {
+                    if((admin.base.ativo == ativo || ativo == 2) && admin.base.id != 0) {
+                        dados[contador][0] = to_string(admin.base.id); 
+                        dados[contador][1] = admin.base.nome;
+                        dados[contador][2] = admin.base.email;
+                        dados[contador][3] = to_string(admin.base.categoria);
+                        dados[contador][4] = admin.base.ativo ? "Ativo" : "Inativo";
+                        contador++;
+                    }
+                }
+                file.close();
+                break;
+            }
+            default:
+                break;
+            }
+
+
+            return contador;
+    }
+
+    void menuCadastroUsuarios() {
+        system("cls || clear");
+        cout << "Dentro de menuCadastroUsuarios" << endl;
+    }
+
+    void menuGerenciarUsuarios(){
+
+        constexpr int Quantidades_opcoes = 4;
+        string texto_do_tipo_de_usuario;
+        Funcao tipo_usuario = ALUNO;
+        int estado_selecionado = 2; // 0=Ativo, 1=Inativo, 2=Ambos (padrão)
+        bool continuar = true;
+
+        while (continuar) {
+            switch(tipo_usuario) {
+                case ALUNO:
+                    texto_do_tipo_de_usuario = "Aluno";
+                    break;
+                case PROFESSOR:
+                    texto_do_tipo_de_usuario = "Professor";
+                    break;
+                case ADMINISTRADOR:
+                    texto_do_tipo_de_usuario = "Administrador";
+                    break;
+                case NENHUMA:
+                    break;
+            }
+
+            string opcoes[Quantidades_opcoes] = {
+                "Filtros de pesquisa",
+                "Listar Usuarios",
+                "Buscar Usuario por ID",
+                "Voltar"
+            };
+            ConfigMenu config;
+            config.titulo = "Gerenciar Usuarios < " + texto_do_tipo_de_usuario + "s >";   
+            config.descricao = "Selecione uma opcao para gerenciar os usuarios do sistema.";
+            saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
+            
+            switch (resultado.indice_da_opcao)
+            {
+                case 0: {
+                    constexpr int qtdVariaveis = 2;
+                    string nomes_variaveis[qtdVariaveis] = {"Tipo de Usuario", "Estado do Usuario"};
+                    
+                    constexpr int qtdTipos = 3;
+                    string tipos[qtdTipos] = {"Aluno", "Professor", "Administrador"};
+                    
+                    constexpr int qtdEstados = 3;
+                    string estados[qtdEstados] = {"Ativo", "Inativo", "Ambos"};
+                    
+                    const string* opcoes_variaveis[] = {(const string*)tipos, (const string*)estados};
+                    int num_opcoes[] = {qtdTipos, qtdEstados};
+                    
+                    ConfigConfigurador configFiltro;
+                    configFiltro.titulo = "Filtros de Pesquisa";
+                    configFiltro.descricao = "Defina os filtros para gerenciar usuarios.";
+                    
+                    saida_configurador resultadofiltro = interface_para_configurador(qtdVariaveis, nomes_variaveis, opcoes_variaveis, num_opcoes, configFiltro);
+                    
+                    cout << "Tipo Usuario selecionado: " << resultadofiltro.valores_selecionados[0] << endl;
+                    cout << "Estado Usuario selecionado: " << resultadofiltro.valores_selecionados[1] << endl;
+                    system("pause");
+                    if (resultadofiltro.confirmado && resultadofiltro.numero_variaveis >= 2) {
+                        // Converter tipo de usuario
+                        string tipo_str = resultadofiltro.valores_selecionados[0];
+                        if (tipo_str == "Aluno") tipo_usuario = ALUNO;
+                        else if (tipo_str == "Professor") tipo_usuario = PROFESSOR;
+                        else if (tipo_str == "Administrador") tipo_usuario = ADMINISTRADOR;
+                        
+                        // Converter estado do usuario
+                        string estado_str = resultadofiltro.valores_selecionados[1];
+                        if (estado_str == "Ativo") estado_selecionado = 1;
+                        else if (estado_str == "Inativo") estado_selecionado = 0;
+                        else if (estado_str == "Ambos") estado_selecionado = 2;
+                    }
+                    break;
+                }
+                case 1: {
+                    string dados[100][6];
+                    int total = listar_usuarios_especificos(tipo_usuario, estado_selecionado, dados);
+                    cout << "Total de usuarios encontrados: " << total << endl;
+                    for (int i = 0; i < total; i++) {
+                        cout << "ID: " << dados[i][0] << " | Nome: " << dados[i][1] << " | Email: " << dados[i][2] << " | Categoria: " << dados[i][3] << " | Status: " << dados[i][4] << endl;
+                    }
+                    system("pause");
+                    string titulos[5] = {"ID", "Nome", "Email", "Categoria", "Status"};
+                    const string* dados_ptr[100];
+                    for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
+                    ConfigTabela configTab;
+                    configTab.titulo = "Todos os Usuarios (" + texto_do_tipo_de_usuario + "s)";
+                    saida_tabela usuario_selecionado = interface_para_tabela(total, 5, dados_ptr, titulos, 0, configTab);
+                    system("pause");
+                    cout << "Usuario selecionado: " << usuario_selecionado.valor_retorno << endl;
+                    cout << "Linha: " << usuario_selecionado.indice_linha << " | Coluna: " << usuario_selecionado.indice_coluna << endl;
+                    
+                    system("pause");
+                    break;
+                }
+                case 2: {
+                    int idBusca;
+                    mostrar_caixa_informacao("BUSCAR", "Digite o ID do usuario (ou -1 para cancelar):");
+                    cin >> idBusca;
+                    limparbuffer();
+                    
+                    if (idBusca > 0) {
+                        std::fstream file;
+                        bool encontrado = false;
+                        
+                        if (tipo_usuario == ALUNO) {
+                            openFile(file, "alunos.dat");
+                            Aluno aluno;
+                            file.seekg((idBusca - 1) * sizeof(Aluno));
+                            if (file.read((char*)&aluno, sizeof(Aluno)) && aluno.base.id == idBusca) {
+                                encontrado = true;
+                                string status_atual = aluno.base.ativo ? "Ativo" : "Inativo";
+                                mostrar_caixa_informacao("INFO", "Nome: " + string(aluno.base.nome) + "\nStatus: " + status_atual);
+                                aluno.base.ativo = !aluno.base.ativo;
+                                file.seekp((idBusca - 1) * sizeof(Aluno));
+                                file.write((char*)&aluno, sizeof(Aluno));
+                                string novo_status = aluno.base.ativo ? "Ativado" : "Desativado";
+                                mostrar_caixa_informacao("SUCESSO", "Usuario " + novo_status + " com sucesso!");
+                            }
+                        } else if (tipo_usuario == PROFESSOR) {
+                            openFile(file, "professores.dat");
+                            Professor prof;
+                            file.seekg((idBusca - 1) * sizeof(Professor));
+                            if (file.read((char*)&prof, sizeof(Professor)) && prof.base.id == idBusca) {
+                                encontrado = true;
+                                string status_atual = prof.base.ativo ? "Ativo" : "Inativo";
+                                mostrar_caixa_informacao("INFO", "Nome: " + string(prof.base.nome) + "\nStatus: " + status_atual);
+                                prof.base.ativo = !prof.base.ativo;
+                                file.seekp((idBusca - 1) * sizeof(Professor));
+                                file.write((char*)&prof, sizeof(Professor));
+                                string novo_status = prof.base.ativo ? "Ativado" : "Desativado";
+                                mostrar_caixa_informacao("SUCESSO", "Usuario " + novo_status + " com sucesso!");
+                            }
+                        } else if (tipo_usuario == ADMINISTRADOR) {
+                            openFile(file, "admin.dat");
+                            Admin admin;
+                            file.seekg((idBusca - 1) * sizeof(Admin));
+                            if (file.read((char*)&admin, sizeof(Admin)) && admin.base.id == idBusca) {
+                                encontrado = true;
+                                string status_atual = admin.base.ativo ? "Ativo" : "Inativo";
+                                mostrar_caixa_informacao("INFO", "Nome: " + string(admin.base.nome) + "\nStatus: " + status_atual);
+                                admin.base.ativo = !admin.base.ativo;
+                                file.seekp((idBusca - 1) * sizeof(Admin));
+                                file.write((char*)&admin, sizeof(Admin));
+                                string novo_status = admin.base.ativo ? "Ativado" : "Desativado";
+                                mostrar_caixa_informacao("SUCESSO", "Usuario " + novo_status + " com sucesso!");
+                            }
+                        }
+                        
+                        if (!encontrado) {
+                            mostrar_caixa_informacao("ERRO", "Usuario nao encontrado!");
+                        }
+                        file.close();
+                    }
+                    break;
+                }
+                case 3:
+                    continuar = false;
+                    break;
+            }
+        }
+    }
+
 /*
     char escolha;
     int Id;
@@ -258,7 +493,6 @@ namespace Modulo_admin {
     usuario_= nullptr;
 
 */
-}
 
 
 void menuCadastroCursos(){
@@ -655,5 +889,85 @@ void menuCadastroCursos(){
         cout << "Dentro de restaurarBackup" << endl;
         // Lógica para restaurar backup
     }
+
+}
+
+
+void abrir_menu_admin(Usuario* usuario) {
+    constexpr int qtdOpcoes = 14;
+    string opcoes[qtdOpcoes] = {
+        "Ativar Creditos Pendentes",
+        "Cadastrar Cursos",
+        "Consultar Estoque",
+        "Consultar Pendencias",
+        "Gerenciar Eventos",
+        "Gerenciar Instrumentos",
+        "Gerenciar Produtos",
+        "Gerenciar Usuarios",
+        "Realizar Backup",
+        "Relatorio Financeiro",
+        "Relatorio Patrimonial",
+        "Relatorios Academicos",
+        "Restaurar Backup",
+        "Logout"
+    };
+    
+
+    
+    ConfigMenu config;
+    config.titulo = "AREA DO ADMINISTRADOR";
+    config.descricao = "Bem-vindo(a), " + string(usuario->nome) + "!";
+    
+    saida_menu resultado = interface_para_menu(qtdOpcoes, opcoes, config);
+    
+    switch (resultado.indice_da_opcao) {
+        case 0: 
+            Lanchonete::ativarCreditosPendentes(); 
+            break;
+        case 1: 
+            Modulo_admin::menuCadastroCursos(); 
+            break;
+        case 2: 
+            Lanchonete::consultarEstoque(); 
+            break;
+        case 3: 
+            consultarPendenciasInstrumentos(); 
+            break;
+        case 4: {
+            fstream file;
+            openFile(file, "eventos.dat");
+            Modulo_admin::menuEventos(file);
+            file.close();
+            break;
+        }
+        case 5: 
+            Modulo_admin::menuCadastroInstrumentos(); 
+            break;
+        case 6: 
+            Lanchonete::menuCadastroProdutos(); 
+            break;
+        case 7: 
+            Modulo_admin::menuGerenciarUsuarios(); 
+            break;
+        case 8: 
+            Modulo_admin::realizarBackup(); 
+            break;
+        case 9: 
+            Modulo_admin::gerarRelatorioFinanceiro(); 
+            break;
+        case 10: 
+            Modulo_admin::gerarRelatorioPatrimonial(); 
+            break;
+        case 11: 
+            Modulo_admin::consultarRelatoriosAcademicos(); 
+            break;
+        case 12: 
+            Modulo_admin::restaurarBackup(); 
+            break;
+        case 13: 
+            usuario->logado = false; 
+            break;
+    }
+    
 
 }

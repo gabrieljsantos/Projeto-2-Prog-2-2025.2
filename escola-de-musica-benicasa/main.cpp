@@ -16,7 +16,6 @@ using namespace std;
 void pausar();
 // void exibirCabecalhoSistema();
 saida_menu exibirMenuLogin();
-void exibirMenuAdministrador();
 void exibirMenuProfessor();
 void exibirMenuAluno();
 
@@ -62,34 +61,7 @@ int main() {
         } else {
             switch (usuario.categoria) {
                 case ADMINISTRADOR: {
-                    int opcao;
-                    exibirMenuAdministrador();
-                    cin >> opcao;
-                    cin.ignore();
-
-                    switch (opcao) {
-                        /*
-                        case 1: Modulo_admin::menuCadastroUsuarios(); break;
-                        case 2: Modulo_admin::menuGerenciarUsuarios(); break;
-                        case 3: Modulo_admin::menuCadastroCursos(); break;
-                        case 4: Modulo_admin::consultarRelatoriosAcademicos(); break;
-                        case 5: Modulo_admin::menuCadastroEventos(); break;
-                        case 6: Modulo_admin::autorizarEventos(); break;
-                        case 7: Modulo_admin::listarTodosEventos(); break;
-                        case 8: Modulo_admin::menuCadastroInstrumentos(); break;
-                        case 9: Modulo_admin::liberarInstrumentos(); break;
-                        case 10: Modulo_admin::consultarPendenciasInstrumentos(); break;
-                        */
-                        case 11: Lanchonete::menuCadastroProdutos(); break;
-                        case 12: Lanchonete::ativarCreditosPendentes(); break;
-                        case 13: Lanchonete::consultarEstoque(); break;
-                        case 14: Modulo_admin::gerarRelatorioFinanceiro(); break;
-                        case 15: Modulo_admin::gerarRelatorioPatrimonial(); break;
-                        case 16: Modulo_admin::realizarBackup(); break;
-                        case 17: Modulo_admin::restaurarBackup(); break;
-                        case 0: usuario.logado = false; break;
-                        default: cout << "\nOpcao invalida!" << endl;
-                    }
+                    abrir_menu_admin(&usuario);
                     if (usuario.logado) pausar();
                     break;
                 }
@@ -175,7 +147,7 @@ void exibirMenuLogin() {
 }
 */
 saida_menu exibirMenuLogin() {
-    int qtdOpcoes = 3;
+    constexpr int qtdOpcoes = 3;
     string opcoes[qtdOpcoes] = {"Fazer Login", "Realizar Cadastro", "Sair do Sistema"};
     ConfigMenu config;
     config.titulo = "SISTEMA DE GESTAO - ESCOLA DE MUSICA";
@@ -183,31 +155,6 @@ saida_menu exibirMenuLogin() {
     return interface_para_menu(qtdOpcoes, opcoes, config);
 }
 
-
-void exibirMenuAdministrador() {
-    system("cls || clear");
-    cout << "AREA DO ADMINISTRADOR" << endl;
-    cout << "============================================" << endl;
-    cout << "1. Cadastrar Usuarios" << endl;
-    cout << "2. Gerenciar Usuarios" << endl;
-    cout << "3. Cadastrar Cursos" << endl;
-    cout << "4. Relatorios Academicos" << endl;
-    cout << "5. Cadastrar Eventos" << endl;
-    cout << "6. Autorizar Eventos" << endl;
-    cout << "7. Listar Todos os Eventos" << endl;
-    cout << "8. Cadastrar Instrumentos" << endl;
-    cout << "9. Liberar Instrumentos" << endl;
-    cout << "10. Consultar Pendencias" << endl;
-    cout << "11. Cadastrar Produtos" << endl;
-    cout << "12. Ativar Creditos Pendentes" << endl;
-    cout << "13. Consultar Estoque" << endl;
-    cout << "14. Relatorio Financeiro" << endl;
-    cout << "15. Relatorio Patrimonial" << endl;
-    cout << "16. Realizar Backup" << endl;
-    cout << "17. Restaurar Backup" << endl;
-    cout << "0. Logout" << endl;
-    cout << "Opcao: ";
-}
 
 void exibirMenuProfessor() {
     system("cls || clear");
