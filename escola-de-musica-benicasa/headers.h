@@ -21,21 +21,33 @@ struct Usuario{
 struct Aluno {
     Usuario base;
     double saldo;
-    int notas[2];
+    float notas[2];
+    float media;
     int faltas;
     int instrumento;
     int turmasId[10];
+    int idInstrumento;
+    int turma;
 };
 
 struct Professor {
     Usuario base;
     double saldo;
     char disciplina[50];
-    int turmasId[5];
+    int turmas[5];
 };
 
 struct Admin {
     Usuario base;
+};
+
+#define MAX_ALUNOS 20
+struct Turma // Por que nao usa A GERAL?????????
+{
+    int id;
+    char nome[100];
+    int id_prof;
+    Aluno alunos[MAX_ALUNOS];
 };
 
 struct Disciplina {
@@ -43,8 +55,6 @@ struct Disciplina {
     int ativo;
     char nome[50];
     int cargaHoraria;
-    int idProfessor;
-    int vagas;
 };
 struct Produto {
     char nome[50];
@@ -93,7 +103,7 @@ struct Credito {
     int id_opera = 0;
     int id_user = 0;
     Funcao tipo_user;
-    double saldo = 0; 
+    double saldo = 0;
     bool realizado = false;
 };
 

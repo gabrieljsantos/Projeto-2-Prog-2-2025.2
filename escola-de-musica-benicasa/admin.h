@@ -3,26 +3,34 @@
 #include <iostream>
 #include <fstream>
 #include "headers.h"
-#include <limits>
 #include <cstring>
+#include <limits>
 
-    void pausar();
-    void limparbuffer();
-    void openFile(std::fstream &f, const std::string Nome);
-    Professor buscaProf(std::fstream &file,int buscaId);
-    Disciplina buscaDisciplina(std::fstream &file, int buscaId);
-    void consultarPendenciasInstrumentos();
+namespace mod_ADM{
+        //prontos
+        void pausar();
+        void limparbuffer();
+        void openFile(std::fstream &file, const std::string Nome);
+        int gerarNovoId(std::fstream &file, size_t tamanhoStruct);
+        Disciplina buscaDisciplina(std::fstream &file, int buscaId );
+        Professor buscaProf(std::fstream &file,int buscaId);
+        Aluno buscaAluno(std::fstream &file,int buscaId);
+        Produto buscaProduto(std::fstream &file,int buscaId);
+        Instrumento buscarInstrumento(std::fstream &file, int buscaId );
+        bool verificaTurmasProf(Professor &prof,int &Index_turma);
+        void menuEventos();
+        // void menuGerenciarUsuarios();//refazer
+        void menuCadastroCursos();
+        void cadastrarProdutos();
+        void consultarPendenciasInstrumentos();
+        void menuInstrumentos();
+        void cadastrarTurma();
+        void matricularAlunoTurma();
 
-namespace mod_ADM {
-    void menuCadastroUsuarios();
-    void menuGerenciarUsuarios();
-    void menuCadastroCursos();
-    void consultarRelatoriosAcademicos();
-    void menuEventos();
-    void menuCadastroInstrumentos();
-    void gerarRelatorioFinanceiro();
-    void gerarRelatorioPatrimonial();
-    void realizarBackup();
-    void restaurarBackup();
-}
-#endif
+        //falta
+        void menuRelatorios();
+        void relatorioAcademico();
+        void relatorioFinanceiro();
+        void relatorioPatrimonial();
+    }
+#endif 
