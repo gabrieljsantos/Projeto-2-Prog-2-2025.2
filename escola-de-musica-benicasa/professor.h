@@ -4,8 +4,7 @@
 #include <iostream>
 #include "headers.h"
 
-#define MAX_TURMAS 30
-#define MAX_ALUNOS 20
+
 #define MAX_TURMAS_PROF 5
 #define MEDIA_MINIMA 7.0
 #define FALTAS_MAXIMAS 10
