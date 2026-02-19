@@ -42,6 +42,10 @@ namespace Login_mat {
     int adquirirPosicaoDoId(int id);
     int verificarUltimoIdUsuario();
 
+    // Funções basicas para escriptografar as senhas
+    string encriptografarSenha(string senha);
+    string desencriptografarSenha(string senhaEncriptografada);
+
     // Ler X (usuario, aluno, professor)
     Usuario lerUsuario(int id);
     Aluno lerAluno(int id);
