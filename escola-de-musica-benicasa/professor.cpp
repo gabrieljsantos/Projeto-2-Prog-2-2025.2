@@ -31,7 +31,7 @@ namespace Calculos
     }
 }
 
-bool turmaPermitida(int id_prof, int turma_index)
+bool turmaPermitida(int id_prof, int turma_index) // 20260001
 {
     if (turma_index < 1 || turma_index > MAX_TURMAS)
         return false;
@@ -370,5 +370,71 @@ namespace ModuloProfessor
                  << " | Faltas: " << (*aluno).faltas
                  << "\n";
         }
+
+        cout << "\n=== HISTORICO DE AVALIACOES ===\n";
+
+        if (turma.qtdAvaliacoes == 0)
+        {
+            cout << "Nenhuma avaliacao registrada.\n";
+        }
+        else
+        {
+            for (int i = 0; i < turma.qtdAvaliacoes; i++)
+            {
+                cout << i + 1 << ". "
+                     << turma.avaliacoes[i].data << " - "
+                     << turma.avaliacoes[i].descricao << "\n";
+            }
+        }
+    }
+
+    void registrarAvaliacao(int id_prof)
+    {
+        int turma_index;
+
+        cout << "Numero da turma: ";
+        cin >> turma_index;
+        cin.ignore();
+
+        if (!turmaPermitida(id_prof, turma_index))
+        {
+            cout << "Turma nao pertence ao professor.\n";
+            return;
+        }
+
+        fstream file("turmas.dat", ios::in | ios::out | ios::binary);
+        if (!file)
+        {
+            cout << "Erro ao abrir arquivo.\n";
+            return;
+        }
+
+        Turma turma;
+
+        file.seekg((turma_index - 1) * sizeof(Turma));
+        file.read((char *)&turma, sizeof(Turma));
+
+        if (turma.qtdAvaliacoes >= MAX_AVALIACOES)
+        {
+            cout << "Limite de avaliacoes atingido.\n";
+            file.close();
+            return;
+        }
+
+        Avaliacao *av = &turma.avaliacoes[turma.qtdAvaliacoes];
+
+        cout << "Data (dd/mm/aaaa): ";
+        cin.getline(av->data, 12);
+
+        cout << "Descricao da avaliacao: ";
+        cin.getline(av->descricao, 100);
+
+        turma.qtdAvaliacoes++;
+
+        file.seekp((turma_index - 1) * sizeof(Turma));
+        file.write((char *)&turma, sizeof(Turma));
+        file.close();
+
+        cout << "Avaliacao registrada com sucesso.\n";
     }
 }
