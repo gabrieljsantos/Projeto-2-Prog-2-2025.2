@@ -1239,6 +1239,7 @@ saida_entrada_texto interface_para_entrada_texto(
     // ── Inicializar ncurses ─────────────────────────────────
     setlocale(LC_ALL, "pt_BR.UTF-8");
     initscr();
+    noecho();
     cbreak();
     keypad(stdscr, TRUE);
     curs_set(1);
@@ -1443,7 +1444,7 @@ saida_entrada_texto interface_para_entrada_texto(
                     entrada_atual += (char)tecla;
             }
         }
-        else if (tecla == KEY_BACKSPACE || tecla == 127)  // Backspace
+        else if (tecla == KEY_BACKSPACE || tecla == 127 || tecla == 8 || tecla == 263)  // Backspace (múltiplas variações)
         {
             if (!entrada_atual.empty())
                 entrada_atual.pop_back();
@@ -1701,5 +1702,231 @@ saida_botoes interface_para_botoes(
         }
     }
 
+    return resultado;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MOSTRAR DETALHES - TÓPICOS COM DESCRIÇÕES E PAGINAÇÃO
+// ═══════════════════════════════════════════════════════════════
+
+saida_detalhes mostrar_detalhes(
+    const TopicDetalhes topicos[],
+    int numero_topicos,
+    const ConfigDetalhes& config)
+{
+    saida_detalhes resultado;
+    resultado.confirmado = false;
+    resultado.pagina_atual = 0;
+
+    // Validações
+    if (numero_topicos <= 0 || numero_topicos > 10)
+        return resultado;
+
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    curs_set(0);
+
+    int max_x, max_y;
+    getmaxyx(stdscr, max_y, max_x);
+
+    // Inicializar cores se disponível
+    if (has_colors())
+    {
+        start_color();
+        init_pair(1, COLOR_YELLOW, COLOR_BLUE);
+        init_pair(2, COLOR_WHITE, COLOR_BLUE);
+        init_pair(3, COLOR_CYAN, COLOR_BLUE);
+        init_pair(4, COLOR_GREEN, COLOR_BLUE);
+        init_pair(5, COLOR_MAGENTA, COLOR_BLUE);
+        init_pair(6, COLOR_WHITE, COLOR_BLACK);
+        init_pair(7, COLOR_WHITE, COLOR_BLUE);
+        init_pair(8, COLOR_YELLOW, COLOR_BLACK);
+    }
+
+    int inicio_y = 2;
+    int altura_disponivel = max_y - 8;
+    int topicos_por_pagina = config.topicos_por_pagina;
+    if (topicos_por_pagina <= 0) topicos_por_pagina = 5;
+
+    int total_paginas = (numero_topicos + topicos_por_pagina - 1) / topicos_por_pagina;
+    int pagina_atual = 0;
+    int topico_selecionado = 0;
+
+    while (true)
+    {
+        clear();
+
+        // ── Título ───────────────────────────────────────────
+        attron(COLOR_PAIR(config.cores.cor_titulo) | A_BOLD);
+        mvprintw(0, centro_x(max_x, (int)config.titulo.length()), "%s", config.titulo.c_str());
+        attroff(COLOR_PAIR(config.cores.cor_titulo) | A_BOLD);
+
+        // ── Descrição geral ───────────────────────────────
+        if (!config.descricao.empty())
+        {
+            attron(COLOR_PAIR(config.cores.cor_descricao));
+            mvprintw(1, config.x, "%s", config.descricao.c_str());
+            attroff(COLOR_PAIR(config.cores.cor_descricao));
+        }
+
+        // ── Linha separadora ──────────────────────────────
+        attron(COLOR_PAIR(config.cores.cor_borda));
+        mvhline(2, 0, ACS_HLINE, max_x);
+        attroff(COLOR_PAIR(config.cores.cor_borda));
+
+        // ── Renderizar tópicos da página atual ────────────
+        int inicio_topico = pagina_atual * topicos_por_pagina;
+        int fim_topico = inicio_topico + topicos_por_pagina;
+        if (fim_topico > numero_topicos) fim_topico = numero_topicos;
+
+        int linha_atual = inicio_y;
+        for (int i = inicio_topico; i < fim_topico; i++)
+        {
+            int indice_local = i - inicio_topico;
+            bool selecionado = (i == topico_selecionado);
+
+            // ── Título do tópico ──────────────────────────
+            if (selecionado)
+            {
+                attron(COLOR_PAIR(config.cores.cor_opcao_selecionada) | A_BOLD);
+                preencher_linha(stdscr, linha_atual, 0, max_x, config.cores.cor_opcao_selecionada);
+            }
+            else
+            {
+                attron(COLOR_PAIR(config.cores.cor_opcao));
+            }
+
+            string titulo_display = "> " + topicos[i].titulo;
+            mvprintw(linha_atual, config.x, "%s", titulo_display.c_str());
+
+            if (selecionado)
+                attroff(COLOR_PAIR(config.cores.cor_opcao_selecionada) | A_BOLD);
+            else
+                attroff(COLOR_PAIR(config.cores.cor_opcao));
+
+            linha_atual++;
+
+            // ── Descrição do tópico (com word wrap) ───────
+            if (selecionado || topicos[i].descricao.length() <= 60)
+            {
+                attron(COLOR_PAIR(config.cores.cor_descricao));
+                int largura_desc = max_x - config.x - 4;
+                if (largura_desc < 20) largura_desc = 20;
+
+                desenhar_texto_wrap(stdscr, linha_atual, config.x + 2, topicos[i].descricao,
+                                   max_x - config.x - 2, config.cores.cor_descricao);
+
+                int linhas_desc = contar_linhas_com_wrap(topicos[i].descricao, max_x - config.x - 2);
+                linha_atual += linhas_desc;
+
+                attroff(COLOR_PAIR(config.cores.cor_descricao));
+            }
+
+            linha_atual++;
+            if (linha_atual >= max_y - 3) break;
+        }
+
+        // ── Linha separadora inferior ──────────────────────
+        int linha_rodape = max_y - 3;
+        attron(COLOR_PAIR(config.cores.cor_borda));
+        mvhline(linha_rodape, 0, ACS_HLINE, max_x);
+        attroff(COLOR_PAIR(config.cores.cor_borda));
+
+        // ── Informação de paginação ───────────────────────
+        if (total_paginas > 1)
+        {
+            string info_pagina = "Página " + to_string(pagina_atual + 1) + "/" + to_string(total_paginas);
+            attron(COLOR_PAIR(config.cores.cor_paginacao));
+            mvprintw(linha_rodape, config.x, "%s", info_pagina.c_str());
+            attroff(COLOR_PAIR(config.cores.cor_paginacao));
+        }
+
+        // ── Instruções de controle ────────────────────────
+        {
+            int linha_ctrl = max_y - 1;
+            move(linha_ctrl, 0);
+            clrtoeol();
+
+            attron(COLOR_PAIR(config.cores.cor_controles) | A_DIM);
+            mvprintw(
+                linha_ctrl,
+                centro_x(max_x, (int)config.instrucao_controles.length()),
+                "%s", config.instrucao_controles.c_str()
+            );
+            attroff(COLOR_PAIR(config.cores.cor_controles) | A_DIM);
+        }
+
+        refresh();
+
+        // ── Input ───────────────────────────────────────────
+        int tecla = getch();
+
+        if (tecla == KEY_DOWN || tecla == 'j' || tecla == 'J')
+        {
+            // Próximo tópico
+            if (topico_selecionado < numero_topicos - 1)
+            {
+                topico_selecionado++;
+
+                // Ajustar página se necessário
+                if (topico_selecionado >= (pagina_atual + 1) * topicos_por_pagina)
+                {
+                    pagina_atual++;
+                }
+            }
+        }
+        else if (tecla == KEY_UP || tecla == 'k' || tecla == 'K')
+        {
+            // Tópico anterior
+            if (topico_selecionado > 0)
+            {
+                topico_selecionado--;
+
+                // Ajustar página se necessário
+                if (topico_selecionado < pagina_atual * topicos_por_pagina)
+                {
+                    pagina_atual--;
+                }
+            }
+        }
+        else if (tecla == KEY_RIGHT || tecla == 'l' || tecla == 'L')
+        {
+            // Próxima página
+            if (pagina_atual < total_paginas - 1)
+            {
+                pagina_atual++;
+                topico_selecionado = pagina_atual * topicos_por_pagina;
+            }
+        }
+        else if (tecla == KEY_LEFT || tecla == 'h' || tecla == 'H')
+        {
+            // Página anterior
+            if (pagina_atual > 0)
+            {
+                pagina_atual--;
+                topico_selecionado = pagina_atual * topicos_por_pagina;
+            }
+        }
+        else if (tecla == '\n' || tecla == 10 || tecla == 13)
+        {
+            // Confirmar
+            resultado.confirmado = true;
+            resultado.pagina_atual = pagina_atual;
+            endwin();
+            return resultado;
+        }
+        else if (tecla == 27 || tecla == 'q' || tecla == 'Q')
+        {
+            // Cancelar
+            resultado.confirmado = false;
+            resultado.pagina_atual = pagina_atual;
+            endwin();
+            return resultado;
+        }
+    }
+
+    endwin();
     return resultado;
 }

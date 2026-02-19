@@ -21,30 +21,39 @@ struct Usuario{
 struct Aluno {
     Usuario base;
     double saldo;
-    int notas[2];
+    float notas[2];
+    float media;
     int faltas;
     int instrumento;
-    int turmasId[10];
+    int idInstrumento;
+    int turma;
 };
 
 struct Professor {
     Usuario base;
     double saldo;
     char disciplina[50];
-    int turmasId[5];
+    int turmas[5];
 };
 
 struct Admin {
     Usuario base;
 };
 
+#define MAX_ALUNOS 20
+struct Turma {
+    int id;
+    int ativo;
+    int idDisciplina;
+    int idProfessor;
+    int alunos[MAX_ALUNOS]; 
+    int qtdAlunos;
+};
 struct Disciplina {
     int id;
     int ativo;
     char nome[50];
     int cargaHoraria;
-    int idProfessor;
-    int vagas;
 };
 struct Produto {
     char nome[50];

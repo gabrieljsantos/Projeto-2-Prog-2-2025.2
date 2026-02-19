@@ -20,6 +20,7 @@ void exibirMenuProfessor();
 void exibirMenuAluno();
 
 int main() {
+    cout << "Bem-vindo ao Sistema de Gestão da Escola de Música!" << endl;
     Usuario usuario;
     saida_menu saidaLogin;
     bool executando = true;
