@@ -41,6 +41,7 @@ struct Admin {
     Usuario base;
 };
 
+#define MAX_ALUNOS 20
 struct Turma // Por que nao usa A GERAL?????????
 {
     int id;
