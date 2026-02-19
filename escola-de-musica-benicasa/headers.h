@@ -41,13 +41,20 @@ struct Admin {
     Usuario base;
 };
 
+#define MAX_ALUNOS 20
+struct Turma {
+    int id;
+    int ativo;
+    int idDisciplina;
+    int idProfessor;
+    int alunos[MAX_ALUNOS]; 
+    int qtdAlunos;
+};
 struct Disciplina {
     int id;
     int ativo;
     char nome[50];
     int cargaHoraria;
-    int idProfessor;
-    int vagas;
 };
 struct Produto {
     char nome[50];
