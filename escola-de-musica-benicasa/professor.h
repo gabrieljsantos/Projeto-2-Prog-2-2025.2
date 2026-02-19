@@ -4,21 +4,34 @@
 #include <iostream>
 #include "headers.h"
 
-
+#define MAX_TURMAS 30
+#define MAX_ALUNOS 20
 #define MAX_TURMAS_PROF 5
 #define MEDIA_MINIMA 7.0
 #define FALTAS_MAXIMAS 10
+#define MAX_AVALIACOES 10
 
 // ============================
 // Estruturas Base
 // ============================
 
-struct Turma // Por que nao usa A GERAL?????????
+struct Avaliacao
+{
+    char data[12];        // dd/mm/aaaa
+    char descricao[100];  // assunto da avaliacao
+};
+
+struct Turma
 {
     int id;
     char nome[100];
     int id_prof;
+
     Aluno alunos[MAX_ALUNOS];
+
+    // NOVO BLOCO
+    Avaliacao avaliacoes[MAX_AVALIACOES];
+    int qtdAvaliacoes;
 };
 
 // ============================
@@ -54,6 +67,7 @@ namespace ModuloProfessor
     void consultarTurma(int id_prof); // ← ADICIONADA
 
     void registrarFaltas(int id_prof);
+    void registrarAvaliacao(int id_prof);
 }
 
 #endif
