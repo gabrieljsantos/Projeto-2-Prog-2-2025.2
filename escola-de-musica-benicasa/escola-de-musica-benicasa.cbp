@@ -14,9 +14,10 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add directory="PDCurses-3.9" />
 				</Compiler>
 				<Linker>
-					<Add library="ncurses" />
+					<Add library="PDCurses-3.9/wincon/pdcurses.a" />
 				</Linker>
 			</Target>
 			<Target title="Release">
