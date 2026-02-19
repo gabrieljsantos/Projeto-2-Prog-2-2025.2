@@ -14,7 +14,7 @@
 // Estruturas Base
 // ============================
 
-struct Turma
+struct Turma // Por que nao usa A GERAL?????????
 {
     int id;
     char nome[100];
