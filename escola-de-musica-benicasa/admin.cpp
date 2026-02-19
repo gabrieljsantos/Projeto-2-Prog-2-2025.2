@@ -1,30 +1,3 @@
-/*
-Módulo Área do Administrador
-Este módulo será responsável pela configuração e supervisão global do sistema.
-Responsabilidades:
-O Administrador cadastrará cursos, eventos, instrumentos e produtos da lanchonete;
-O Administrador autorizará a disponibilização de eventos e instrumentos;
-O módulo consolidará informações acadêmicas, financeiras e patrimoniais;
-O módulo fornecerá relatórios para tomada de decisão.
-Permissões:
-Administrador: acesso total;
-Professor e Aluno: sem acesso direto.
-Módulo Área do Administrador
-############################
-O módulo Área do Administrador será responsável por oferecer uma visão global e administrativa do sistema. Espera-se que este módulo:
-Permita o cadastro de usuários, eventos, instrumentos e produtos da lanchonete;
-Consolide informações provenientes de todos os demais módulos;
-Disponibilize relatórios acadêmicos, financeiros e patrimoniais;
-Permita a visualização de pendencias de alunos e do funcionamento geral do sistema;
-Execute rotinas de backup e restauração dos dados.
-Este módulo não deverá:
-Executar tarefas académicas próprias do professor;
-Realizar compras ou inscrições como usuário comum;
-Alterar dados operacionais de outros módulos diretamente.
-6/11
-*/
-
-
 #include <iostream>
 #include <fstream>
 #include <ctime>
@@ -38,6 +11,10 @@ Alterar dados operacionais de outros módulos diretamente.
 #include "login_matricula.h"
 
 using namespace std;
+
+// =====================================================================
+// SEÇÃO: FUNÇÕES AUXILIARES GERAIS
+// =====================================================================
 
 void limparbuffer(){
     std::cin.clear();
@@ -53,6 +30,11 @@ void openFile(std::fstream &f, const std::string Nome){
         f.open(Nome, std::ios::in | std::ios::out | std::ios::binary);
     }
 }
+
+// =====================================================================
+// SEÇÃO: FUNÇÕES DE BUSCA
+// =====================================================================
+
 Professor buscaProf(std::fstream &file,int buscaId){
     Professor prof{};
     file.clear();
@@ -64,7 +46,7 @@ Professor buscaProf(std::fstream &file,int buscaId){
         mostrar_caixa_informacao("ERRO", "ID invalido!");
         return prof;
     }
-    file.seekg((buscaId - 2026000) * sizeof(Professor));
+    file.seekg((buscaId - 20260000) * sizeof(Professor));
     file.read((char*)&prof,sizeof(Professor));
     if(prof.base.id == buscaId&&prof.base.ativo){
         string info = "Nome: " + string(prof.base.nome) + "\nE-mail: " + string(prof.base.email);
@@ -111,7 +93,7 @@ Aluno buscaAluno(std::fstream &file, int buscaId){
         mostrar_caixa_informacao("ERRO", "ID invalido!");
         return aluno;
     }
-    file.seekg((buscaId - 2026000) * sizeof(Aluno));
+    file.seekg((buscaId - 20260000) * sizeof(Aluno));
     file.read((char*)&aluno, sizeof(Aluno));
     if(aluno.base.id == buscaId && aluno.base.ativo){
         string info = "Nome: " + string(aluno.base.nome) + "\nE-mail: " + string(aluno.base.email);
@@ -181,6 +163,10 @@ int gerarNovoId(std::fstream &file, size_t tamanhoStruct){
     return totalRegistros + 1;
 }
 
+// =====================================================================
+// SEÇÃO: FUNÇÕES DE CONSULTA E RELATÓRIOS
+// =====================================================================
+
 void consultarPendenciasInstrumentos() {
     constexpr int Quantidades_opcoes = 3;
     bool continuar = true;
@@ -217,7 +203,7 @@ void consultarPendenciasInstrumentos() {
                 
                 while(fileEmprestimo.read((char*)&emp, sizeof(Emprestimo)) && contador < 100) {
                     fileAlunos.clear();
-                    fileAlunos.seekg((emp.idAluno - 2026000) * sizeof(Aluno));
+                    fileAlunos.seekg((emp.idAluno - 20260000) * sizeof(Aluno));
                     
                     if(!fileAlunos.read((char*)&user, sizeof(Aluno)))
                         continue;
@@ -296,7 +282,7 @@ void consultarPendenciasInstrumentos() {
                         continue;
                     
                     fileAlunos.clear();
-                    fileAlunos.seekg((emp.idAluno - 2026000) * sizeof(Aluno));
+                    fileAlunos.seekg((emp.idAluno - 20260000) * sizeof(Aluno));
                     
                     if(!fileAlunos.read((char*)&user, sizeof(Aluno)))
                         continue;
@@ -353,7 +339,14 @@ void consultarPendenciasInstrumentos() {
 }
 
 
+// =====================================================================
+// NAMESPACE: MÓDULO DE ADMINISTRAÇÃO (mod_ADM)
+// Contém todos os menus e funções do painel administrativo
+// =====================================================================
+
 namespace mod_ADM {
+
+    // ----- FUNÇÕES AUXILIARES DE LISTAGEM -----
 
     void atualizar_estado_de_usuario(int id_usuario, Funcao tipo_usuario, string estado) {
         bool novo_estado = (estado == "Ativo") ? true : false;
@@ -401,7 +394,16 @@ namespace mod_ADM {
     }
 
     int listar_usuarios_especificos(Funcao tipo_usuario, int ativo, string dados[100][6]){
+            // Inicializar dados com valores vazios
+            for(int i = 0; i < 100; i++) {
+                for(int j = 0; j < 6; j++) {
+                    dados[i][j] = "";
+                }
+            }
+            
             int contador = 0;
+            int total_lidos = 0;
+            
             switch (tipo_usuario)
             {
             case ALUNO: {
@@ -410,7 +412,8 @@ namespace mod_ADM {
                 Aluno aluno;
                 file.seekg(0);
                 while(file.read((char*)&aluno, sizeof(Aluno)) && contador < 100) {
-                    if((aluno.base.ativo == ativo || ativo == 2) && aluno.base.id != 20260000 ) {
+                    total_lidos++;
+                    if ((aluno.base.id > USUARIO_VAZIO_ID) && (ativo == 2 || aluno.base.ativo == (ativo == 1))) {
                         dados[contador][0] = to_string(aluno.base.id); 
                         dados[contador][1] = aluno.base.nome;
                         dados[contador][2] = aluno.base.email;
@@ -428,7 +431,8 @@ namespace mod_ADM {
                 Professor prof;
                 file.seekg(0);
                 while(file.read((char*)&prof, sizeof(Professor)) && contador < 100) {
-                    if((prof.base.ativo == ativo || ativo == 2) && prof.base.id != 20260000) {
+                    total_lidos++;
+                    if ((prof.base.id > USUARIO_VAZIO_ID) && (ativo == 2 || prof.base.ativo == (ativo == 1))) {
                         dados[contador][0] = to_string(prof.base.id); 
                         dados[contador][1] = prof.base.nome;
                         dados[contador][2] = prof.base.email;
@@ -440,29 +444,15 @@ namespace mod_ADM {
                 file.close();
                 break;
             }
-            case ADMINISTRADOR: {
-                std::fstream file;
-                openFile(file, "administradores.dat");
-                Admin admin;
-                file.seekg(0);
-                while(file.read((char*)&admin, sizeof(Admin)) && contador < 100) {
-                    if((admin.base.ativo == ativo || ativo == 2) && admin.base.id != 20260000) {
-                        dados[contador][0] = to_string(admin.base.id); 
-                        dados[contador][1] = admin.base.nome;
-                        dados[contador][2] = admin.base.email;
-                        dados[contador][3] = to_string(admin.base.categoria);
-                        dados[contador][4] = admin.base.ativo ? "Ativo" : "Inativo";
-                        contador++;
-                    }
-                }
-                file.close();
-                break;
-            }
+
             default:
                 break;
             }
-
-
+            
+            // DEBUG: Mostrar informações sobre filtro
+            std::cout << "[DEBUG] Total lidos: " << total_lidos << std::endl;
+            std::cout << "[DEBUG] Usuarios encontrados: " << contador << " | Filtro ativo: " << ativo << " (1=Ativo, 0=Inativo, 2=Ambos)" << std::endl;
+            system("pause"); // Pausa para leitura dos debug logs
             return contador;
     }
 
@@ -530,6 +520,8 @@ namespace mod_ADM {
         return contador;
     }
 
+    // ----- MENUS PRINCIPAIS -----
+
     void menuCadastroUsuarios() {
         constexpr int Quantidades_opcoes = 3;
         bool continuar = true;
@@ -576,7 +568,7 @@ namespace mod_ADM {
         constexpr int Quantidades_opcoes = 4;
         string texto_do_tipo_de_usuario;
         Funcao tipo_usuario = ALUNO;
-        int estado_selecionado = 2; // 0=Ativo, 1=Inativo, 2=Ambos (padrão)
+        int estado_selecionado = 2; // 1=Ativo, 0=Inativo, 2=Ambos (padrão)
         bool continuar = true;
 
         while (continuar) {
@@ -602,7 +594,7 @@ namespace mod_ADM {
                 "Voltar"
             };
             ConfigMenu config;
-            config.titulo = "Gerenciar Usuarios < " + texto_do_tipo_de_usuario + "s >";   
+            config.titulo = "Gerenciar Usuarios < " + texto_do_tipo_de_usuario + " >" + " < " + (estado_selecionado == 0 ? "Inativos" : (estado_selecionado == 1 ? "Ativos" : "Todos")) + " >";   
             config.descricao = "Selecione uma opcao para gerenciar os usuarios do sistema.";
             saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
             
@@ -635,9 +627,17 @@ namespace mod_ADM {
                         
                         // Converter estado do usuario
                         string estado_str = resultadofiltro.valores_selecionados[1];
-                        if (estado_str == "Ativo") estado_selecionado = 1;
-                        else if (estado_str == "Inativo") estado_selecionado = 0;
-                        else if (estado_str == "Ambos") estado_selecionado = 2;
+                        if (estado_str == "Ativo") {
+                            estado_selecionado = 1;
+                        }
+                        else if (estado_str == "Inativo") {
+                            estado_selecionado = 0;
+                        }
+                        else if (estado_str == "Ambos") {
+                            estado_selecionado = 2;
+                        }
+                        std::cout << "[DEBUG MENU] Estado selecionado: " << estado_selecionado << " (String: '" << estado_str << "')" << std::endl;
+                        std::cout << "[DEBUG MENU] Tipo selecionado: " << tipo_usuario << " (String: '" << tipo_str << "')" << std::endl;
                     }
                     break;
                 }
@@ -753,6 +753,11 @@ namespace mod_ADM {
             }
         }
     }
+
+// =====================================================================
+// SEÇÃO: FUNÇÕES DE MENU (FORA DO NAMESPACE MOD_ADM)
+// Menus principais de gerenciamento
+// =====================================================================
 
 void menuCadastroCursos(){
     constexpr int Quantidades_opcoes = 6;
@@ -956,7 +961,7 @@ void menuCadastroCursos(){
                         prof.disciplina[29] = '\0';
                         
                         openFile(fileProfessores, "professores.dat");
-                        fileProfessores.seekp((idProf - 2026000) * sizeof(Professor));
+                        fileProfessores.seekp((idProf - 20260000) * sizeof(Professor));
                         fileProfessores.write((char*)&prof, sizeof(Professor));
                         fileProfessores.close();
                         file.clear();
@@ -1047,6 +1052,8 @@ void menuCadastroCursos(){
         configTab.titulo = "Relatorio Academico - Total de Alunos: " + to_string(total);
         interface_para_tabela(total, 5, dados_ptr, titulos, 0, configTab);
     }
+
+    // ----- MENU DE EVENTOS -----
 
     void menuEventos(std::fstream &file) {
         constexpr int Quantidades_opcoes = 5;
@@ -1315,6 +1322,8 @@ void menuCadastroCursos(){
         }
     }
 
+    // ----- FUNÇÕES DE TURMAS E MATRÍCULA -----
+
     bool verificaTurmasProf(Professor &prof, int &Index_turma){
         for(int i = 0; i < 5; i++){
             if(prof.turmas[i] == 0){
@@ -1395,7 +1404,7 @@ void menuCadastroCursos(){
         int indexVAGA;
         if(verificaTurmasProf(*prof, indexVAGA)){
             prof->turmas[indexVAGA] = turma.id;
-            fileProf.seekp((prof->base.id - 2026000) * sizeof(Professor));
+            fileProf.seekp((prof->base.id - 20260000) * sizeof(Professor));
             fileProf.write((const char*)prof, sizeof(Professor));
         }
         else{
@@ -1449,8 +1458,8 @@ void menuCadastroCursos(){
         idAluno = stoi(resultAluno.valor);
         aluno = buscaAluno(fileAluno, idAluno);
         
-        if (aluno.base.id != idAluno || !aluno.base.ativo) {
-            mostrar_caixa_informacao("ERRO", "Aluno inativo ou nao encontrado.");
+        if (aluno.base.id != idAluno) {
+            mostrar_caixa_informacao("ERRO", "Aluno nao encontrado ou inativo.");
             fileTurma.close();
             fileAluno.close();
             return;
@@ -1520,6 +1529,8 @@ void menuCadastroCursos(){
         
         mostrar_caixa_informacao("SUCESSO", "Aluno matriculado com sucesso na turma!");
     }
+
+    // ----- MENU DE PRODUTOS (LANCHONETE) -----
 
     void cadastrarProdutos(){
         constexpr int Quantidades_opcoes = 6;
@@ -1786,6 +1797,8 @@ void menuCadastroCursos(){
         }
     }
 
+    // ----- MENU DE INSTRUMENTOS -----
+
     void menuCadastroInstrumentos() {
         constexpr int Quantidades_opcoes = 6;
         bool continuar = true;
@@ -1991,6 +2004,8 @@ void menuCadastroCursos(){
             file.close();
         }
     }
+
+    // ----- FUNÇÕES DE RELATÓRIOS E BACKUP -----
 
     void gerarRelatorioFinanceiro() {
         std::fstream fileLanchonete;
@@ -2280,6 +2295,10 @@ void menuCadastroCursos(){
 
 }
 
+// =====================================================================
+// SEÇÃO: MENU PRINCIPAL DO ADMINISTRADOR
+// Ponto de entrada para o módulo de administração
+// =====================================================================
 
 void abrir_menu_admin(Usuario* usuario) {
     constexpr int qtdOpcoes = 14;
