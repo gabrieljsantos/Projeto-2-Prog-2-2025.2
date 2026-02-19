@@ -20,6 +20,9 @@ namespace Login_mat {
     void inicializarArquivoAdmin();
     void inicializarArquivos(); // Junção de todos inicializadores
 
+    // Verificadores de arquivo
+    bool verificarArquivoExistente(string nomeArquivo);
+
     // Cadastro
     int realizarCadastro();
     int realizarCadastroAluno();
@@ -33,10 +36,11 @@ namespace Login_mat {
     void salvarUsuario(Usuario usuario);
     void salvarAluno(Aluno aluno); // Salva e sincroniza com "usuarios.dat"
     void salvarProfessor(Professor professor); // Salva e sincroniza com "usuarios.dat"
-    void salvarAdmin(Admin admin);
+    void salvarAdmin(Admin admin); // Salva e sincroniza com "usuarios.dat"
 
     // Gera novo ID baseado no arquivo "usuarios.dat"
     int gerarNovoId();
+    int adquirirPosicaoDoId(int id);
     int verificarUltimoIdUsuario();
 
     // Ler X (usuario, aluno, professor)
@@ -45,6 +49,7 @@ namespace Login_mat {
     Professor lerProfessor(int id);
 
     // Atualizar
+    void atualizar(int id, Aluno aluno);
     void atualizar(int id, Professor professor);
 
     // Verificar quantas pessoas tem em cada arquivo
@@ -60,6 +65,7 @@ namespace Login_mat {
     Usuario inicializarUsuarioVazio();
     Aluno inicializarAlunoVazio();
     Professor inicializarProfessorVazio();
+    Admin inicializarAdminVazio();
 
     //Interface grafica
       //Cadastro

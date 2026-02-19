@@ -11,9 +11,8 @@ namespace Login_mat {
 //======================================================================
     // Feito por Luiz Felipe
     void inicializarArquivoUsuario() {
-        ifstream teste(ARQUIVO_USUARIOS, ios::binary);
-        if (teste.good()) return; // arquivo já existe
-        teste.close();
+        if (verificarArquivoExistente(ARQUIVO_USUARIOS))
+            return;
 
         Usuario usuarioVazio = inicializarUsuarioVazio();
 
@@ -32,9 +31,8 @@ namespace Login_mat {
 
     // Feito por Luiz Felipe
     void inicializarArquivoAluno() {
-        ifstream teste(ARQUIVO_ALUNOS, ios::binary);
-        if (teste.good()) return;
-        teste.close();
+        if (verificarArquivoExistente(ARQUIVO_ALUNOS))
+            return;
 
         Aluno alunoVazio = inicializarAlunoVazio();
 
@@ -53,9 +51,8 @@ namespace Login_mat {
 
     // Feito por Clara
     void inicializarArquivoProfessor() {
-        ifstream teste(ARQUIVO_PROFESSORES, ios::binary);
-        if (teste.good()) return;
-        teste.close();
+        if (verificarArquivoExistente(ARQUIVO_PROFESSORES))
+            return;
 
         Professor professorVazio = inicializarProfessorVazio();
 
@@ -72,24 +69,24 @@ namespace Login_mat {
         outProfessores.close();
     }
 
-    // Feito por Clara
+    // Feito por Luiz Felipe
     void inicializarArquivoAdmin() {
-        ifstream teste(ARQUIVO_ADMINISTRADORES, ios::binary);
-        if (teste.good()) return;
-        teste.close();
+        if (verificarArquivoExistente(ARQUIVO_ADMINISTRADORES))
+            return;
 
-        Admin adminVazio;
-        adminVazio.base = inicializarUsuarioVazio();
+        Admin adminVazio = inicializarAdminVazio();
 
-        ofstream outAdmin(ARQUIVO_ADMINISTRADORES, ios::out | ios::binary);
+        ofstream outAdmin;
+        outAdmin.open(ARQUIVO_ADMINISTRADORES, ios::out|ios::binary);
 
-        if (outAdmin.fail()) {
+        if(outAdmin.fail()){
             cout << "A abertura do aquivo falhou!\n";
             exit(1);
         }
 
-        for (int i = 0; i < 100; i++)
+        for(int i=0; i<100; i++) {
             outAdmin.write((const char*)(&adminVazio), sizeof(Admin));
+        }
 
         outAdmin.close();
     }
@@ -99,6 +96,16 @@ namespace Login_mat {
         inicializarArquivoAluno();
         inicializarArquivoProfessor();
         inicializarArquivoAdmin();
+    }
+
+    bool verificarArquivoExistente(string nomeArquivo) {
+        ifstream teste(nomeArquivo, ios::binary);
+        if (teste) {
+            teste.close();
+            return true;
+        }
+
+        return false;
     }
 
 //======================================================================
@@ -131,6 +138,7 @@ namespace Login_mat {
         *alunoPtr = inicializarAlunoVazio();
         int novoId = gerarNovoId();
         (*alunoPtr).base.id = novoId;
+        (*alunoPtr).base.ativo = true;
 
         string titulo = "CADASTRO ALUNO";
 
@@ -178,12 +186,16 @@ namespace Login_mat {
         return novoId;
     }
 
-    // Feito por Clara
-    void realizarCadastroAdmin(){
-        Admin novoAdmin;
-        novoAdmin.base = Usuario{1, true, "admin", "admin@gmail.com", "1234567", ADMINISTRADOR, false};
+    void realizarCadastroAdmin() {
+        Usuario base = {20260001, true, "admin", "admin@gmail.com", "1234567", ADMINISTRADOR, false};
 
-        salvarAdmin(novoAdmin);
+        Admin* adminPtr = new Admin;
+        (*adminPtr).base = base;
+
+        salvarAdmin(*adminPtr);
+
+        delete adminPtr;
+        adminPtr = nullptr;
     }
 
 
@@ -235,6 +247,8 @@ namespace Login_mat {
 //======================================================================
 
     void salvarUsuario(Usuario usuario) {
+        int posicao = adquirirPosicaoDoId(usuario.id);
+
         fstream arquivo;
 
         arquivo.open(ARQUIVO_USUARIOS, ios::in | ios::out | ios::binary);
@@ -244,13 +258,14 @@ namespace Login_mat {
             exit(1);
         }
 
-        arquivo.seekp((usuario.id - 1) * sizeof(Usuario));
+        arquivo.seekp((posicao - 1) * sizeof(Usuario));
         arquivo.write((const char*)(&usuario), sizeof(Usuario));
         arquivo.close();
     }
 
     void salvarAluno(Aluno aluno) {
         salvarUsuario(aluno.base);
+        int posicao = adquirirPosicaoDoId(aluno.base.id);
 
         fstream arquivo;
 
@@ -261,13 +276,14 @@ namespace Login_mat {
             exit(1);
         }
 
-        arquivo.seekp((aluno.base.id - 1) * sizeof(Aluno));
+        arquivo.seekp((posicao - 1) * sizeof(Aluno));
         arquivo.write((const char*)(&aluno), sizeof(Aluno));
         arquivo.close();
     }
 
     void salvarProfessor(Professor professor) {
         salvarUsuario(professor.base);
+        int posicao = adquirirPosicaoDoId(professor.base.id);
 
         fstream arquivo;
 
@@ -278,13 +294,14 @@ namespace Login_mat {
             exit(1);
         }
 
-        arquivo.seekp((professor.base.id - 1) * sizeof(Professor));
+        arquivo.seekp((posicao - 1) * sizeof(Professor));
         arquivo.write((const char*)(&professor), sizeof(Professor));
         arquivo.close();
     }
 
     void salvarAdmin(Admin admin) {
         salvarUsuario(admin.base);
+        int posicao = adquirirPosicaoDoId(admin.base.id);
 
         fstream arquivo;
 
@@ -295,7 +312,7 @@ namespace Login_mat {
             exit(1);
         }
 
-        arquivo.seekp((admin.base.id - 1) * sizeof(Admin));
+        arquivo.seekp((posicao - 1) * sizeof(Admin));
         arquivo.write((const char*)(&admin), sizeof(Admin));
         arquivo.close();
     }
@@ -309,9 +326,13 @@ namespace Login_mat {
         return verificarUltimoIdUsuario() + 1;
     }
 
+    int adquirirPosicaoDoId(int id) {
+        return id - 20260000;
+    }
+
     //Feito por Luiz Felipe
     int verificarUltimoIdUsuario() {
-        int ultimoId = 0;
+        int ultimoId = 20260000;
         Usuario usuario;
         ifstream inUsuarios;
         inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary);
@@ -337,6 +358,7 @@ namespace Login_mat {
     // Feito por Luiz Felipe
     Usuario lerUsuario(int id) {
         Usuario usuario = inicializarUsuarioVazio();
+        int posicao = adquirirPosicaoDoId(id);
 
         if (id > verificarUltimoIdUsuario())
             return usuario;
@@ -349,7 +371,7 @@ namespace Login_mat {
             exit(1);
         }
 
-        inUsuarios.seekg((id - 1) * sizeof(Usuario));
+        inUsuarios.seekg((posicao - 1) * sizeof(Usuario));
         inUsuarios.read((char*)(&usuario), sizeof(Usuario));
         inUsuarios.close();
 
@@ -359,6 +381,7 @@ namespace Login_mat {
     // Feito por Luiz Felipe
     Aluno lerAluno(int id) {
         Aluno aluno = inicializarAlunoVazio();
+        int posicao = adquirirPosicaoDoId(id);
 
         ifstream inAlunos;
         inAlunos.open(ARQUIVO_ALUNOS, ios::in | ios::binary);
@@ -368,7 +391,7 @@ namespace Login_mat {
             exit(1);
         }
 
-        inAlunos.seekg((id - 1) * sizeof(Aluno));
+        inAlunos.seekg((posicao - 1) * sizeof(Aluno));
         inAlunos.read((char*)(&aluno), sizeof(Aluno));
         inAlunos.close();
 
@@ -378,6 +401,8 @@ namespace Login_mat {
     // Feito por Clara
     Professor lerProfessor(int id) {
         Professor professor = inicializarProfessorVazio();
+        int posicao = adquirirPosicaoDoId(id);
+
         ifstream inProfessores;
         inProfessores.open(ARQUIVO_PROFESSORES, ios::in | ios::binary);
 
@@ -386,7 +411,7 @@ namespace Login_mat {
             exit(1);
         }
 
-        inProfessores.seekg((id - 1)* sizeof(Professor));
+        inProfessores.seekg((posicao - 1)* sizeof(Professor));
         inProfessores.read((char*)(&professor), sizeof(Professor));
         inProfessores.close();
 
@@ -396,20 +421,30 @@ namespace Login_mat {
 //======================================================================
 // Atualizar
 //======================================================================
-    void atualizar(int id, Professor professor){
-
-        if (verificarUsuarioExistente(id) == true) {
-            cout<< "usuário existente!";
-        }
-        else {
-            cout<< "O usuário não existe";
+    void atualizar(int id, Professor professor) {
+        if (!verificarUsuarioExistente(id)) {
+            cout << "O usuário não existe";
             return;
         }
+
         professor.base.id = id;
         professor.base.categoria = PROFESSOR;
 
         salvarProfessor(professor);
-        cout<< "Usuário atualizado com sucesso!";
+        cout << "Usuário atualizado com sucesso!";
+    }
+
+    void atualizar(int id, Aluno aluno) {
+        if (!verificarUsuarioExistente(id)) {
+            cout << "O usuário não existe";
+            return;
+        }
+
+        aluno.base.id = id;
+        aluno.base.categoria = ALUNO;
+
+        salvarAluno(aluno);
+        cout << "Usuário atualizado com sucesso!";
     }
 
 
@@ -418,7 +453,8 @@ namespace Login_mat {
 //======================================================================
     // Feito por Luiz Felipe
     int verificarQuantosUsuarios() {
-        return verificarUltimoIdUsuario();
+        int idUltimoUsuario = verificarUltimoIdUsuario();
+        return adquirirPosicaoDoId(idUltimoUsuario);
     }
 
     // Feito por Luiz Felipe
@@ -434,7 +470,7 @@ namespace Login_mat {
         }
 
         while (inAlunos.read((char*)(&aluno), sizeof(Aluno)))
-            if (aluno.base.id != 0)
+            if (aluno.base.id != 20260000)
                 contador++;
 
         inAlunos.close();
@@ -455,7 +491,7 @@ namespace Login_mat {
         }
 
         while (inProfessores.read((char*)(&professor), sizeof(Professor))) {
-            if(professor.base.id != 0){
+            if(professor.base.id != 20260000){
                 contador++;
             }
         }
@@ -469,6 +505,7 @@ namespace Login_mat {
 //======================================================================
     //Feito por Jeanderson
     bool verificarUsuarioExistente(int id) {
+        int posicao = adquirirPosicaoDoId(id);
 
         if (id > verificarUltimoIdUsuario() || id <= 0)
             return false;
@@ -481,7 +518,7 @@ namespace Login_mat {
             return false;
         }
 
-        inUsuarios.seekg((id - 1) * sizeof(Usuario));
+        inUsuarios.seekg((posicao - 1) * sizeof(Usuario));
 
         Usuario verificaId = inicializarUsuarioVazio();
 
@@ -507,7 +544,7 @@ namespace Login_mat {
         Usuario u;
         while (inUsuarios.read((char*)(&u), sizeof(Usuario))) {
             // ignora registros vazios
-            if (u.id != 0) {
+            if (u.id != 20260000) {
                 if (strncmp(u.nome, nome, 100) == 0) {
                     inUsuarios.close();
                     return true;
@@ -526,7 +563,7 @@ namespace Login_mat {
 //======================================================================
     //Feito por Luiz Felipe
      Usuario inicializarUsuarioVazio() {
-        Usuario usuarioVazio = {0, true, "", "", "", NENHUMA, false};
+        Usuario usuarioVazio = {20260000, false, "", "", "", NENHUMA, false};
         return usuarioVazio;
     }
 
@@ -539,6 +576,9 @@ namespace Login_mat {
         alunoVazio.notas[0] = 0;
         alunoVazio.notas[1] = 0;
         alunoVazio.faltas = 0;
+        alunoVazio.instrumento = 0;
+        for (int i = 0; i < 10; i++) 
+            alunoVazio.turmasId[i] = 0;
         return alunoVazio;
     }
 
@@ -548,14 +588,18 @@ namespace Login_mat {
         professorVazio.base = inicializarUsuarioVazio();
         professorVazio.base.categoria = PROFESSOR;
         professorVazio.saldo = 0.0;
+        professorVazio.disciplina[0] = '\0';
+        for (int i = 0; i < 5; i++) 
+            professorVazio.turmasId[i] = 0;
         return professorVazio;
     }
 
-
-
-
-
-
+    //Feito por Luiz Felipe
+    Admin inicializarAdminVazio() {
+        Admin adminVazio;
+        adminVazio.base = inicializarUsuarioVazio();
+        return adminVazio;
+    }
 
 //======================================================================
 // Interface Grafica
@@ -612,6 +656,5 @@ namespace Login_mat {
         config.tamanho_maximo = 30;
         return interface_para_entrada_texto(config);
     }
-
 
 }

@@ -39,7 +39,8 @@ int main() {
                     if (login) {
                         informacao = "Bem-vindo(a), " + string(usuario.nome) + "!";
                     } else {
-                        informacao = "Falha no login.";
+                        cout << "\nFalha no login. Verifique se o usuário existe e está ativo!" << endl;
+                        pausar();
                     }
 
                     mostrar_caixa_informacao("AVISO", informacao);

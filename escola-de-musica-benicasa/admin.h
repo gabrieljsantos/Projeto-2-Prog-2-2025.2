@@ -16,7 +16,7 @@
 void exibirMenuAdministrador();
 void abrir_menu_admin(Usuario* usuario);
 
-namespace Modulo_admin {
+namespace mod_ADM {
     int listar_usuarios_especificos(Funcao tipo_usuario, int ativo, std::string dados[100][6]);
     void menuCadastroUsuarios();
     void menuGerenciarUsuarios();

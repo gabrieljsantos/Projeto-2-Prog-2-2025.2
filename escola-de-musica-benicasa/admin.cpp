@@ -121,7 +121,7 @@ void consultarPendenciasInstrumentos() {
 }
 
 
-namespace Modulo_admin {
+namespace mod_ADM {
 
 
     int listar_usuarios_especificos(Funcao tipo_usuario, int ativo, string dados[100][6]){
@@ -925,7 +925,7 @@ void abrir_menu_admin(Usuario* usuario) {
             Lanchonete::ativarCreditosPendentes(); 
             break;
         case 1: 
-            Modulo_admin::menuCadastroCursos(); 
+            mod_ADM::menuCadastroCursos(); 
             break;
         case 2: 
             Lanchonete::consultarEstoque(); 
@@ -936,33 +936,33 @@ void abrir_menu_admin(Usuario* usuario) {
         case 4: {
             fstream file;
             openFile(file, "eventos.dat");
-            Modulo_admin::menuEventos(file);
+            mod_ADM::menuEventos(file);
             file.close();
             break;
         }
         case 5: 
-            Modulo_admin::menuCadastroInstrumentos(); 
+            mod_ADM::menuCadastroInstrumentos(); 
             break;
         case 6: 
             Lanchonete::menuCadastroProdutos(); 
             break;
         case 7: 
-            Modulo_admin::menuGerenciarUsuarios(); 
+            mod_ADM::menuGerenciarUsuarios(); 
             break;
         case 8: 
-            Modulo_admin::realizarBackup(); 
+            mod_ADM::realizarBackup(); 
             break;
         case 9: 
-            Modulo_admin::gerarRelatorioFinanceiro(); 
+            mod_ADM::gerarRelatorioFinanceiro(); 
             break;
         case 10: 
-            Modulo_admin::gerarRelatorioPatrimonial(); 
+            mod_ADM::gerarRelatorioPatrimonial(); 
             break;
         case 11: 
-            Modulo_admin::consultarRelatoriosAcademicos(); 
+            mod_ADM::consultarRelatoriosAcademicos(); 
             break;
         case 12: 
-            Modulo_admin::restaurarBackup(); 
+            mod_ADM::restaurarBackup(); 
             break;
         case 13: 
             usuario->logado = false; 
