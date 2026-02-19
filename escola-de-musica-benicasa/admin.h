@@ -22,7 +22,6 @@ namespace mod_ADM{
         // void menuGerenciarUsuarios();//refazer
         void menuCadastroCursos();
         void cadastrarProdutos();
-        void adicionarCredito();
         void consultarPendenciasInstrumentos();
         void menuInstrumentos();
         void cadastrarTurma();
