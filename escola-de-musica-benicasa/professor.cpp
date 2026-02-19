@@ -156,10 +156,10 @@ namespace ModuloProfessor
         {
             Aluno *aluno = &turma.alunos[i];
 
-            if (aluno->base.id == 0)
+            if ((*aluno).base.id == 0)
                 continue;
 
-            cout << "Aluno: " << aluno->base.nome << "\n";
+            cout << "Aluno: " << (*aluno).base.nome << "\n";
 
             float notas[2];
             for (int j = 0; j < 2; j++)
@@ -168,9 +168,9 @@ namespace ModuloProfessor
                 cin >> notas[j];
             }
 
-            aluno->notas[0] = notas[0];
-            aluno->notas[1] = notas[1];
-            aluno->media = Calculos::calcularMedia(notas, 2);
+            (*aluno).notas[0] = notas[0];
+            (*aluno).notas[1] = notas[1];
+            (*aluno).media = Calculos::calcularMedia(notas, 2);
         }
 
         file.seekp((turma_index - 1) * sizeof(Turma));
@@ -187,11 +187,11 @@ namespace ModuloProfessor
 
         for (int t = 0; t < MAX_TURMAS_PROF; t++)
         {
-            if (prof->turmas[t] == 0)
+            if ((*prof).turmas[t] == 0)
                 continue;
 
             Turma turma;
-            if (!lerTurma(prof->turmas[t], turma))
+            if (!lerTurma((*prof).turmas[t], turma))
                 continue;
 
             cout << "\nTurma: " << turma.nome << "\n";
@@ -199,15 +199,16 @@ namespace ModuloProfessor
             for (int i = 0; i < MAX_ALUNOS; i++)
             {
                 Aluno *aluno = &turma.alunos[i];
-                if (aluno->base.id == 0)
+
+                if ((*aluno).base.id == 0)
                     continue;
 
-                cout << aluno->base.id << " - "
-                     << aluno->base.nome << " | "
-                     << "N1: " << aluno->notas[0]
-                     << " | N2: " << aluno->notas[1]
-                     << " | Media: " << aluno->media
-                     << " | Faltas: " << aluno->faltas
+                cout << (*aluno).base.id << " - "
+                     << (*aluno).base.nome << " | "
+                     << "N1: " << (*aluno).notas[0]
+                     << " | N2: " << (*aluno).notas[1]
+                     << " | Media: " << (*aluno).media
+                     << " | Faltas: " << (*aluno).faltas
                      << "\n";
             }
         }
@@ -241,18 +242,19 @@ namespace ModuloProfessor
         for (int i = 0; i < MAX_ALUNOS; i++)
         {
             Aluno *aluno = &turma.alunos[i];
-            if (aluno->base.id == 0)
+
+            if ((*aluno).base.id == 0)
                 continue;
 
             total++;
-            soma += aluno->media;
+            soma += (*aluno).media;
 
-            if (aluno->faltas > FALTAS_MAXIMAS)
+            if ((*aluno).faltas > FALTAS_MAXIMAS)
             {
                 reprovadosFalta++;
                 criticos[qtd++] = aluno;
             }
-            else if (aluno->media >= MEDIA_MINIMA)
+            else if ((*aluno).media >= MEDIA_MINIMA)
                 aprovados++;
             else
             {
@@ -277,9 +279,9 @@ namespace ModuloProfessor
         {
             cout << "Alunos em situacao critica:\n";
             for (int i = 0; i < qtd; i++)
-                cout << "- " << criticos[i]->base.nome
-                     << " | Media: " << criticos[i]->media
-                     << " | Faltas: " << criticos[i]->faltas
+                cout << "- " << (*criticos[i]).base.nome
+                     << " | Media: " << (*criticos[i]).media
+                     << " | Faltas: " << (*criticos[i]).faltas
                      << "\n";
         }
 
@@ -306,15 +308,16 @@ namespace ModuloProfessor
         for (int i = 0; i < MAX_ALUNOS; i++)
         {
             Aluno *aluno = &turma.alunos[i];
-            if (aluno->base.id == 0)
+
+            if ((*aluno).base.id == 0)
                 continue;
 
             char opcao;
-            cout << aluno->base.nome << " faltou? (s/n): ";
+            cout << (*aluno).base.nome << " faltou? (s/n): ";
             cin >> opcao;
 
             if (opcao == 's' || opcao == 'S')
-                aluno->faltas++;
+                (*aluno).faltas++;
         }
 
         file.seekp((turma_index - 1) * sizeof(Turma));
@@ -352,20 +355,19 @@ namespace ModuloProfessor
         cout << "\nTurma: " << turma.nome << "\n";
         cout << "Professor ID: " << turma.id_prof << "\n";
 
-        // Ponteiro simples
         Aluno *aluno;
 
         for (int i = 0; i < MAX_ALUNOS; i++)
         {
             aluno = &turma.alunos[i];
 
-            if (aluno->base.id == 0)
+            if ((*aluno).base.id == 0)
                 continue;
 
-            cout << aluno->base.id << " - "
-                 << aluno->base.nome
-                 << " | Media: " << aluno->media
-                 << " | Faltas: " << aluno->faltas
+            cout << (*aluno).base.id << " - "
+                 << (*aluno).base.nome
+                 << " | Media: " << (*aluno).media
+                 << " | Faltas: " << (*aluno).faltas
                  << "\n";
         }
     }
