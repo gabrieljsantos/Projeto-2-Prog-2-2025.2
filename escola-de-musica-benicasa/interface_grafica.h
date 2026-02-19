@@ -76,11 +76,11 @@ saida_menu interface_para_menu(
 );
 
 saida_tabela interface_para_tabela(
-    int                      linhas,
-    int                      colunas,
-    const string**           matriz,
-    const string             titulos[],
-    int                      coluna_retorno,
+    int                      linhas, // número total de linhas na matriz
+    int                      colunas, // número total de colunas na matriz
+    const string**           matriz, // matriz de strings com os dados (linhas x colunas)
+    const string             titulos[], // títulos das colunas
+    int                      coluna_retorno, // índice da coluna cujo valor será retornado em valor_retorno
     const ConfigTabela&      config
 );
 
@@ -180,8 +180,8 @@ struct ConfigBotoes
     string caminho             = "";
     string instrucao_controles = "[Tecla] Selecionar  [ESC] Cancelar";
 
-    BotaoOpcao botoes[4];      // Máximo 4 botões
-    int numero_botoes          = 0;
+    BotaoOpcao botoes[10];      // Máximo 10 botões
+    int numero_botoes          = 1;
 
     int x                      = 4;
     int largura_janela         = 70;
@@ -194,6 +194,42 @@ saida_botoes interface_para_botoes(
 );
 
 void mostrar_caixa_informacao(const string& titulo, const string& mensagem);
+
+// ═══════════════════════════════════════════════════════════════
+// DETALHES COM TÓPICOS E DESCRIÇÕES (COM PAGINAÇÃO)
+// ═══════════════════════════════════════════════════════════════
+
+struct TopicDetalhes
+{
+    string titulo;
+    string descricao;
+};
+
+struct saida_detalhes
+{
+    bool confirmado;
+    int pagina_atual;
+};
+
+struct ConfigDetalhes
+{
+    string titulo              = "";
+    string descricao           = "";
+    string caminho             = "";
+    string instrucao_controles = "[Setas] Navegar  [ENTER] Confirmar  [ESC] Voltar";
+
+    int x                      = 4;
+    int largura_janela         = 80;
+    int topicos_por_pagina     = 5;
+
+    CoresMenu cores;
+};
+
+saida_detalhes mostrar_detalhes(
+    const TopicDetalhes topicos[],
+    int numero_topicos,
+    const ConfigDetalhes& config = ConfigDetalhes()
+);
 
 #endif
 

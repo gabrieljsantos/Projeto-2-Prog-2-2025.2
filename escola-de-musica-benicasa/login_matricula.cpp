@@ -577,8 +577,8 @@ namespace Login_mat {
         alunoVazio.notas[1] = 0;
         alunoVazio.faltas = 0;
         alunoVazio.instrumento = 0;
-        for (int i = 0; i < 10; i++) 
-            alunoVazio.turmasId[i] = 0;
+        alunoVazio.idInstrumento = 0;
+        alunoVazio.turma = 0;
         return alunoVazio;
     }
 
@@ -590,7 +590,7 @@ namespace Login_mat {
         professorVazio.saldo = 0.0;
         professorVazio.disciplina[0] = '\0';
         for (int i = 0; i < 5; i++) 
-            professorVazio.turmasId[i] = 0;
+            professorVazio.turmas[i] = 0;
         return professorVazio;
     }
 
@@ -605,7 +605,7 @@ namespace Login_mat {
 // Interface Grafica
 //======================================================================
     saida_menu exibirSelecionarCategoria() {
-        int qtdOpcoes = 2;
+        const int qtdOpcoes = 2;
         string opcoes[qtdOpcoes] = {"Aluno", "Professor"};
         ConfigMenu config;
         config.titulo = "REALIZAR CADASTRO";
