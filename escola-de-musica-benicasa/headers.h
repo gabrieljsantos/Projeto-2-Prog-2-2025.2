@@ -41,15 +41,14 @@ struct Admin {
     Usuario base;
 };
 
-#define MAX_ALUNOS 20
-struct Turma {
+struct Turma // Por que nao usa A GERAL?????????
+{
     int id;
-    int ativo;
-    int idDisciplina;
-    int idProfessor;
-    int alunos[MAX_ALUNOS]; 
-    int qtdAlunos;
+    char nome[100];
+    int id_prof;
+    Aluno alunos[MAX_ALUNOS];
 };
+
 struct Disciplina {
     int id;
     int ativo;
