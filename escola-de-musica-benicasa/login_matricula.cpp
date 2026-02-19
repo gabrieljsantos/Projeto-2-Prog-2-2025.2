@@ -602,7 +602,7 @@ namespace Login_mat {
         professorVazio.saldo = 0.0;
         professorVazio.disciplina[0] = '\0';
         for (int i = 0; i < 5; i++) 
-            professorVazio.turmasId[i] = 0;
+            professorVazio.turmas[i] = 0; // SOMENTE .turmas
         return professorVazio;
     }
 
