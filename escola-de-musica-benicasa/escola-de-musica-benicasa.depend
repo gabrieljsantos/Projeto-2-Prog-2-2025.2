@@ -173,12 +173,14 @@
 	"lanchonete.h"
 	"login_matricula.h"
 
-1771510988 d:\projects\prog2\escola-de-musica-benicasa\admin.h
+1771513420 d:\projects\prog2\escola-de-musica-benicasa\admin.h
 	<iostream>
 	<fstream>
-	"headers.h"
-	<limits>
+	<string>
 	<cstring>
+	<vector>
+	<limits>
+	"headers.h"
 
 1771511596 d:\projects\prog2\escola-de-musica-benicasa\headers.h
 
@@ -253,7 +255,7 @@
 	<string>
 	<iostream>
 
-1771459903 source:d:\projects\prog2\escola-de-musica-benicasa\login_matricula.cpp
+1771511752 source:d:\projects\prog2\escola-de-musica-benicasa\login_matricula.cpp
 	<iostream>
 	<fstream>
 	<cstring>
