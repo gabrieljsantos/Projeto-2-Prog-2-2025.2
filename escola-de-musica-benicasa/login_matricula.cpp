@@ -210,7 +210,7 @@ namespace Login_mat {
     }
 
     void realizarCadastroAdmin() {
-        Usuario base = {20260001, true, "admin", "admin@gmail.com", "1234567", ADMINISTRADOR, false};
+        Usuario base = {20260001, true, "admin", "admin@gmail.com", "456789:", ADMINISTRADOR, false};
 
         Admin* adminPtr = new Admin;
         (*adminPtr).base = base;
@@ -243,14 +243,6 @@ namespace Login_mat {
 
             *usuarios[1] = lerUsuario((*usuarios[0]).id);
             string senhaDesencriptada = desencriptografarSenha((*usuarios[1]).senha);
-
-            if((*usuarios[1]).id == 20260001) {
-                if(strcmp((*usuarios[0]).senha, (*usuarios[1]).senha) == 0) {
-                    usuario = *usuarios[1]; 
-                    usuario.logado = true;
-                    sucesso = true;
-                }
-            }
 
             if (strcmp((*usuarios[0]).senha, senhaDesencriptada.c_str()) == 0 && (*usuarios[1]).ativo) {
                 usuario = *usuarios[1];
