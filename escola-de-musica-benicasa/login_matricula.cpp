@@ -46,7 +46,7 @@ namespace Login_mat {
             exit(1);
         }
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 100; i++)  //Como o id tem o formato 0000 não seriam 1000?
             outAlunos.write((const char *)(&alunoVazio), sizeof(Aluno));
 
         outAlunos.close();
@@ -160,6 +160,7 @@ namespace Login_mat {
         int novoId = gerarNovoId();
         (*alunoPtr).base.id = novoId;
         (*alunoPtr).base.ativo = true;
+        char senha[30] = "";
 
         cout << "\n───────── CADASTRO ALUNO ─────────\n";
         cout << "\nNome: ";
@@ -169,7 +170,9 @@ namespace Login_mat {
         cin.getline((*alunoPtr).base.email, 100);
 
         cout << "Senha: ";
-        cin.getline((*alunoPtr).base.senha, 30);
+        cin.getline(senha, 30);
+        string senhaEncriptada = encriptografarSenha(senha);
+        strcpy((*alunoPtr).base.senha, senhaEncriptada.c_str());
 
         salvarAluno(*alunoPtr);
 
@@ -184,6 +187,7 @@ namespace Login_mat {
         Professor novoProfessor = inicializarProfessorVazio();
         int novoId = gerarNovoId();
         novoProfessor.base.id = novoId;
+        char senha[30] = "";
 
         cout << "\n──────── CADASTRO PROFESSOR ────────\n";
         cout << "\nNome: ";
@@ -193,7 +197,9 @@ namespace Login_mat {
         cin.getline(novoProfessor.base.email, 100);
 
         cout << "Senha: ";
-        cin.getline(novoProfessor.base.senha, 30);
+        cin.getline(senha, 30);
+        string senhaEncriptada = encriptografarSenha(senha);
+        strcpy(novoProfessor.base.senha, senhaEncriptada.c_str());
 
         cout << "Disciplina: ";
         cin.getline(novoProfessor.disciplina, 50);
@@ -204,7 +210,7 @@ namespace Login_mat {
     }
 
     void realizarCadastroAdmin() {
-        Usuario base = {20260001, true, "admin", "admin@gmail.com", "1234567", ADMINISTRADOR, false};
+        Usuario base = {20260001, true, "admin", "admin@gmail.com", "456789:", ADMINISTRADOR, false};
 
         Admin* adminPtr = new Admin;
         (*adminPtr).base = base;
@@ -236,8 +242,9 @@ namespace Login_mat {
         if (verificarUsuarioExistente((*usuarios[0]).id)) {
 
             *usuarios[1] = lerUsuario((*usuarios[0]).id);
+            string senhaDesencriptada = desencriptografarSenha((*usuarios[1]).senha);
 
-            if (strcmp((*usuarios[0]).senha, (*usuarios[1]).senha) == 0 && (*usuarios[1]).ativo) {
+            if (strcmp((*usuarios[0]).senha, senhaDesencriptada.c_str()) == 0 && (*usuarios[1]).ativo) {
                 usuario = *usuarios[1];
                 usuario.logado = true;
                 sucesso = true;
@@ -331,7 +338,7 @@ namespace Login_mat {
 
 
 //======================================================================
-// Gerar novo ID
+// Gerar novo ID e encriptrografar senhas
 //======================================================================
 
     int gerarNovoId() {
@@ -361,6 +368,26 @@ namespace Login_mat {
         inUsuarios.close();
 
         return ultimoId;
+    }
+
+    string encriptografarSenha(string senha) {
+        string senhaEncriptografada;
+        for (size_t i = 0; i < senha.length(); i++) {
+            char c = senha[i];
+            c += 3; // Desloca o caractere 3 posições na tabela ASCII
+            senhaEncriptografada += c;
+        }
+        return senhaEncriptografada;
+    }
+
+    string desencriptografarSenha(string senhaEncriptografada) {
+        string senhaDesecriptografada;
+        for (size_t i = 0; i < senhaEncriptografada.length(); i++) {
+            char c = senhaEncriptografada[i];
+            c -= 3; // Desloca o caractere 3 posições na tabela ASCII
+            senhaDesecriptografada += c;
+        }
+        return senhaDesecriptografada;
     }
 
 
@@ -589,7 +616,7 @@ namespace Login_mat {
         alunoVazio.notas[1] = 0;
         alunoVazio.faltas = 0;
         alunoVazio.instrumento = 0;
-        for (int i = 0; i < 10; i++) 
+        for (int i = 0; i < 10; i++)
             alunoVazio.turmasId[i] = 0;
         return alunoVazio;
     }
@@ -601,8 +628,8 @@ namespace Login_mat {
         professorVazio.base.categoria = PROFESSOR;
         professorVazio.saldo = 0.0;
         professorVazio.disciplina[0] = '\0';
-        for (int i = 0; i < 5; i++) 
-            professorVazio.turmas[i] = 0; // SOMENTE .turmas
+        for (int i = 0; i < 5; i++)
+            professorVazio.turmasId[i] = 0;
         return professorVazio;
     }
 
