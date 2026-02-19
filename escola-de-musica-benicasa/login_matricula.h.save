@@ -2,7 +2,10 @@
 #define LOGIN_MATRICULA_H
 
 #include "headers.h"
+<<<<<<< HEAD
 #include "interface_grafica.h"
+=======
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
 
 #define ARQUIVO_USUARIOS "usuarios.dat"
 #define ARQUIVO_ALUNOS "alunos.dat"
@@ -20,8 +23,16 @@ namespace Login_mat {
     void inicializarArquivoAdmin();
     void inicializarArquivos(); // Junção de todos inicializadores
 
+<<<<<<< HEAD
     // Cadastro
     int realizarCadastro();
+=======
+    // Verificadores de arquivo
+    bool verificarArquivoExistente(string nomeArquivo);
+
+    // Cadastro
+    void realizarCadastro();
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
     int realizarCadastroAluno();
     int realizarCadastroProfessor();
     void realizarCadastroAdmin();
@@ -33,10 +44,18 @@ namespace Login_mat {
     void salvarUsuario(Usuario usuario);
     void salvarAluno(Aluno aluno); // Salva e sincroniza com "usuarios.dat"
     void salvarProfessor(Professor professor); // Salva e sincroniza com "usuarios.dat"
+<<<<<<< HEAD
     void salvarAdministrador(Admin admin);
 
     // Gera novo ID baseado no arquivo "usuarios.dat"
     int gerarNovoId();
+=======
+    void salvarAdmin(Admin admin); // Salva e sincroniza com "usuarios.dat"
+
+    // Gera novo ID baseado no arquivo "usuarios.dat"
+    int gerarNovoId();
+    int adquirirPosicaoDoId(int id);
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
     int verificarUltimoIdUsuario();
 
     // Ler X (usuario, aluno, professor)
@@ -45,6 +64,10 @@ namespace Login_mat {
     Professor lerProfessor(int id);
 
     // Atualizar
+<<<<<<< HEAD
+=======
+    void atualizar(int id, Aluno aluno);
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
     void atualizar(int id, Professor professor);
 
     // Verificar quantas pessoas tem em cada arquivo
@@ -60,6 +83,7 @@ namespace Login_mat {
     Usuario inicializarUsuarioVazio();
     Aluno inicializarAlunoVazio();
     Professor inicializarProfessorVazio();
+<<<<<<< HEAD
 
     //Interface grafica
       //Cadastro
@@ -68,6 +92,9 @@ namespace Login_mat {
         saida_entrada_texto digiteNome(string titulo);
         saida_entrada_texto digiteEmail(string titulo);
         saida_entrada_texto digiteSenha(string titulo);
+=======
+    Admin inicializarAdminVazio();
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
 }
 
 #endif

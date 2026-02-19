@@ -9,25 +9,38 @@
 #include "eventos.h"
 #include "instrumentos.h"
 #include "lanchonete.h"
+<<<<<<< HEAD
 #include "interface_grafica.h"
+=======
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
 
 using namespace std;
 
 void pausar();
+<<<<<<< HEAD
 // void exibirCabecalhoSistema();
 saida_menu exibirMenuLogin();
+=======
+void exibirCabecalhoSistema();
+void exibirMenuLogin();
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
 void exibirMenuAdministrador();
 void exibirMenuProfessor();
 void exibirMenuAluno();
 
 int main() {
     Usuario usuario;
+<<<<<<< HEAD
     saida_menu saidaLogin;
+=======
+    int opcaoLogin;
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
     bool executando = true;
 
     Login_mat::inicializarArquivos();
     Login_mat::realizarCadastroAdmin();
 
+<<<<<<< HEAD
     while (executando) {
         if (!usuario.logado) {
             saidaLogin = exibirMenuLogin();
@@ -58,6 +71,40 @@ int main() {
                 case -1:
                     executando = false;
                     break;
+=======
+    exibirCabecalhoSistema();
+
+    while (executando) {
+        if (!usuario.logado) {
+            exibirMenuLogin();
+            cin >> opcaoLogin;
+            cin.ignore();
+
+            switch (opcaoLogin) {
+                case 1: {
+                    bool login = Login_mat::realizarLogin(usuario);
+
+                    if (login) {
+                        cout << "\nBem-vindo(a), " << usuario.nome << "!" << endl;
+                        pausar();
+                    } else {
+                        cout << "\nFalha no login. Verifique se o usuário existe e está ativo!" << endl;
+                        pausar();
+                    }
+                    break;
+                }
+                case 2: {
+                    Login_mat::realizarCadastro();
+                    pausar();
+                    break;
+                }
+                case 0:
+                    executando = false;
+                    break;
+                default:
+                    cout << "\nOpcao invalida!" << endl;
+                    pausar();
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
             }
         } else {
             switch (usuario.categoria) {
@@ -81,7 +128,11 @@ int main() {
                         case 10: Modulo_admin::consultarPendenciasInstrumentos(); break;
                         */
                         case 11: Lanchonete::menuCadastroProdutos(); break;
+<<<<<<< HEAD
                         case 12: Lanchonete::ativarCreditosPendentes(); break;
+=======
+                        case 12: Lanchonete::adicionarCreditosUsuario(); break;
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
                         case 13: Lanchonete::consultarEstoque(); break;
                         case 14: Modulo_admin::gerarRelatorioFinanceiro(); break;
                         case 15: Modulo_admin::gerarRelatorioPatrimonial(); break;
@@ -110,7 +161,10 @@ int main() {
                         case 6: Modulo_professor::consultarEventosDisponiveis(); break;
                         case 7: Modulo_professor::consultarInstrumentosDisponiveis(); break;
                         case 8: Lanchonete::consultarSaldo(usuario.id); break;
+<<<<<<< HEAD
                         case 9: Lanchonete::solicitarCreditosUsuario(usuario.id, usuario.categoria); break;
+=======
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -137,7 +191,10 @@ int main() {
                         case 11: Lanchonete::consultarSaldo(usuario.id); break;
                         case 12: Lanchonete::visualizarProdutos(); break;
                         case 13: Lanchonete::realizarCompra(usuario.id); break;
+<<<<<<< HEAD
                         case 14: Lanchonete::solicitarCreditosUsuario(usuario.id, usuario.categoria); break;
+=======
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
                         case 0: usuario.logado = false; break;
                         default: cout << "\nOpcao invalida!" << endl;
                     }
@@ -159,12 +216,20 @@ void pausar() {
     cout << "\nPressione ENTER para continuar..." << endl;
     cin.get();
 }
+<<<<<<< HEAD
 /*
+=======
+
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
 void exibirCabecalhoSistema() {
     cout << "============================================" << endl;
     cout << "   SISTEMA DE GESTAO - ESCOLA DE MUSICA    " << endl;
     cout << "============================================" << endl;
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
 void exibirMenuLogin() {
     cout << "\nMENU DE ACESSO" << endl;
     cout << "============================================" << endl;
@@ -173,6 +238,7 @@ void exibirMenuLogin() {
     cout << "0. Sair do Sistema" << endl;
     cout << "Opcao: ";
 }
+<<<<<<< HEAD
 */
 saida_menu exibirMenuLogin() {
     int qtdOpcoes = 3;
@@ -183,6 +249,8 @@ saida_menu exibirMenuLogin() {
     return interface_para_menu(qtdOpcoes, opcoes, config);
 }
 
+=======
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
 
 void exibirMenuAdministrador() {
     system("cls || clear");
@@ -199,7 +267,11 @@ void exibirMenuAdministrador() {
     cout << "9. Liberar Instrumentos" << endl;
     cout << "10. Consultar Pendencias" << endl;
     cout << "11. Cadastrar Produtos" << endl;
+<<<<<<< HEAD
     cout << "12. Ativar Creditos Pendentes" << endl;
+=======
+    cout << "12. Adicionar Creditos" << endl;
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
     cout << "13. Consultar Estoque" << endl;
     cout << "14. Relatorio Financeiro" << endl;
     cout << "15. Relatorio Patrimonial" << endl;
@@ -221,7 +293,10 @@ void exibirMenuProfessor() {
     cout << "6. Consultar Eventos" << endl;
     cout << "7. Consultar Instrumentos" << endl;
     cout << "8. Consultar Saldo Lanchonete" << endl;
+<<<<<<< HEAD
     cout << "9. Solicitar Creditos" << endl;
+=======
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
     cout << "0. Logout" << endl;
     cout << "Opcao: ";
 }
@@ -243,7 +318,10 @@ void exibirMenuAluno() {
     cout << "11. Consultar Saldo" << endl;
     cout << "12. Ver Produtos" << endl;
     cout << "13. Realizar Compra" << endl;
+<<<<<<< HEAD
     cout << "14. Solicitar Creditos" << endl;
+=======
+>>>>>>> 3bcc94e984afc71ec58d5d348ff5367a21ddd38d
     cout << "0. Logout" << endl;
     cout << "Opcao: ";
 }
