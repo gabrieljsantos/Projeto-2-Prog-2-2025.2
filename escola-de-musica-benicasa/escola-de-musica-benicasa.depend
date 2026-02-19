@@ -160,7 +160,7 @@
 	<string>
 	<iostream>
 
-1771511307 source:d:\projects\prog2\escola-de-musica-benicasa\admin.cpp
+1771516831 source:d:\projects\prog2\escola-de-musica-benicasa\admin.cpp
 	<iostream>
 	<fstream>
 	<ctime>
@@ -261,4 +261,11 @@
 	<cstring>
 	<iomanip>
 	"login_matricula.h"
+
+1567627682 d:\projects\prog2\escola-de-musica-benicasa\pdcurses-3.9\curses.h
+	<stdarg.h>
+	<stddef.h>
+	<stdio.h>
+	<wchar.h>
+	<stdbool.h>
 
