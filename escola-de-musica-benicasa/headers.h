@@ -21,17 +21,20 @@ struct Usuario{
 struct Aluno {
     Usuario base;
     double saldo;
-    int notas[2];
+    float notas[2];
+    float media;
     int faltas;
     int instrumento;
     int turmasId[10];
+    int idInstrumento;
+    int turma;
 };
 
 struct Professor {
     Usuario base;
     double saldo;
     char disciplina[50];
-    int turmasId[5];
+    int turmas[5];
 };
 
 struct Admin {
@@ -92,8 +95,7 @@ struct Evento {
 struct Credito {
     int id_opera = 0;
     int id_user = 0;
-    Funcao tipo_user;
-    double saldo = 0; 
+    double saldo = 0;
     bool realizado = false;
 };
 
