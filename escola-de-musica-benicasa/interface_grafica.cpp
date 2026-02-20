@@ -113,24 +113,45 @@ static int desenhar_texto_wrap(WINDOW *win, int y, int x, const string& texto,
 // ─── Função principal ───────────────────────────────────────────
 
 void mostrar_caixa_informacao(const string& titulo, const string& mensagem) {
-    int largura = 50;
-    int altura = 7;
+    // Calcular largura baseada no tamanho do título e mensagem
+    int largura_titulo = titulo.size() + 4;
+    int largura_base = 50;
+    int largura = max({largura_titulo, largura_base, (int)mensagem.size() + 4});
+    
+    // Limitar ao tamanho da tela
+    if (largura > COLS - 4) largura = COLS - 4;
+    
+    // Calcular altura baseada no número de linhas da mensagem
+    int linhas_mensagem = contar_linhas_com_wrap(mensagem, largura);
+    // Altura: +1 título, +1 separador, +1 espaço antes da instrução, +1 instrução, +2 bordas
+    int altura = linhas_mensagem + 6;
+    
+    // Limitar ao tamanho da tela
+    if (altura > LINES - 2) altura = LINES - 2;
 
     int starty = (LINES - altura) / 2;
     int startx = (COLS - largura) / 2;
 
     WINDOW* win = newwin(altura, largura, starty, startx);
+    wbkgd(win, COLOR_PAIR(0));
+    wclear(win);
     box(win, 0, 0);
 
     // Título centralizado
-    mvwprintw(win, 0, (largura - titulo.size()) / 2, "%s", titulo.c_str());
+    int pos_titulo = centro_x(largura, titulo.size());
+    mvwprintw(win, 1, pos_titulo, "%s", titulo.c_str());
 
-    // Mensagem centralizada
-    mvwprintw(win, 2, (largura - mensagem.size()) / 2, "%s", mensagem.c_str());
+    // Desenhar linha separadora
+    for (int i = 1; i < largura - 1; i++)
+        mvwaddch(win, 2, i, ACS_HLINE);
 
-    // Instrução
+    // Mensagem com word wrap (começa na linha 3)
+    desenhar_texto_wrap(win, 3, 2, mensagem, largura, 0);
+
+    // Instrução sempre na penúltima linha
     std::string instrucao = "Pressione ENTER";
-    mvwprintw(win, 4, (largura - instrucao.size()) / 2, "%s", instrucao.c_str());
+    int pos_instrucao = centro_x(largura, instrucao.size());
+    mvwprintw(win, altura - 2, pos_instrucao, "%s", instrucao.c_str());
 
     wrefresh(win);
 

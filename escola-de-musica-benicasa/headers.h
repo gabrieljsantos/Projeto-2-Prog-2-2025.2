@@ -41,13 +41,25 @@ struct Admin {
 };
 
 #define MAX_ALUNOS 20
+#define MAX_AVALIACOES 10
+
+struct Avaliacao
+{
+    char data[12];        // dd/mm/aaaa
+    char descricao[100];  // assunto da avaliacao
+};
+
 struct Turma {
     int id;
     int ativo;
     int idDisciplina;
     int idProfessor;
-    int alunos[MAX_ALUNOS]; 
+    char nome[100];
+    int id_prof;
+    Aluno alunos[MAX_ALUNOS];
     int qtdAlunos;
+    Avaliacao avaliacoes[MAX_AVALIACOES];
+    int qtdAvaliacoes;
 };
 struct Disciplina {
     int id;
