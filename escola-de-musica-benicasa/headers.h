@@ -74,13 +74,15 @@ struct Produto {
     double preco;
     int estoque;
 };
+
 struct Instrumento {
     int id;
     int ativo;          // 1 = ativo, 0 = removido
     int autorizado;     // 0 = não autorizado, 1 = autorizado
     char nome[30];
-    bool disponivel;     // 1 = disponível, 0 = indisponível
-    int estoque;
+    bool disponivel;    // 1 = disponível, 0 = indisponível
+    int estoque;        // Quantidade física disponível
+    int idAluno;        // ID do aluno que pegou o instrumento emprestado
 };
 
 struct Emprestimo {

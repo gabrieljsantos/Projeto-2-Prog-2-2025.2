@@ -54,7 +54,6 @@ namespace mod_ADM {
     void menuCadastroCursos();
     void consultarRelatoriosAcademicos();
     void menuEventos(std::fstream &file);
-    void menuCadastroInstrumentos();
     
     // Funções de gerenciamento de disciplinas
     void gerenciar_disciplina_menu(int idDisciplina);
