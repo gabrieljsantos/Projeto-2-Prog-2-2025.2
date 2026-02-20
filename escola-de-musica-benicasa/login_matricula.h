@@ -7,6 +7,7 @@
 #define ARQUIVO_ALUNOS "alunos.dat"
 #define ARQUIVO_PROFESSORES "professores.dat"
 #define ARQUIVO_ADMINISTRADORES "administradores.dat"
+#define VALOR_PADRAO_CRIPTOGRAFIA 0;
 
 using namespace std;
 
@@ -43,8 +44,8 @@ namespace Login_mat {
     int verificarUltimoIdUsuario();
 
     // Funções basicas para escriptografar as senhas
-    string encriptografarSenha(string senha);
-    string desencriptografarSenha(string senhaEncriptografada);
+    string encriptografarSenha(string senha, int index);
+    string desencriptografarSenha(string senhaEncriptografada, int index);
 
     // Ler X (usuario, aluno, professor)
     Usuario lerUsuario(int id);
