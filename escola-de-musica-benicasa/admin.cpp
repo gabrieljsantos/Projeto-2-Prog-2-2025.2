@@ -46,7 +46,7 @@ Professor buscaProf(std::fstream &file,int buscaId){
         mostrar_caixa_informacao("ERRO", "ID invalido!");
         return prof;
     }
-    file.seekg((buscaId - 20260000) * sizeof(Professor));
+    file.seekg((buscaId - 20260001) * sizeof(Professor));
     file.read((char*)&prof,sizeof(Professor));
     if(prof.base.id == buscaId&&prof.base.ativo){
         string info = "Nome: " + string(prof.base.nome) + "\nE-mail: " + string(prof.base.email);
@@ -93,7 +93,7 @@ Aluno buscaAluno(std::fstream &file, int buscaId){
         mostrar_caixa_informacao("ERRO", "ID invalido!");
         return aluno;
     }
-    file.seekg((buscaId - 20260000) * sizeof(Aluno));
+    file.seekg((buscaId - 20260001) * sizeof(Aluno));
     file.read((char*)&aluno, sizeof(Aluno));
     if(aluno.base.id == buscaId && aluno.base.ativo){
         string info = "Nome: " + string(aluno.base.nome) + "\nE-mail: " + string(aluno.base.email);
@@ -203,7 +203,7 @@ void consultarPendenciasInstrumentos() {
                 
                 while(fileEmprestimo.read((char*)&emp, sizeof(Emprestimo)) && contador < 100) {
                     fileAlunos.clear();
-                    fileAlunos.seekg((emp.idAluno - 20260000) * sizeof(Aluno));
+                    fileAlunos.seekg((emp.idAluno - 20260001) * sizeof(Aluno));
                     
                     if(!fileAlunos.read((char*)&user, sizeof(Aluno)))
                         continue;
@@ -282,7 +282,7 @@ void consultarPendenciasInstrumentos() {
                         continue;
                     
                     fileAlunos.clear();
-                    fileAlunos.seekg((emp.idAluno - 20260000) * sizeof(Aluno));
+                    fileAlunos.seekg((emp.idAluno - 20260001) * sizeof(Aluno));
                     
                     if(!fileAlunos.read((char*)&user, sizeof(Aluno)))
                         continue;
@@ -602,61 +602,94 @@ namespace mod_ADM {
                 return;
             }
             
+            // Buscar professor vinculado a esta disciplina
+            string nomeProfVinculado = "Nenhum";
+            {
+                std::fstream fileProfs;
+                openFile(fileProfs, "professores.dat");
+                Professor profTemp;
+                fileProfs.seekg(0);
+                while(fileProfs.read((char*)&profTemp, sizeof(Professor))) {
+                    if(profTemp.base.id > 0 && strcmp(profTemp.disciplina, disciplina.nome) == 0) {
+                        nomeProfVinculado = profTemp.base.nome;
+                        break;
+                    }
+                }
+                fileProfs.close();
+            }
+
             // Mostrar menu de gerenciamento
             ConfigBotoes configBotoes;
             configBotoes.titulo = "Gerenciar Disciplina";
             configBotoes.descricao = "ID: " + to_string(idDisciplina) + " | Nome: " + string(disciplina.nome) + 
                                      " | Carga Horaria: " + to_string(disciplina.cargaHoraria) + "h" +
-                                     " | Status: " + (disciplina.ativo ? "Ativa" : "Inativa");
+                                     " | Status: " + (disciplina.ativo ? "Ativa" : "Inativa") +
+                                     " | Professor: " + nomeProfVinculado;
             configBotoes.botoes[0].label = "Ativar";
             configBotoes.botoes[0].tecla = 'A';
             configBotoes.botoes[0].valor_retorno = 1;
             configBotoes.botoes[1].label = "Desativar";
             configBotoes.botoes[1].tecla = 'D';
             configBotoes.botoes[1].valor_retorno = 0;
-            configBotoes.botoes[2].label = "Excluir";
-            configBotoes.botoes[2].tecla = 'E';
-            configBotoes.botoes[2].valor_retorno = 3;
-            configBotoes.botoes[3].label = "Cancelar";
-            configBotoes.botoes[3].tecla = 'C';
-            configBotoes.botoes[3].valor_retorno = 4;
-            configBotoes.numero_botoes = 4;
+            configBotoes.botoes[2].label = "Vincular Prof.";
+            configBotoes.botoes[2].tecla = 'V';
+            configBotoes.botoes[2].valor_retorno = 5;
+            configBotoes.botoes[3].label = "Remover Prof.";
+            configBotoes.botoes[3].tecla = 'R';
+            configBotoes.botoes[3].valor_retorno = 6;
+            configBotoes.botoes[4].label = "Excluir";
+            configBotoes.botoes[4].tecla = 'E';
+            configBotoes.botoes[4].valor_retorno = 3;
+            configBotoes.botoes[5].label = "Cancelar";
+            configBotoes.botoes[5].tecla = 'C';
+            configBotoes.botoes[5].valor_retorno = 4;
+            configBotoes.numero_botoes = 6;
             
             saida_botoes acao = interface_para_botoes(configBotoes);
             
             if (!acao.confirmado) return;
             
-            openFile(file, "disciplinas.dat");
-            
-            if (acao.valor_retorno == 1) {
-                // Ativar disciplina
-                disciplina.ativo = 1;
-                file.seekp((idDisciplina - 1) * sizeof(Disciplina));
-                file.write((char*)&disciplina, sizeof(Disciplina));
-                file.close();
-                mostrar_caixa_informacao("SUCESSO", "Disciplina ativada com sucesso!");
+            if (acao.valor_retorno == 5) {
+                // Vincular professor a disciplina
+                vincular_professor_disciplina(idDisciplina, string(disciplina.nome));
             }
-            else if (acao.valor_retorno == 0) {
-                // Desativar disciplina
-                disciplina.ativo = 0;
-                file.seekp((idDisciplina - 1) * sizeof(Disciplina));
-                file.write((char*)&disciplina, sizeof(Disciplina));
-                file.close();
-                mostrar_caixa_informacao("SUCESSO", "Disciplina desativada com sucesso!");
+            else if (acao.valor_retorno == 6) {
+                // Remover vinculo professor da disciplina
+                remover_vinculo_professor_disciplina(string(disciplina.nome));
             }
-            else if (acao.valor_retorno == 3) {
-                // Excluir disciplina
-                disciplina.id = 0;
-                file.seekp((idDisciplina - 1) * sizeof(Disciplina));
-                file.write((char*)&disciplina, sizeof(Disciplina));
-                file.close();
-                mostrar_caixa_informacao("SUCESSO", "Disciplina excluida com sucesso!");
-                continuar_gerenciando = false;
-            }
-            else if (acao.valor_retorno == 4) {
-                // Cancelar/Sair
-                file.close();
-                continuar_gerenciando = false;
+            else {
+                openFile(file, "disciplinas.dat");
+                
+                if (acao.valor_retorno == 1) {
+                    // Ativar disciplina
+                    disciplina.ativo = 1;
+                    file.seekp((idDisciplina - 1) * sizeof(Disciplina));
+                    file.write((char*)&disciplina, sizeof(Disciplina));
+                    file.close();
+                    mostrar_caixa_informacao("SUCESSO", "Disciplina ativada com sucesso!");
+                }
+                else if (acao.valor_retorno == 0) {
+                    // Desativar disciplina
+                    disciplina.ativo = 0;
+                    file.seekp((idDisciplina - 1) * sizeof(Disciplina));
+                    file.write((char*)&disciplina, sizeof(Disciplina));
+                    file.close();
+                    mostrar_caixa_informacao("SUCESSO", "Disciplina desativada com sucesso!");
+                }
+                else if (acao.valor_retorno == 3) {
+                    // Excluir disciplina
+                    disciplina.id = 0;
+                    file.seekp((idDisciplina - 1) * sizeof(Disciplina));
+                    file.write((char*)&disciplina, sizeof(Disciplina));
+                    file.close();
+                    mostrar_caixa_informacao("SUCESSO", "Disciplina excluida com sucesso!");
+                    continuar_gerenciando = false;
+                }
+                else if (acao.valor_retorno == 4) {
+                    // Cancelar/Sair
+                    file.close();
+                    continuar_gerenciando = false;
+                }
             }
         }
     }
@@ -728,7 +761,7 @@ namespace mod_ADM {
                 profVincular.disciplina[49] = '\0';
                 
                 openFile(fileProfs, "professores.dat");
-                fileProfs.seekp((idProfessor - 20260000) * sizeof(Professor));
+                fileProfs.seekp((idProfessor - 20260001) * sizeof(Professor));
                 fileProfs.write((char*)&profVincular, sizeof(Professor));
                 fileProfs.close();
                 
@@ -763,7 +796,7 @@ namespace mod_ADM {
         profVincular.disciplina[49] = '\0';
         
         openFile(fileProfs, "professores.dat");
-        fileProfs.seekp((idProfessor - 20260000) * sizeof(Professor));
+        fileProfs.seekp((idProfessor - 20260001) * sizeof(Professor));
         fileProfs.write((char*)&profVincular, sizeof(Professor));
         fileProfs.close();
         
@@ -1559,18 +1592,25 @@ void menuCadastroCursos(){
     }
 
     int listar_professores_para_turma(string dados[100][4]) {
+        std::cout << "[DEBUG listar_professores_para_turma] Inicio" << std::endl;
+        system("pause");
         int contador = 0;
         std::fstream file;
         openFile(file, "professores.dat");
         Professor professor;
         
         file.seekg(0);
+        int total_lidos = 0;
         while(file.read((char*)&professor, sizeof(Professor)) && contador < 100) {
+            total_lidos++;
+            std::cout << "[DEBUG listar_professores_para_turma] Lido prof #" << total_lidos << " ID=" << professor.base.id << " ativo=" << professor.base.ativo << " nome=" << professor.base.nome << std::endl;
             if(professor.base.id > 0 && professor.base.ativo) {
                 int vagasDisponiveis = 0;
                 for(int i = 0; i < 5; i++) {
+                    std::cout << "[DEBUG listar_professores_para_turma]   turmas[" << i << "]=" << professor.turmas[i] << std::endl;
                     if(professor.turmas[i] == 0) vagasDisponiveis++;
                 }
+                std::cout << "[DEBUG listar_professores_para_turma]   vagasDisponiveis=" << vagasDisponiveis << std::endl;
                 
                 if(vagasDisponiveis > 0) {
                     dados[contador][0] = to_string(professor.base.id);
@@ -1582,6 +1622,8 @@ void menuCadastroCursos(){
             }
         }
         file.close();
+        std::cout << "[DEBUG listar_professores_para_turma] Total lidos=" << total_lidos << " professores validos=" << contador << std::endl;
+        system("pause");
         return contador;
     }
 
@@ -1637,12 +1679,18 @@ void menuCadastroCursos(){
     // ----- FUNÇÕES DE TURMAS E MATRÍCULA -----
 
     bool verificaTurmasProf(Professor &prof, int &Index_turma){
+        std::cout << "[DEBUG verificaTurmasProf] Prof ID=" << prof.base.id << " Nome=" << prof.base.nome << std::endl;
         for(int i = 0; i < 5; i++){
+            std::cout << "[DEBUG verificaTurmasProf]   turmas[" << i << "]=" << prof.turmas[i] << std::endl;
             if(prof.turmas[i] == 0){
                 Index_turma = i;
+                std::cout << "[DEBUG verificaTurmasProf] Vaga encontrada no index " << i << std::endl;
+                system("pause");
                 return true;
             }
         }
+        std::cout << "[DEBUG verificaTurmasProf] SEM VAGAS!" << std::endl;
+        system("pause");
         return false;
     }
 
@@ -1664,9 +1712,10 @@ void menuCadastroCursos(){
                 // Buscar nome do professor
                 if(turma.idProfessor > 0) {
                     Professor prof;
-                    fileProf.seekg((turma.idProfessor - 20260000) * sizeof(Professor));
-                    fileProf.read((char*)&prof, sizeof(Professor));
-                    if(prof.base.id == turma.idProfessor) {
+                    memset(&prof, 0, sizeof(Professor));
+                    fileProf.clear(); // Limpar flags de erro antes de buscar
+                    fileProf.seekg((turma.idProfessor - 20260001) * sizeof(Professor));
+                    if(fileProf.read((char*)&prof, sizeof(Professor)) && prof.base.id == turma.idProfessor) {
                         dados[contador][2] = prof.base.nome;
                     } else {
                         dados[contador][2] = "Nao atribuido";
@@ -1799,6 +1848,8 @@ void menuCadastroCursos(){
 
     // Atribui professor a uma turma
     void atribuirProfessorTurma(int idTurma) {
+        std::cout << "[DEBUG atribuirProfessorTurma] Inicio - idTurma: " << idTurma << std::endl;
+        system("pause");
         string dados_prof[100][4];
         
         std::fstream file;
@@ -1811,7 +1862,12 @@ void menuCadastroCursos(){
         file.seekg((idTurma - 1) * sizeof(Turma));
         file.read((char*)&turma, sizeof(Turma));
         
+        std::cout << "[DEBUG atribuirProfessorTurma] Turma lida: id=" << turma.id << " ativo=" << turma.ativo << " nome=" << turma.nome << " idProfessor=" << turma.idProfessor << std::endl;
+        system("pause");
+        
         if(turma.id != idTurma || !turma.ativo) {
+            std::cout << "[DEBUG atribuirProfessorTurma] ERRO: turma nao encontrada! turma.id=" << turma.id << " esperado=" << idTurma << std::endl;
+            system("pause");
             mostrar_caixa_informacao("ERRO", "Turma nao encontrada.");
             file.close();
             fileProf.close();
@@ -1820,31 +1876,48 @@ void menuCadastroCursos(){
         
         // Se já tem professor, remover turma do professor antigo
         if(turma.idProfessor > 0) {
+            std::cout << "[DEBUG atribuirProfessorTurma] Removendo turma do professor antigo ID=" << turma.idProfessor << std::endl;
             Professor profAntigo;
-            fileProf.seekg((turma.idProfessor - 20260000) * sizeof(Professor));
+            fileProf.seekg((turma.idProfessor - 20260001) * sizeof(Professor));
             fileProf.read((char*)&profAntigo, sizeof(Professor));
+            std::cout << "[DEBUG atribuirProfessorTurma] ProfAntigo lido: id=" << profAntigo.base.id << " nome=" << profAntigo.base.nome << std::endl;
             
             if(profAntigo.base.id == turma.idProfessor) {
                 for(int i = 0; i < 5; i++) {
+                    std::cout << "[DEBUG atribuirProfessorTurma]   profAntigo.turmas[" << i << "]=" << profAntigo.turmas[i] << std::endl;
                     if(profAntigo.turmas[i] == idTurma) {
+                        std::cout << "[DEBUG atribuirProfessorTurma]   Removendo turma " << idTurma << " do slot " << i << std::endl;
                         profAntigo.turmas[i] = 0;
                         break;
                     }
                 }
-                fileProf.seekp((turma.idProfessor - 20260000) * sizeof(Professor));
+                fileProf.seekp((turma.idProfessor - 20260001) * sizeof(Professor));
                 fileProf.write((char*)&profAntigo, sizeof(Professor));
+                std::cout << "[DEBUG atribuirProfessorTurma] Professor antigo atualizado no arquivo" << std::endl;
             }
+            system("pause");
         }
         
         // Listar professores
+        std::cout << "[DEBUG atribuirProfessorTurma] Chamando listar_professores_para_turma()" << std::endl;
         int total_prof = listar_professores_para_turma(dados_prof);
+        std::cout << "[DEBUG atribuirProfessorTurma] Total professores disponiveis: " << total_prof << std::endl;
+        system("pause");
         
         if (total_prof == 0) {
+            std::cout << "[DEBUG atribuirProfessorTurma] Nenhum professor disponivel, retornando" << std::endl;
+            system("pause");
             mostrar_caixa_informacao("INFO", "Nenhum professor ativo com vagas disponiveis.");
             file.close();
             fileProf.close();
             return;
         }
+        
+        // Mostrar professores encontrados
+        for(int i = 0; i < total_prof; i++) {
+            std::cout << "[DEBUG atribuirProfessorTurma] Prof[" << i << "]: ID=" << dados_prof[i][0] << " Nome=" << dados_prof[i][1] << " Email=" << dados_prof[i][2] << " Vagas=" << dados_prof[i][3] << std::endl;
+        }
+        system("pause");
         
         string titulos_prof[4] = {"ID", "Nome", "Email", "Vagas"};
         const string* dados_ptr_prof[100];
@@ -1853,27 +1926,53 @@ void menuCadastroCursos(){
         ConfigTabela configTab_prof;
         configTab_prof.titulo = "Atribuir Professor - " + string(turma.nome);
         configTab_prof.descricao = turma.idProfessor > 0 ? "Professor atual: ID " + to_string(turma.idProfessor) : "Sem professor atribuido";
+        
+        std::cout << "[DEBUG atribuirProfessorTurma] Chamando interface_para_tabela" << std::endl;
+        system("pause");
         saida_tabela prof_selecionado = interface_para_tabela(total_prof, 4, dados_ptr_prof, titulos_prof, 0, configTab_prof);
         
+        std::cout << "[DEBUG atribuirProfessorTurma] Retornou da tabela. indice_linha=" << prof_selecionado.indice_linha << std::endl;
+        system("pause");
+        
         if (prof_selecionado.indice_linha == -1) {
+            std::cout << "[DEBUG atribuirProfessorTurma] Selecao cancelada" << std::endl;
+            system("pause");
             file.close();
             fileProf.close();
             return;
         }
         
         int idProfessor = stoi(dados_prof[prof_selecionado.indice_linha][0]);
+        std::cout << "[DEBUG atribuirProfessorTurma] Professor selecionado ID=" << idProfessor << " Nome=" << dados_prof[prof_selecionado.indice_linha][1] << std::endl;
+        system("pause");
         
         // Vincular turma ao novo professor
+        std::cout << "[DEBUG atribuirProfessorTurma] Lendo professor do arquivo. Offset=" << (idProfessor - 20260001) * sizeof(Professor) << std::endl;
         Professor prof;
-        fileProf.seekg((idProfessor - 20260000) * sizeof(Professor));
+        fileProf.seekg((idProfessor - 20260001) * sizeof(Professor));
         fileProf.read((char*)&prof, sizeof(Professor));
+        std::cout << "[DEBUG atribuirProfessorTurma] Professor lido: id=" << prof.base.id << " nome=" << prof.base.nome << " ativo=" << prof.base.ativo << std::endl;
+        for(int i = 0; i < 5; i++) {
+            std::cout << "[DEBUG atribuirProfessorTurma]   prof.turmas[" << i << "]=" << prof.turmas[i] << std::endl;
+        }
+        system("pause");
         
         int indexVAGA;
+        std::cout << "[DEBUG atribuirProfessorTurma] Chamando verificaTurmasProf()" << std::endl;
         if(verificaTurmasProf(prof, indexVAGA)){
+            std::cout << "[DEBUG atribuirProfessorTurma] Vaga encontrada no index=" << indexVAGA << ". Escrevendo turma " << idTurma << " no slot" << std::endl;
             prof.turmas[indexVAGA] = idTurma;
-            fileProf.seekp((idProfessor - 20260000) * sizeof(Professor));
+            fileProf.seekp((idProfessor - 20260001) * sizeof(Professor));
             fileProf.write((char*)&prof, sizeof(Professor));
+            std::cout << "[DEBUG atribuirProfessorTurma] Professor atualizado no arquivo" << std::endl;
+            // Verificar escrita
+            for(int i = 0; i < 5; i++) {
+                std::cout << "[DEBUG atribuirProfessorTurma]   prof.turmas[" << i << "]=" << prof.turmas[i] << " (apos escrita)" << std::endl;
+            }
+            system("pause");
         } else {
+            std::cout << "[DEBUG atribuirProfessorTurma] ERRO: Professor SEM VAGAS!" << std::endl;
+            system("pause");
             mostrar_caixa_informacao("ERRO", "Professor nao tem vaga para novas turmas.");
             file.close();
             fileProf.close();
@@ -1881,14 +1980,19 @@ void menuCadastroCursos(){
         }
         
         // Atualizar turma
+        std::cout << "[DEBUG atribuirProfessorTurma] Atualizando turma: idProfessor=" << idProfessor << " offset=" << (idTurma - 1) * sizeof(Turma) << std::endl;
         turma.idProfessor = idProfessor;
         turma.id_prof = idProfessor;
         file.seekp((idTurma - 1) * sizeof(Turma));
         file.write((char*)&turma, sizeof(Turma));
+        std::cout << "[DEBUG atribuirProfessorTurma] Turma atualizada: idProfessor=" << turma.idProfessor << " id_prof=" << turma.id_prof << std::endl;
+        system("pause");
         
         file.close();
         fileProf.close();
         
+        std::cout << "[DEBUG atribuirProfessorTurma] CONCLUIDO com sucesso!" << std::endl;
+        system("pause");
         mostrar_caixa_informacao("SUCESSO", "Professor atribuido com sucesso!");
     }
 
@@ -2192,14 +2296,27 @@ void menuCadastroCursos(){
 
     // Menu para definir atributos de turmas (seleciona turma e abre submenu)
     void menuDefinirAtributosTurma() {
+        std::cout << "[DEBUG menuDefinirAtributosTurma] Inicio da funcao" << std::endl;
+        system("pause");
+        
         string dados[100][4];
         
         int total_turmas = listar_todas_turmas(dados);
+        std::cout << "[DEBUG menuDefinirAtributosTurma] Total turmas encontradas: " << total_turmas << std::endl;
+        system("pause");
         
         if (total_turmas == 0) {
+            std::cout << "[DEBUG menuDefinirAtributosTurma] Nenhuma turma encontrada, retornando" << std::endl;
+            system("pause");
             mostrar_caixa_informacao("INFO", "Nenhuma turma cadastrada.\nCrie uma turma primeiro.");
             return;
         }
+        
+        // Mostrar dados de cada turma encontrada
+        for(int i = 0; i < total_turmas; i++) {
+            std::cout << "[DEBUG menuDefinirAtributosTurma] Turma[" << i << "]: ID=" << dados[i][0] << " Nome=" << dados[i][1] << " Prof=" << dados[i][2] << " Alunos=" << dados[i][3] << std::endl;
+        }
+        system("pause");
         
         string titulos[4] = {"ID", "Nome da Turma", "Professor", "Alunos"};
         const string* dados_ptr[100];
@@ -2208,14 +2325,27 @@ void menuCadastroCursos(){
         ConfigTabela configTab;
         configTab.titulo = "Selecionar Turma para Configurar";
         configTab.descricao = "Selecione uma turma para definir seus atributos.";
+        
+        std::cout << "[DEBUG menuDefinirAtributosTurma] Chamando interface_para_tabela com " << total_turmas << " turmas" << std::endl;
+        system("pause");
         saida_tabela turma_selecionada = interface_para_tabela(total_turmas, 4, dados_ptr, titulos, 0, configTab);
         
+        std::cout << "[DEBUG menuDefinirAtributosTurma] Retornou da tabela. indice_linha: " << turma_selecionada.indice_linha << std::endl;
+        system("pause");
+        
         if (turma_selecionada.indice_linha == -1) {
+            std::cout << "[DEBUG menuDefinirAtributosTurma] Selecao cancelada, retornando" << std::endl;
+            system("pause");
             return; // Cancelado
         }
         
         int idTurma = stoi(dados[turma_selecionada.indice_linha][0]);
+        std::cout << "[DEBUG menuDefinirAtributosTurma] Turma selecionada ID: " << idTurma << " Nome: " << dados[turma_selecionada.indice_linha][1] << std::endl;
+        std::cout << "[DEBUG menuDefinirAtributosTurma] Chamando menuAtributosTurmaSelecionada(" << idTurma << ")" << std::endl;
+        system("pause");
         menuAtributosTurmaSelecionada(idTurma);
+        std::cout << "[DEBUG menuDefinirAtributosTurma] Retornou de menuAtributosTurmaSelecionada" << std::endl;
+        system("pause");
     }
 
     // Menu principal de gerenciamento de turmas
@@ -2235,14 +2365,23 @@ void menuCadastroCursos(){
             config.descricao = "Crie turmas e defina disciplinas, professores e alunos.";
             saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
             
+            std::cout << "[DEBUG menuGerenciarTurmas] Opcao selecionada: " << resultado.indice_da_opcao << std::endl;
+            system("pause");
+
             switch (resultado.indice_da_opcao) {
                 case 0:
+                    std::cout << "[DEBUG menuGerenciarTurmas] Entrando em criarTurmaBasica()" << std::endl;
+                    system("pause");
                     criarTurmaBasica();
                     break;
                 case 1:
+                    std::cout << "[DEBUG menuGerenciarTurmas] Entrando em menuDefinirAtributosTurma()" << std::endl;
+                    system("pause");
                     menuDefinirAtributosTurma();
                     break;
                 case 2:
+                    std::cout << "[DEBUG menuGerenciarTurmas] Saindo do menu (Voltar)" << std::endl;
+                    system("pause");
                     continuar = false;
                     break;
             }
