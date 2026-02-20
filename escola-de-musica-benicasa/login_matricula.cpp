@@ -46,7 +46,7 @@ namespace Login_mat {
             exit(1);
         }
 
-        for (int i = 0; i < 100; i++)  //Como o id tem o formato 0000 não seriam 1000?
+        for (int i = 0; i < 100; i++)  
             outAlunos.write((const char *)(&alunoVazio), sizeof(Aluno));
 
         outAlunos.close();
@@ -171,7 +171,7 @@ namespace Login_mat {
 
         cout << "Senha: ";
         cin.getline(senha, 30);
-        string senhaEncriptada = encriptografarSenha(senha);
+        string senhaEncriptada = encriptografarSenha(senha, 0);
         strcpy((*alunoPtr).base.senha, senhaEncriptada.c_str());
 
         salvarAluno(*alunoPtr);
@@ -198,7 +198,7 @@ namespace Login_mat {
 
         cout << "Senha: ";
         cin.getline(senha, 30);
-        string senhaEncriptada = encriptografarSenha(senha);
+        string senhaEncriptada = encriptografarSenha(senha, 0);
         strcpy(novoProfessor.base.senha, senhaEncriptada.c_str());
 
         cout << "Disciplina: ";
@@ -242,7 +242,7 @@ namespace Login_mat {
         if (verificarUsuarioExistente((*usuarios[0]).id)) {
 
             *usuarios[1] = lerUsuario((*usuarios[0]).id);
-            string senhaDesencriptada = desencriptografarSenha((*usuarios[1]).senha);
+            string senhaDesencriptada = desencriptografarSenha((*usuarios[1]).senha, 0);
 
             if (strcmp((*usuarios[0]).senha, senhaDesencriptada.c_str()) == 0 && (*usuarios[1]).ativo) {
                 usuario = *usuarios[1];
@@ -370,24 +370,24 @@ namespace Login_mat {
         return ultimoId;
     }
 
-    string encriptografarSenha(string senha) {
-        string senhaEncriptografada;
-        for (size_t i = 0; i < senha.length(); i++) {
-            char c = senha[i];
-            c += 3; // Desloca o caractere 3 posições na tabela ASCII
-            senhaEncriptografada += c;
+    string encriptografarSenha(string senha, int index) {
+        char c;
+        if(index == senha.length()) {
+            return "";
         }
-        return senhaEncriptografada;
+        c = senha[index];
+        c += 3; 
+        return c + encriptografarSenha(senha, index + 1);
     }
 
-    string desencriptografarSenha(string senhaEncriptografada) {
-        string senhaDesecriptografada;
-        for (size_t i = 0; i < senhaEncriptografada.length(); i++) {
-            char c = senhaEncriptografada[i];
-            c -= 3; // Desloca o caractere 3 posições na tabela ASCII
-            senhaDesecriptografada += c;
+    string desencriptografarSenha(string senhaEncriptografada, int index) {
+        char c;
+        if(index == senhaEncriptografada.length()) {
+            return "";
         }
-        return senhaDesecriptografada;
+        c = senhaEncriptografada[index];
+        c -= 3; 
+        return c + desencriptografarSenha(senhaEncriptografada, index + 1);
     }
 
 
