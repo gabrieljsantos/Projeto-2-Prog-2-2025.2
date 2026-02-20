@@ -1646,25 +1646,126 @@ void menuCadastroCursos(){
         return false;
     }
 
-    void cadastrarTurma(){
+    // Lista todas as turmas para exibição na tabela principal
+    int listar_todas_turmas(string dados[100][4]) {
+        int contador = 0;
+        std::fstream file;
+        std::fstream fileProf;
+        openFile(file, "turmas.dat");
+        openFile(fileProf, "professores.dat");
+        
+        Turma turma;
+        file.seekg(0);
+        while(file.read((char*)&turma, sizeof(Turma)) && contador < 100) {
+            if(turma.id != 0 && turma.ativo) {
+                dados[contador][0] = to_string(turma.id);
+                dados[contador][1] = turma.nome;
+                
+                // Buscar nome do professor
+                if(turma.idProfessor > 0) {
+                    Professor prof;
+                    fileProf.seekg((turma.idProfessor - 20260000) * sizeof(Professor));
+                    fileProf.read((char*)&prof, sizeof(Professor));
+                    if(prof.base.id == turma.idProfessor) {
+                        dados[contador][2] = prof.base.nome;
+                    } else {
+                        dados[contador][2] = "Nao atribuido";
+                    }
+                } else {
+                    dados[contador][2] = "Nao atribuido";
+                }
+                
+                dados[contador][3] = to_string(turma.qtdAlunos) + "/" + to_string(MAX_ALUNOS);
+                contador++;
+            }
+        }
+        file.close();
+        fileProf.close();
+        return contador;
+    }
+
+    // Cria turma apenas com nome (definições básicas)
+    void criarTurmaBasica() {
+        std::fstream file;
+        openFile(file, "turmas.dat");
+        
+        // ===== ENTRADA DO NOME DA TURMA =====
+        ConfigEntradaTexto configNome;
+        configNome.titulo = "Criar Nova Turma";
+        configNome.descricao = "Informe o nome da turma.";
+        configNome.label = "Nome da Turma: ";
+        configNome.tipo_entrada = TIPO_TEXTO;
+        configNome.tamanho_maximo = 99;
+        
+        saida_entrada_texto resultadoNome = interface_para_entrada_texto(configNome);
+        
+        if (!resultadoNome.confirmado || resultadoNome.valor.empty()) {
+            file.close();
+            return;
+        }
+        
+        // ===== CRIAR TURMA =====
+        Turma turma;
+        turma.id = gerarNovoId(file, sizeof(Turma));
+        turma.ativo = 1;
+        turma.idDisciplina = 0;  // Não atribuído
+        turma.idProfessor = 0;   // Não atribuído
+        turma.id_prof = 0;
+        turma.qtdAlunos = 0;
+        turma.qtdAvaliacoes = 0;
+        
+        // Copiar nome
+        strncpy(turma.nome, resultadoNome.valor.c_str(), 99);
+        turma.nome[99] = '\0';
+        
+        // Inicializar alunos vazios
+        for(int i = 0; i < MAX_ALUNOS; i++) {
+            turma.alunos[i].base.id = 0;
+            turma.alunos[i].base.ativo = 0;
+        }
+        
+        // Inicializar avaliações vazias
+        for(int i = 0; i < MAX_AVALIACOES; i++) {
+            turma.avaliacoes[i].data[0] = '\0';
+            turma.avaliacoes[i].descricao[0] = '\0';
+        }
+        
+        // ===== SALVAR TURMA =====
+        file.seekp((turma.id - 1) * sizeof(Turma));
+        file.write((char*)&turma, sizeof(Turma));
+        file.close();
+        
+        mostrar_caixa_informacao("SUCESSO", "Turma criada com sucesso!\nID: " + to_string(turma.id) + "\nNome: " + turma.nome);
+    }
+
+    // Atribui disciplina a uma turma
+    void atribuirDisciplinaTurma(int idTurma) {
         string dados_disc[100][4];
-        string dados_prof[100][4];
         
         std::fstream file;
         std::fstream fileDisc;
-        std::fstream fileProf;
         openFile(file, "turmas.dat");
         openFile(fileDisc, "disciplinas.dat");
-        openFile(fileProf, "professores.dat");
         
-        // ===== SELECIONAR DISCIPLINA =====
+        // Buscar turma
+        Turma turma;
+        file.seekg((idTurma - 1) * sizeof(Turma));
+        file.read((char*)&turma, sizeof(Turma));
+        
+        if(turma.id != idTurma || !turma.ativo) {
+            mostrar_caixa_informacao("ERRO", "Turma nao encontrada.");
+            file.close();
+            fileDisc.close();
+            return;
+        }
+        
+        // Listar disciplinas
         int total_disc = listar_disciplinas_para_turma(dados_disc);
         
         if (total_disc == 0) {
             mostrar_caixa_informacao("INFO", "Nenhuma disciplina ativa disponivel.");
             file.close();
             fileDisc.close();
-            fileProf.close();
             return;
         }
         
@@ -1673,25 +1774,74 @@ void menuCadastroCursos(){
         for(int i = 0; i < total_disc; i++) dados_ptr_disc[i] = dados_disc[i];
         
         ConfigTabela configTab_disc;
-        configTab_disc.titulo = "Selecionar Disciplina para Nova Turma";
+        configTab_disc.titulo = "Atribuir Disciplina - " + string(turma.nome);
+        configTab_disc.descricao = turma.idDisciplina > 0 ? "Disciplina atual: ID " + to_string(turma.idDisciplina) : "Sem disciplina atribuida";
         saida_tabela disc_selecionada = interface_para_tabela(total_disc, 4, dados_ptr_disc, titulos_disc, 0, configTab_disc);
         
         if (disc_selecionada.indice_linha == -1) {
             file.close();
             fileDisc.close();
-            fileProf.close();
-            return; // Cancelado
+            return;
         }
         
         int idDisciplina = stoi(dados_disc[disc_selecionada.indice_linha][0]);
         
-        // ===== SELECIONAR PROFESSOR =====
+        // Atualizar turma
+        turma.idDisciplina = idDisciplina;
+        file.seekp((idTurma - 1) * sizeof(Turma));
+        file.write((char*)&turma, sizeof(Turma));
+        
+        file.close();
+        fileDisc.close();
+        
+        mostrar_caixa_informacao("SUCESSO", "Disciplina atribuida com sucesso!");
+    }
+
+    // Atribui professor a uma turma
+    void atribuirProfessorTurma(int idTurma) {
+        string dados_prof[100][4];
+        
+        std::fstream file;
+        std::fstream fileProf;
+        openFile(file, "turmas.dat");
+        openFile(fileProf, "professores.dat");
+        
+        // Buscar turma
+        Turma turma;
+        file.seekg((idTurma - 1) * sizeof(Turma));
+        file.read((char*)&turma, sizeof(Turma));
+        
+        if(turma.id != idTurma || !turma.ativo) {
+            mostrar_caixa_informacao("ERRO", "Turma nao encontrada.");
+            file.close();
+            fileProf.close();
+            return;
+        }
+        
+        // Se já tem professor, remover turma do professor antigo
+        if(turma.idProfessor > 0) {
+            Professor profAntigo;
+            fileProf.seekg((turma.idProfessor - 20260000) * sizeof(Professor));
+            fileProf.read((char*)&profAntigo, sizeof(Professor));
+            
+            if(profAntigo.base.id == turma.idProfessor) {
+                for(int i = 0; i < 5; i++) {
+                    if(profAntigo.turmas[i] == idTurma) {
+                        profAntigo.turmas[i] = 0;
+                        break;
+                    }
+                }
+                fileProf.seekp((turma.idProfessor - 20260000) * sizeof(Professor));
+                fileProf.write((char*)&profAntigo, sizeof(Professor));
+            }
+        }
+        
+        // Listar professores
         int total_prof = listar_professores_para_turma(dados_prof);
         
         if (total_prof == 0) {
             mostrar_caixa_informacao("INFO", "Nenhum professor ativo com vagas disponiveis.");
             file.close();
-            fileDisc.close();
             fileProf.close();
             return;
         }
@@ -1701,80 +1851,127 @@ void menuCadastroCursos(){
         for(int i = 0; i < total_prof; i++) dados_ptr_prof[i] = dados_prof[i];
         
         ConfigTabela configTab_prof;
-        configTab_prof.titulo = "Selecionar Professor para a Turma";
+        configTab_prof.titulo = "Atribuir Professor - " + string(turma.nome);
+        configTab_prof.descricao = turma.idProfessor > 0 ? "Professor atual: ID " + to_string(turma.idProfessor) : "Sem professor atribuido";
         saida_tabela prof_selecionado = interface_para_tabela(total_prof, 4, dados_ptr_prof, titulos_prof, 0, configTab_prof);
         
         if (prof_selecionado.indice_linha == -1) {
             file.close();
-            fileDisc.close();
             fileProf.close();
-            return; // Cancelado
+            return;
         }
         
         int idProfessor = stoi(dados_prof[prof_selecionado.indice_linha][0]);
         
-        // ===== CRIAR E SALVAR TURMA =====
-        Turma turma;
-        turma.id = gerarNovoId(file, sizeof(Turma));
-        turma.ativo = 1;
-        turma.idDisciplina = idDisciplina;
-        turma.idProfessor = idProfessor;
-        turma.qtdAlunos = 0;
-        
-        for(int i = 0; i < MAX_ALUNOS; i++) {
-            turma.alunos[i].base.id = 0;
-            turma.alunos[i].base.ativo = 0;
-        }
-        
-        // ===== VINCULAR TURMA AO PROFESSOR =====
+        // Vincular turma ao novo professor
         Professor prof;
         fileProf.seekg((idProfessor - 20260000) * sizeof(Professor));
         fileProf.read((char*)&prof, sizeof(Professor));
         
         int indexVAGA;
         if(verificaTurmasProf(prof, indexVAGA)){
-            prof.turmas[indexVAGA] = turma.id;
+            prof.turmas[indexVAGA] = idTurma;
             fileProf.seekp((idProfessor - 20260000) * sizeof(Professor));
             fileProf.write((char*)&prof, sizeof(Professor));
-        }
-        else{
+        } else {
             mostrar_caixa_informacao("ERRO", "Professor nao tem vaga para novas turmas.");
             file.close();
-            fileDisc.close();
             fileProf.close();
             return;
         }
         
-        // ===== SALVAR TURMA =====
-        file.seekp((turma.id - 1) * sizeof(Turma));
+        // Atualizar turma
+        turma.idProfessor = idProfessor;
+        turma.id_prof = idProfessor;
+        file.seekp((idTurma - 1) * sizeof(Turma));
         file.write((char*)&turma, sizeof(Turma));
         
         file.close();
         fileProf.close();
-        fileDisc.close();
         
-        mostrar_caixa_informacao("SUCESSO", "Turma cadastrada com sucesso!\nID: " + to_string(turma.id));
+        mostrar_caixa_informacao("SUCESSO", "Professor atribuido com sucesso!");
     }
 
-    void matricularAlunoTurma() {
+    // Lista alunos de uma turma
+    void listarAlunosDaTurma(int idTurma) {
+        std::fstream file;
+        openFile(file, "turmas.dat");
+        
+        Turma turma;
+        file.seekg((idTurma - 1) * sizeof(Turma));
+        file.read((char*)&turma, sizeof(Turma));
+        file.close();
+        
+        if(turma.id != idTurma || !turma.ativo) {
+            mostrar_caixa_informacao("ERRO", "Turma nao encontrada.");
+            return;
+        }
+        
+        if(turma.qtdAlunos == 0) {
+            mostrar_caixa_informacao("INFO", "Nenhum aluno matriculado nesta turma.");
+            return;
+        }
+        
+        // Montar tabela de alunos
+        string dados[MAX_ALUNOS][4];
+        int contador = 0;
+        
+        for(int i = 0; i < MAX_ALUNOS && contador < turma.qtdAlunos; i++) {
+            if(turma.alunos[i].base.id > 0) {
+                dados[contador][0] = to_string(turma.alunos[i].base.id);
+                dados[contador][1] = turma.alunos[i].base.nome;
+                dados[contador][2] = turma.alunos[i].base.email;
+                dados[contador][3] = turma.alunos[i].base.ativo ? "Ativo" : "Inativo";
+                contador++;
+            }
+        }
+        
+        string titulos[4] = {"ID", "Nome", "Email", "Status"};
+        const string* dados_ptr[MAX_ALUNOS];
+        for(int i = 0; i < contador; i++) dados_ptr[i] = dados[i];
+        
+        ConfigTabela configTab;
+        configTab.titulo = "Alunos da Turma - " + string(turma.nome);
+        configTab.descricao = "Total: " + to_string(turma.qtdAlunos) + " aluno(s)";
+        
+        interface_para_tabela(contador, 4, dados_ptr, titulos, 0, configTab);
+    }
+
+    // Matricula alunos em uma turma específica
+    void matricularAlunosNaTurma(int idTurma) {
         string dados_alunos[100][5];
-        string dados_turmas[100][5];
         
         std::fstream fileAluno;
         std::fstream fileTurma;
-        std::fstream fileDisc;
         openFile(fileAluno, "alunos.dat");
         openFile(fileTurma, "turmas.dat");
-        openFile(fileDisc, "disciplinas.dat");
         
-        // ===== SELECIONAR ALUNO =====
+        // Buscar turma
+        Turma turma;
+        fileTurma.seekg((idTurma - 1) * sizeof(Turma));
+        fileTurma.read((char*)&turma, sizeof(Turma));
+        
+        if(turma.id != idTurma || !turma.ativo) {
+            mostrar_caixa_informacao("ERRO", "Turma nao encontrada.");
+            fileAluno.close();
+            fileTurma.close();
+            return;
+        }
+        
+        if(turma.qtdAlunos >= MAX_ALUNOS) {
+            mostrar_caixa_informacao("INFO", "Turma cheia. Nao ha vagas disponiveis.");
+            fileAluno.close();
+            fileTurma.close();
+            return;
+        }
+        
+        // Listar alunos disponíveis
         int total_alunos = listar_alunos_para_matricula(dados_alunos);
         
         if (total_alunos == 0) {
             mostrar_caixa_informacao("INFO", "Nenhum aluno ativo disponivel.");
             fileAluno.close();
             fileTurma.close();
-            fileDisc.close();
             return;
         }
         
@@ -1783,74 +1980,24 @@ void menuCadastroCursos(){
         for(int i = 0; i < total_alunos; i++) dados_ptr_alunos[i] = dados_alunos[i];
         
         ConfigTabela configTab_alunos;
-        configTab_alunos.titulo = "Selecionar Aluno para Matricula";
+        configTab_alunos.titulo = "Matricular Aluno - " + string(turma.nome);
+        configTab_alunos.descricao = "Vagas: " + to_string(MAX_ALUNOS - turma.qtdAlunos) + " disponiveis";
         saida_tabela aluno_selecionado = interface_para_tabela(total_alunos, 4, dados_ptr_alunos, titulos_alunos, 0, configTab_alunos);
         
         if (aluno_selecionado.indice_linha == -1) {
             fileAluno.close();
             fileTurma.close();
-            fileDisc.close();
-            return; // Cancelado
+            return;
         }
         
         int idAluno = stoi(dados_alunos[aluno_selecionado.indice_linha][0]);
         
-        // ===== VERIFICAR ALUNO =====
+        // Buscar aluno
         Aluno aluno = buscaAluno(fileAluno, idAluno);
         if (aluno.base.id != idAluno) {
-            mostrar_caixa_informacao("ERRO", "Aluno nao encontrado ou inativo.");
+            mostrar_caixa_informacao("ERRO", "Aluno nao encontrado.");
             fileAluno.close();
             fileTurma.close();
-            fileDisc.close();
-            return;
-        }
-        
-        // ===== SELECIONAR TURMA =====
-        int total_turmas = listar_turmas_para_matricula(dados_turmas);
-        
-        if (total_turmas == 0) {
-            mostrar_caixa_informacao("INFO", "Nenhuma turma disponivel com vagas.");
-            fileAluno.close();
-            fileTurma.close();
-            fileDisc.close();
-            return;
-        }
-        
-        string titulos_turmas[5] = {"ID Turma", "Disciplina", "Prof. ID", "Alunos", "Status"};
-        const string* dados_ptr_turmas[100];
-        for(int i = 0; i < total_turmas; i++) dados_ptr_turmas[i] = dados_turmas[i];
-        
-        ConfigTabela configTab_turmas;
-        configTab_turmas.titulo = "Selecionar Turma para Matricula";
-        saida_tabela turma_selecionada = interface_para_tabela(total_turmas, 5, dados_ptr_turmas, titulos_turmas, 0, configTab_turmas);
-        
-        if (turma_selecionada.indice_linha == -1) {
-            fileAluno.close();
-            fileTurma.close();
-            fileDisc.close();
-            return; // Cancelado
-        }
-        
-        int idTurma = stoi(dados_turmas[turma_selecionada.indice_linha][0]);
-        
-        // ===== VERIFICAR TURMA E MATRICULAR =====
-        Turma turma;
-        fileTurma.seekg((idTurma - 1) * sizeof(Turma));
-        fileTurma.read((char*)&turma, sizeof(Turma));
-        
-        if (turma.id != idTurma || !turma.ativo) {
-            mostrar_caixa_informacao("ERRO", "Turma invalida ou inativa.");
-            fileAluno.close();
-            fileTurma.close();
-            fileDisc.close();
-            return;
-        }
-        
-        if (turma.qtdAlunos >= MAX_ALUNOS) {
-            mostrar_caixa_informacao("ERRO", "Turma cheia.");
-            fileAluno.close();
-            fileTurma.close();
-            fileDisc.close();
             return;
         }
         
@@ -1860,7 +2007,6 @@ void menuCadastroCursos(){
                 mostrar_caixa_informacao("ERRO", "Aluno ja matriculado nesta turma.");
                 fileAluno.close();
                 fileTurma.close();
-                fileDisc.close();
                 return;
             }
         }
@@ -1878,7 +2024,6 @@ void menuCadastroCursos(){
             mostrar_caixa_informacao("ERRO", "Nao foi possivel encontrar vaga.");
             fileAluno.close();
             fileTurma.close();
-            fileDisc.close();
             return;
         }
         
@@ -1891,9 +2036,217 @@ void menuCadastroCursos(){
         
         fileAluno.close();
         fileTurma.close();
-        fileDisc.close();
         
-        mostrar_caixa_informacao("SUCESSO", "Aluno matriculado com sucesso na turma!");
+        mostrar_caixa_informacao("SUCESSO", "Aluno matriculado com sucesso!");
+    }
+
+    // Remove aluno de uma turma
+    void removerAlunoDaTurma(int idTurma) {
+        std::fstream fileTurma;
+        openFile(fileTurma, "turmas.dat");
+        
+        // Buscar turma
+        Turma turma;
+        fileTurma.seekg((idTurma - 1) * sizeof(Turma));
+        fileTurma.read((char*)&turma, sizeof(Turma));
+        
+        if(turma.id != idTurma || !turma.ativo) {
+            mostrar_caixa_informacao("ERRO", "Turma nao encontrada.");
+            fileTurma.close();
+            return;
+        }
+        
+        if(turma.qtdAlunos == 0) {
+            mostrar_caixa_informacao("INFO", "Nenhum aluno matriculado nesta turma.");
+            fileTurma.close();
+            return;
+        }
+        
+        // Montar tabela de alunos da turma
+        string dados[MAX_ALUNOS][4];
+        int indices[MAX_ALUNOS]; // Guardar índice real no array
+        int contador = 0;
+        
+        for(int i = 0; i < MAX_ALUNOS && contador < turma.qtdAlunos; i++) {
+            if(turma.alunos[i].base.id > 0) {
+                dados[contador][0] = to_string(turma.alunos[i].base.id);
+                dados[contador][1] = turma.alunos[i].base.nome;
+                dados[contador][2] = turma.alunos[i].base.email;
+                dados[contador][3] = "Matriculado";
+                indices[contador] = i;
+                contador++;
+            }
+        }
+        
+        string titulos[4] = {"ID", "Nome", "Email", "Status"};
+        const string* dados_ptr[MAX_ALUNOS];
+        for(int i = 0; i < contador; i++) dados_ptr[i] = dados[i];
+        
+        ConfigTabela configTab;
+        configTab.titulo = "Remover Aluno - " + string(turma.nome);
+        configTab.descricao = "Selecione o aluno para remover da turma";
+        
+        saida_tabela resultado = interface_para_tabela(contador, 4, dados_ptr, titulos, 0, configTab);
+        
+        if(resultado.indice_linha == -1) {
+            fileTurma.close();
+            return;
+        }
+        
+        // Remover aluno
+        int indexRemover = indices[resultado.indice_linha];
+        turma.alunos[indexRemover].base.id = 0;
+        turma.alunos[indexRemover].base.ativo = 0;
+        turma.qtdAlunos--;
+        
+        fileTurma.seekp((turma.id - 1) * sizeof(Turma));
+        fileTurma.write((char*)&turma, sizeof(Turma));
+        fileTurma.close();
+        
+        mostrar_caixa_informacao("SUCESSO", "Aluno removido da turma com sucesso!");
+    }
+
+    // Submenu de gerenciamento de alunos da turma
+    void menuGerenciarAlunosTurma(int idTurma) {
+        constexpr int Quantidades_opcoes = 4;
+        bool continuar = true;
+
+        while (continuar) {
+            string opcoes[Quantidades_opcoes] = {
+                "Matricular Aluno",
+                "Remover Aluno",
+                "Listar Alunos",
+                "Voltar"
+            };
+            
+            ConfigMenu config;
+            config.titulo = "Gerenciar Alunos da Turma";
+            config.descricao = "Selecione uma opcao.";
+            saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
+            
+            switch (resultado.indice_da_opcao) {
+                case 0:
+                    matricularAlunosNaTurma(idTurma);
+                    break;
+                case 1:
+                    removerAlunoDaTurma(idTurma);
+                    break;
+                case 2:
+                    listarAlunosDaTurma(idTurma);
+                    break;
+                case 3:
+                    continuar = false;
+                    break;
+            }
+        }
+    }
+
+    // Submenu de atributos de uma turma selecionada
+    void menuAtributosTurmaSelecionada(int idTurma) {
+        constexpr int Quantidades_opcoes = 5;
+        bool continuar = true;
+
+        // Buscar nome da turma para exibir
+        std::fstream file;
+        openFile(file, "turmas.dat");
+        Turma turma;
+        file.seekg((idTurma - 1) * sizeof(Turma));
+        file.read((char*)&turma, sizeof(Turma));
+        file.close();
+        
+        string nomeTurma = turma.nome;
+
+        while (continuar) {
+            string opcoes[Quantidades_opcoes] = {
+                "Atribuir Disciplina",
+                "Atribuir Professor",
+                "Gerenciar Alunos",
+                "Listar Alunos",
+                "Voltar"
+            };
+            
+            ConfigMenu config;
+            config.titulo = "Atributos da Turma: " + nomeTurma;
+            config.descricao = "ID: " + to_string(idTurma);
+            saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
+            
+            switch (resultado.indice_da_opcao) {
+                case 0:
+                    atribuirDisciplinaTurma(idTurma);
+                    break;
+                case 1:
+                    atribuirProfessorTurma(idTurma);
+                    break;
+                case 2:
+                    menuGerenciarAlunosTurma(idTurma);
+                    break;
+                case 3:
+                    listarAlunosDaTurma(idTurma);
+                    break;
+                case 4:
+                    continuar = false;
+                    break;
+            }
+        }
+    }
+
+    // Menu para definir atributos de turmas (seleciona turma e abre submenu)
+    void menuDefinirAtributosTurma() {
+        string dados[100][4];
+        
+        int total_turmas = listar_todas_turmas(dados);
+        
+        if (total_turmas == 0) {
+            mostrar_caixa_informacao("INFO", "Nenhuma turma cadastrada.\nCrie uma turma primeiro.");
+            return;
+        }
+        
+        string titulos[4] = {"ID", "Nome da Turma", "Professor", "Alunos"};
+        const string* dados_ptr[100];
+        for(int i = 0; i < total_turmas; i++) dados_ptr[i] = dados[i];
+        
+        ConfigTabela configTab;
+        configTab.titulo = "Selecionar Turma para Configurar";
+        configTab.descricao = "Selecione uma turma para definir seus atributos.";
+        saida_tabela turma_selecionada = interface_para_tabela(total_turmas, 4, dados_ptr, titulos, 0, configTab);
+        
+        if (turma_selecionada.indice_linha == -1) {
+            return; // Cancelado
+        }
+        
+        int idTurma = stoi(dados[turma_selecionada.indice_linha][0]);
+        menuAtributosTurmaSelecionada(idTurma);
+    }
+
+    // Menu principal de gerenciamento de turmas
+    void menuGerenciarTurmas() {
+        constexpr int Quantidades_opcoes = 3;
+        bool continuar = true;
+
+        while (continuar) {
+            string opcoes[Quantidades_opcoes] = {
+                "Criar Turma",
+                "Definir Atributos de Turma",
+                "Voltar"
+            };
+            
+            ConfigMenu config;
+            config.titulo = "Gerenciar Turmas";
+            config.descricao = "Crie turmas e defina disciplinas, professores e alunos.";
+            saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
+            
+            switch (resultado.indice_da_opcao) {
+                case 0:
+                    criarTurmaBasica();
+                    break;
+                case 1:
+                    menuDefinirAtributosTurma();
+                    break;
+                case 2:
+                    continuar = false;
+                    break;
+            }
+        }
     }
 
     // ----- MENU DE INSTRUMENTOS -----
@@ -2353,7 +2706,7 @@ namespace mod_ADM {
                     mod_ADM::menuCadastroCursos();
                     break;
                 case 2:
-                    mod_ADM::cadastrarTurma();
+                    mod_ADM::menuGerenciarTurmas();
                     break;
                 case 3:
                     mod_ADM::menuGerenciarUsuarios();
