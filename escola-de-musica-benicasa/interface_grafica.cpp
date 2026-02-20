@@ -622,7 +622,7 @@ saida_tabela interface_para_tabela(
     linhas_cabecalho += contar_linhas_com_wrap(config.caminho, largura);
 
     int espaco_apos_cabecalho = (linhas_cabecalho > 0) ? 2 : 0;
-    int altura = 2 + linhas_cabecalho + espaco_apos_cabecalho + 2 + config.linhas_por_janela + 3;
+    int altura = 2 + linhas_cabecalho + espaco_apos_cabecalho + 2 + config.linhas_por_janela + 4;
 
     if (altura > max_y - 4) altura = max_y - 4;
 
