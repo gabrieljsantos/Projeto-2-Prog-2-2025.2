@@ -7,6 +7,7 @@
 #include "admin.h"
 #include "headers.h"
 #include "interface_grafica.h"
+#include "instrumentos.h"
 #include "lanchonete.h"
 #include "login_matricula.h"
 
@@ -41,8 +42,9 @@ Professor buscaProf(std::fstream &file,int buscaId){
     file.seekg(0, std::ios::end);
     int tamanho = file.tellg();
     int total = tamanho / sizeof(Professor);
+    int posicao = buscaId - 20260001;
 
-    if(buscaId <= 0 || buscaId > total){
+    if(posicao < 0 || posicao >= total){
         mostrar_caixa_informacao("ERRO", "ID invalido!");
         return prof;
     }
@@ -88,8 +90,9 @@ Aluno buscaAluno(std::fstream &file, int buscaId){
     file.seekg(0, std::ios::end);
     int tamanho = file.tellg();
     int total = tamanho / sizeof(Aluno);
+    int posicao = buscaId - 20260001;
     
-    if(buscaId <= 0 || buscaId > total){
+    if(posicao < 0 || posicao >= total){
         mostrar_caixa_informacao("ERRO", "ID invalido!");
         return aluno;
     }
@@ -106,28 +109,7 @@ Aluno buscaAluno(std::fstream &file, int buscaId){
     }
 }
 
-Instrumento buscarInstrumento(std::fstream &file, int buscaId){
-    Instrumento inst{};
-    file.clear();
-    file.seekg(0, std::ios::end);
-    int tamanho = file.tellg();
-    int total = tamanho / sizeof(Instrumento);
-    if (buscaId <= 0 || buscaId > total){
-        mostrar_caixa_informacao("ERRO", "ID invalido!");
-        return inst;
-    }
-    file.seekg((buscaId - 1) * sizeof(Instrumento));
-    file.read((char*)&inst, sizeof(Instrumento));
-    if (inst.id == buscaId){
-        string info = "Nome: " + string(inst.nome) + "\nEstoque: " + to_string(inst.estoque);
-        mostrar_caixa_informacao("INSTRUMENTO", info);
-        return inst;
-    }
-    else{
-        mostrar_caixa_informacao("ERRO", "Nenhum instrumento com esse ID!");
-        return inst;
-    }
-}
+
 
 Produto buscaProduto(std::fstream &file, int buscaId){
     Produto p{};
@@ -1656,13 +1638,18 @@ void menuCadastroCursos(){
     }
 
     int listar_alunos_para_matricula(string dados[100][5]) {
+        std::cout << "[DEBUG listar_alunos_para_matricula] Inicio" << std::endl;
+        system("pause");
         int contador = 0;
+        int total_lidos = 0;
         std::fstream file;
         openFile(file, "alunos.dat");
         Aluno aluno;
         
         file.seekg(0);
         while(file.read((char*)&aluno, sizeof(Aluno)) && contador < 100) {
+            total_lidos++;
+            std::cout << "[DEBUG listar_alunos_para_matricula] Lido #" << total_lidos << " ID=" << aluno.base.id << " ativo=" << aluno.base.ativo << " cat=" << aluno.base.categoria << " nome=" << aluno.base.nome << std::endl;
             if(aluno.base.id > 0 && aluno.base.ativo && aluno.base.categoria == ALUNO) {
                 dados[contador][0] = to_string(aluno.base.id);
                 dados[contador][1] = aluno.base.nome;
@@ -1673,6 +1660,8 @@ void menuCadastroCursos(){
             }
         }
         file.close();
+        std::cout << "[DEBUG listar_alunos_para_matricula] Total lidos=" << total_lidos << " alunos validos=" << contador << std::endl;
+        system("pause");
         return contador;
     }
 
@@ -1695,12 +1684,14 @@ void menuCadastroCursos(){
     }
 
     // Lista todas as turmas para exibição na tabela principal
-    int listar_todas_turmas(string dados[100][4]) {
+    int listar_todas_turmas(string dados[100][5]) {
         int contador = 0;
         std::fstream file;
         std::fstream fileProf;
+        std::fstream fileDisc;
         openFile(file, "turmas.dat");
         openFile(fileProf, "professores.dat");
+        openFile(fileDisc, "disciplinas.dat");
         
         Turma turma;
         file.seekg(0);
@@ -1709,6 +1700,21 @@ void menuCadastroCursos(){
                 dados[contador][0] = to_string(turma.id);
                 dados[contador][1] = turma.nome;
                 
+                // Buscar nome da disciplina
+                if(turma.idDisciplina > 0) {
+                    Disciplina disc;
+                    memset(&disc, 0, sizeof(Disciplina));
+                    fileDisc.clear();
+                    fileDisc.seekg((turma.idDisciplina - 1) * sizeof(Disciplina));
+                    if(fileDisc.read((char*)&disc, sizeof(Disciplina)) && disc.id == turma.idDisciplina) {
+                        dados[contador][2] = disc.nome;
+                    } else {
+                        dados[contador][2] = "Nao atribuida";
+                    }
+                } else {
+                    dados[contador][2] = "Nao atribuida";
+                }
+                
                 // Buscar nome do professor
                 if(turma.idProfessor > 0) {
                     Professor prof;
@@ -1716,20 +1722,21 @@ void menuCadastroCursos(){
                     fileProf.clear(); // Limpar flags de erro antes de buscar
                     fileProf.seekg((turma.idProfessor - 20260001) * sizeof(Professor));
                     if(fileProf.read((char*)&prof, sizeof(Professor)) && prof.base.id == turma.idProfessor) {
-                        dados[contador][2] = prof.base.nome;
+                        dados[contador][3] = prof.base.nome;
                     } else {
-                        dados[contador][2] = "Nao atribuido";
+                        dados[contador][3] = "Nao atribuido";
                     }
                 } else {
-                    dados[contador][2] = "Nao atribuido";
+                    dados[contador][3] = "Nao atribuido";
                 }
                 
-                dados[contador][3] = to_string(turma.qtdAlunos) + "/" + to_string(MAX_ALUNOS);
+                dados[contador][4] = to_string(turma.qtdAlunos) + "/" + to_string(MAX_ALUNOS);
                 contador++;
             }
         }
         file.close();
         fileProf.close();
+        fileDisc.close();
         return contador;
     }
 
@@ -2043,6 +2050,8 @@ void menuCadastroCursos(){
 
     // Matricula alunos em uma turma específica
     void matricularAlunosNaTurma(int idTurma) {
+        std::cout << "[DEBUG matricularAlunosNaTurma] Inicio - idTurma: " << idTurma << std::endl;
+        system("pause");
         string dados_alunos[100][5];
         
         std::fstream fileAluno;
@@ -2055,7 +2064,12 @@ void menuCadastroCursos(){
         fileTurma.seekg((idTurma - 1) * sizeof(Turma));
         fileTurma.read((char*)&turma, sizeof(Turma));
         
+        std::cout << "[DEBUG matricularAlunosNaTurma] Turma lida: id=" << turma.id << " ativo=" << turma.ativo << " nome=" << turma.nome << " qtdAlunos=" << turma.qtdAlunos << std::endl;
+        system("pause");
+        
         if(turma.id != idTurma || !turma.ativo) {
+            std::cout << "[DEBUG matricularAlunosNaTurma] ERRO: turma nao encontrada! turma.id=" << turma.id << " esperado=" << idTurma << std::endl;
+            system("pause");
             mostrar_caixa_informacao("ERRO", "Turma nao encontrada.");
             fileAluno.close();
             fileTurma.close();
@@ -2063,21 +2077,43 @@ void menuCadastroCursos(){
         }
         
         if(turma.qtdAlunos >= MAX_ALUNOS) {
+            std::cout << "[DEBUG matricularAlunosNaTurma] Turma cheia! qtdAlunos=" << turma.qtdAlunos << " MAX=" << MAX_ALUNOS << std::endl;
+            system("pause");
             mostrar_caixa_informacao("INFO", "Turma cheia. Nao ha vagas disponiveis.");
             fileAluno.close();
             fileTurma.close();
             return;
         }
         
+        // Mostrar alunos atuais da turma
+        std::cout << "[DEBUG matricularAlunosNaTurma] Alunos ja na turma:" << std::endl;
+        for(int i = 0; i < MAX_ALUNOS; i++) {
+            if(turma.alunos[i].base.id > 0) {
+                std::cout << "[DEBUG matricularAlunosNaTurma]   slot[" << i << "] ID=" << turma.alunos[i].base.id << " nome=" << turma.alunos[i].base.nome << std::endl;
+            }
+        }
+        system("pause");
+        
         // Listar alunos disponíveis
+        std::cout << "[DEBUG matricularAlunosNaTurma] Chamando listar_alunos_para_matricula()" << std::endl;
         int total_alunos = listar_alunos_para_matricula(dados_alunos);
+        std::cout << "[DEBUG matricularAlunosNaTurma] Total alunos disponiveis: " << total_alunos << std::endl;
+        system("pause");
         
         if (total_alunos == 0) {
+            std::cout << "[DEBUG matricularAlunosNaTurma] Nenhum aluno disponivel, retornando" << std::endl;
+            system("pause");
             mostrar_caixa_informacao("INFO", "Nenhum aluno ativo disponivel.");
             fileAluno.close();
             fileTurma.close();
             return;
         }
+        
+        // Mostrar alunos encontrados
+        for(int i = 0; i < total_alunos; i++) {
+            std::cout << "[DEBUG matricularAlunosNaTurma] Aluno[" << i << "]: ID=" << dados_alunos[i][0] << " Nome=" << dados_alunos[i][1] << " Email=" << dados_alunos[i][2] << std::endl;
+        }
+        system("pause");
         
         string titulos_alunos[4] = {"ID", "Nome", "Email", "Status"};
         const string* dados_ptr_alunos[100];
@@ -2086,19 +2122,35 @@ void menuCadastroCursos(){
         ConfigTabela configTab_alunos;
         configTab_alunos.titulo = "Matricular Aluno - " + string(turma.nome);
         configTab_alunos.descricao = "Vagas: " + to_string(MAX_ALUNOS - turma.qtdAlunos) + " disponiveis";
+        
+        std::cout << "[DEBUG matricularAlunosNaTurma] Chamando interface_para_tabela" << std::endl;
+        system("pause");
         saida_tabela aluno_selecionado = interface_para_tabela(total_alunos, 4, dados_ptr_alunos, titulos_alunos, 0, configTab_alunos);
         
+        std::cout << "[DEBUG matricularAlunosNaTurma] indice_linha=" << aluno_selecionado.indice_linha << std::endl;
+        system("pause");
+        
         if (aluno_selecionado.indice_linha == -1) {
+            std::cout << "[DEBUG matricularAlunosNaTurma] Selecao cancelada" << std::endl;
+            system("pause");
             fileAluno.close();
             fileTurma.close();
             return;
         }
         
         int idAluno = stoi(dados_alunos[aluno_selecionado.indice_linha][0]);
+        std::cout << "[DEBUG matricularAlunosNaTurma] Aluno selecionado ID=" << idAluno << " Nome=" << dados_alunos[aluno_selecionado.indice_linha][1] << std::endl;
+        system("pause");
         
         // Buscar aluno
+        std::cout << "[DEBUG matricularAlunosNaTurma] Chamando buscaAluno(" << idAluno << ")" << std::endl;
         Aluno aluno = buscaAluno(fileAluno, idAluno);
+        std::cout << "[DEBUG matricularAlunosNaTurma] buscaAluno retornou: id=" << aluno.base.id << " nome=" << aluno.base.nome << " ativo=" << aluno.base.ativo << std::endl;
+        system("pause");
+        
         if (aluno.base.id != idAluno) {
+            std::cout << "[DEBUG matricularAlunosNaTurma] ERRO: aluno nao encontrado! aluno.base.id=" << aluno.base.id << " esperado=" << idAluno << std::endl;
+            system("pause");
             mostrar_caixa_informacao("ERRO", "Aluno nao encontrado.");
             fileAluno.close();
             fileTurma.close();
@@ -2106,25 +2158,35 @@ void menuCadastroCursos(){
         }
         
         // Verificar se já está matriculado
+        std::cout << "[DEBUG matricularAlunosNaTurma] Verificando se aluno ja esta matriculado..." << std::endl;
         for (int i = 0; i < MAX_ALUNOS; i++) {
             if (turma.alunos[i].base.id == aluno.base.id) {
+                std::cout << "[DEBUG matricularAlunosNaTurma] ERRO: Aluno ja matriculado no slot[" << i << "]!" << std::endl;
+                system("pause");
                 mostrar_caixa_informacao("ERRO", "Aluno ja matriculado nesta turma.");
                 fileAluno.close();
                 fileTurma.close();
                 return;
             }
         }
+        std::cout << "[DEBUG matricularAlunosNaTurma] Aluno NAO esta matriculado ainda, OK" << std::endl;
         
         // Encontrar vaga
         int index = -1;
+        std::cout << "[DEBUG matricularAlunosNaTurma] Procurando vaga nos slots:" << std::endl;
         for (int i = 0; i < MAX_ALUNOS; i++) {
+            std::cout << "[DEBUG matricularAlunosNaTurma]   slot[" << i << "] id=" << turma.alunos[i].base.id << std::endl;
             if (turma.alunos[i].base.id == 0) {
                 index = i;
+                std::cout << "[DEBUG matricularAlunosNaTurma]   VAGA encontrada no slot[" << i << "]" << std::endl;
                 break;
             }
         }
+        system("pause");
         
         if (index == -1) {
+            std::cout << "[DEBUG matricularAlunosNaTurma] ERRO: Nenhuma vaga encontrada!" << std::endl;
+            system("pause");
             mostrar_caixa_informacao("ERRO", "Nao foi possivel encontrar vaga.");
             fileAluno.close();
             fileTurma.close();
@@ -2132,15 +2194,30 @@ void menuCadastroCursos(){
         }
         
         // Matricular aluno
+        std::cout << "[DEBUG matricularAlunosNaTurma] Matriculando aluno ID=" << idAluno << " no slot[" << index << "]" << std::endl;
         turma.alunos[index] = aluno;
         turma.qtdAlunos++;
+        std::cout << "[DEBUG matricularAlunosNaTurma] qtdAlunos agora=" << turma.qtdAlunos << std::endl;
         
+        std::cout << "[DEBUG matricularAlunosNaTurma] Escrevendo turma no arquivo. Offset=" << (turma.id - 1) * sizeof(Turma) << std::endl;
         fileTurma.seekp((turma.id - 1) * sizeof(Turma));
         fileTurma.write((char*)&turma, sizeof(Turma));
+        std::cout << "[DEBUG matricularAlunosNaTurma] Turma escrita com sucesso" << std::endl;
+        
+        // Verificar alunos apos matricula
+        std::cout << "[DEBUG matricularAlunosNaTurma] Alunos na turma apos matricula:" << std::endl;
+        for(int i = 0; i < MAX_ALUNOS; i++) {
+            if(turma.alunos[i].base.id > 0) {
+                std::cout << "[DEBUG matricularAlunosNaTurma]   slot[" << i << "] ID=" << turma.alunos[i].base.id << " nome=" << turma.alunos[i].base.nome << std::endl;
+            }
+        }
+        system("pause");
         
         fileAluno.close();
         fileTurma.close();
         
+        std::cout << "[DEBUG matricularAlunosNaTurma] CONCLUIDO com sucesso!" << std::endl;
+        system("pause");
         mostrar_caixa_informacao("SUCESSO", "Aluno matriculado com sucesso!");
     }
 
@@ -2212,6 +2289,8 @@ void menuCadastroCursos(){
 
     // Submenu de gerenciamento de alunos da turma
     void menuGerenciarAlunosTurma(int idTurma) {
+        std::cout << "[DEBUG menuGerenciarAlunosTurma] Inicio - idTurma: " << idTurma << std::endl;
+        system("pause");
         constexpr int Quantidades_opcoes = 4;
         bool continuar = true;
 
@@ -2228,17 +2307,30 @@ void menuCadastroCursos(){
             config.descricao = "Selecione uma opcao.";
             saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
             
+            std::cout << "[DEBUG menuGerenciarAlunosTurma] Opcao selecionada: " << resultado.indice_da_opcao << std::endl;
+            system("pause");
+            
             switch (resultado.indice_da_opcao) {
                 case 0:
+                    std::cout << "[DEBUG menuGerenciarAlunosTurma] Entrando em matricularAlunosNaTurma(" << idTurma << ")" << std::endl;
+                    system("pause");
                     matricularAlunosNaTurma(idTurma);
+                    std::cout << "[DEBUG menuGerenciarAlunosTurma] Retornou de matricularAlunosNaTurma" << std::endl;
+                    system("pause");
                     break;
                 case 1:
+                    std::cout << "[DEBUG menuGerenciarAlunosTurma] Entrando em removerAlunoDaTurma(" << idTurma << ")" << std::endl;
+                    system("pause");
                     removerAlunoDaTurma(idTurma);
                     break;
                 case 2:
+                    std::cout << "[DEBUG menuGerenciarAlunosTurma] Entrando em listarAlunosDaTurma(" << idTurma << ")" << std::endl;
+                    system("pause");
                     listarAlunosDaTurma(idTurma);
                     break;
                 case 3:
+                    std::cout << "[DEBUG menuGerenciarAlunosTurma] Saindo (Voltar)" << std::endl;
+                    system("pause");
                     continuar = false;
                     break;
             }
@@ -2299,7 +2391,7 @@ void menuCadastroCursos(){
         std::cout << "[DEBUG menuDefinirAtributosTurma] Inicio da funcao" << std::endl;
         system("pause");
         
-        string dados[100][4];
+        string dados[100][5];
         
         int total_turmas = listar_todas_turmas(dados);
         std::cout << "[DEBUG menuDefinirAtributosTurma] Total turmas encontradas: " << total_turmas << std::endl;
@@ -2314,21 +2406,21 @@ void menuCadastroCursos(){
         
         // Mostrar dados de cada turma encontrada
         for(int i = 0; i < total_turmas; i++) {
-            std::cout << "[DEBUG menuDefinirAtributosTurma] Turma[" << i << "]: ID=" << dados[i][0] << " Nome=" << dados[i][1] << " Prof=" << dados[i][2] << " Alunos=" << dados[i][3] << std::endl;
+            std::cout << "[DEBUG menuDefinirAtributosTurma] Turma[" << i << "]: ID=" << dados[i][0] << " Nome=" << dados[i][1] << " Disc=" << dados[i][2] << " Prof=" << dados[i][3] << " Alunos=" << dados[i][4] << std::endl;
         }
         system("pause");
         
-        string titulos[4] = {"ID", "Nome da Turma", "Professor", "Alunos"};
+        string titulos[5] = {"ID", "Nome da Turma", "Disciplina", "Professor", "Alunos"};
         const string* dados_ptr[100];
         for(int i = 0; i < total_turmas; i++) dados_ptr[i] = dados[i];
         
         ConfigTabela configTab;
-        configTab.titulo = "Selecionar Turma para Configurar";
+        configTab.titulo = "Selecionar Turma para Gerenciar";
         configTab.descricao = "Selecione uma turma para definir seus atributos.";
         
         std::cout << "[DEBUG menuDefinirAtributosTurma] Chamando interface_para_tabela com " << total_turmas << " turmas" << std::endl;
         system("pause");
-        saida_tabela turma_selecionada = interface_para_tabela(total_turmas, 4, dados_ptr, titulos, 0, configTab);
+        saida_tabela turma_selecionada = interface_para_tabela(total_turmas, 5, dados_ptr, titulos, 0, configTab);
         
         std::cout << "[DEBUG menuDefinirAtributosTurma] Retornou da tabela. indice_linha: " << turma_selecionada.indice_linha << std::endl;
         system("pause");
@@ -2356,7 +2448,7 @@ void menuCadastroCursos(){
         while (continuar) {
             string opcoes[Quantidades_opcoes] = {
                 "Criar Turma",
-                "Definir Atributos de Turma",
+                "Ver ou Modificar Turma",
                 "Voltar"
             };
             
@@ -2385,140 +2477,6 @@ void menuCadastroCursos(){
                     continuar = false;
                     break;
             }
-        }
-    }
-
-    // ----- MENU DE INSTRUMENTOS -----
-
-    void menuCadastroInstrumentos() {
-        constexpr int Quantidades_opcoes = 5;
-        bool continuar = true;
-        int filtro_selecionado = 2; // 0=pendente, 1=autorizado, 2=ambos
-
-        while (continuar) {
-            string titulo_filtro = (filtro_selecionado == 0 ? "Pendentes" : (filtro_selecionado == 1 ? "Autorizados" : "Todos"));
-            
-            string opcoes[Quantidades_opcoes] = {
-                "Cadastrar Instrumento",
-                "Filtros de pesquisa",
-                "Listar Instrumentos",
-                "Buscar por ID",
-                "Voltar"
-            };
-            
-            ConfigMenu config;
-            config.titulo = "Gerenciar Instrumentos (" + titulo_filtro + ")";
-            config.descricao = "Selecione uma opcao para gerenciar os instrumentos.";
-            saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
-            
-            std::fstream file;
-            openFile(file, "instrumentos.dat");
-            Instrumento instrumento_;
-            
-            switch (resultado.indice_da_opcao) {
-                case 0: { // Cadastrar Instrumento
-                    ConfigEntradaTexto configNome;
-                    configNome.titulo = "Cadastrar Instrumento";
-                    configNome.label = "Nome do Instrumento: ";
-                    saida_entrada_texto resultNome = interface_para_entrada_texto(configNome);
-                    if (!resultNome.confirmado) break;
-                    
-                    ConfigEntradaTexto configEstoque;
-                    configEstoque.titulo = "Cadastrar Instrumento";
-                    configEstoque.label = "Quantidade em Estoque: ";
-                    configEstoque.tipo_entrada = TIPO_NUMERO;
-                    saida_entrada_texto resultEstoque = interface_para_entrada_texto(configEstoque);
-                    if (!resultEstoque.confirmado) break;
-                    
-                    char nome[30];
-                    strncpy(nome, resultNome.valor.c_str(), 29);
-                    nome[29] = '\0';
-                    int estoque = stoi(resultEstoque.valor);
-                    
-                    strncpy(instrumento_.nome, nome, 29);
-                    instrumento_.nome[29] = '\0';
-                    instrumento_.estoque = estoque;
-                    instrumento_.ativo = 1;
-                    instrumento_.autorizado = 0; // Pendente por padrão
-                    instrumento_.disponivel = 1;
-                    
-                    file.seekp(0, std::ios::end);
-                    instrumento_.id = 1 + file.tellp() / sizeof(Instrumento);
-                    file.write((char*)&instrumento_, sizeof(Instrumento));
-                    file.clear();
-                    
-                    mostrar_caixa_informacao("SUCESSO", "Instrumento cadastrado com sucesso!\nID: " + to_string(instrumento_.id));
-                    break;
-                }
-                
-                case 1: { // Filtros de pesquisa
-                    constexpr int qtdEstados = 3;
-                    string estados[qtdEstados] = {"Pendente", "Autorizado", "Ambos"};
-                    
-                    ConfigMenu configFiltro;
-                    configFiltro.titulo = "Filtros de Pesquisa";
-                    configFiltro.descricao = "Selecione o filtro para gerenciar instrumentos.";
-                    saida_menu resultadofiltro = interface_para_menu(qtdEstados, estados, configFiltro);
-                    
-                    if (resultadofiltro.indice_da_opcao == 0) filtro_selecionado = 0;
-                    else if (resultadofiltro.indice_da_opcao == 1) filtro_selecionado = 1;
-                    else if (resultadofiltro.indice_da_opcao == 2) filtro_selecionado = 2;
-                    break;
-                }
-                
-                case 2: { // Listar Instrumentos
-                    string dados[100][6];
-                    int total = listar_instrumentos_especificos(filtro_selecionado, dados);
-                    
-                    if (total == 0) {
-                        mostrar_caixa_informacao("INFO", "Nenhum instrumento encontrado com os filtros selecionados.");
-                        break;
-                    }
-                    
-                    string titulos[6] = {"ID", "Nome", "Estoque", "Autorizado", "Status", "Disp"};
-                    const string* dados_ptr[100];
-                    for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
-                    
-                    ConfigTabela configTab;
-                    configTab.titulo = "Lista de Instrumentos";
-                    saida_tabela instrumento_selecionado = interface_para_tabela(total, 6, dados_ptr, titulos, 0, configTab);
-                    
-                    if (instrumento_selecionado.indice_linha != -1) {
-                        int id = stoi(dados[instrumento_selecionado.indice_linha][0]);
-                        gerenciar_instrumento_menu(id);
-                    }
-                    break;
-                }
-                
-                case 3: { // Buscar por ID
-                    ConfigEntradaTexto configBusca;
-                    configBusca.titulo = "Buscar Instrumento";
-                    configBusca.label = "Digite o ID do instrumento: ";
-                    configBusca.tipo_entrada = TIPO_NUMERO;
-                    configBusca.descricao = "Digite o número de identificação do instrumento que deseja buscar.";
-                    
-                    saida_entrada_texto resultBusca = interface_para_entrada_texto(configBusca);
-                    
-                    if (!resultBusca.confirmado) break;
-                    
-                    int idBusca = stoi(resultBusca.valor);
-                    
-                    if (idBusca <= 0) {
-                        mostrar_caixa_informacao("ERRO", "ID invalido! Digite um numero positivo.");
-                        break;
-                    }
-                    
-                    gerenciar_instrumento_menu(idBusca);
-                    break;
-                }
-                
-                case 4: { // Voltar
-                    continuar = false;
-                    break;
-                }
-            }
-            
-            file.close();
         }
     }
 
@@ -3014,10 +2972,10 @@ void abrir_menu_admin(Usuario* usuario) {
                 break;
             }
             case 2:
-                mod_ADM::menuCadastroInstrumentos();
+                menuInstrumentos();
                 break;
             case 3:
-                mod_ADM::menuGestaoLanchonete();
+                Lanchonete::menuCadastroProdutos();
                 break;
             case 4:
                 mod_ADM::menuRelatorios();

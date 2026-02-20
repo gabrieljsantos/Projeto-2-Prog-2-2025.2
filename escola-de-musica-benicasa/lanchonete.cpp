@@ -53,26 +53,6 @@ namespace Lanchonete {
     void menuCadastroProdutos(){
         char opcao;
 
-        const int quantidade_de_opc = 6;
-        string lista_de_opcoes[quantidade_de_opc] = {
-            "Adicionar produto",
-            "Remover produto",
-            "Visualizar produtos",
-            "Consultar estoque",
-            "Alterar preço",
-            "Ativar créditos pendentes"
-        };
-
-        ConfigMenu config;
-        config.titulo = "Lanchonete - Menu de Gerenciamento";
-
-        saida_menu resultado;
-        resultado = interface_para_menu(quantidade_de_opc, lista_de_opcoes, config);
-
-        cout << "\nOpção selecionada: " << resultado.indice_da_opcao << "\n";
-
-
-        /*
         do {
             system("cls || clear");
             cout << "========== LANCHONETE ==========\n";
@@ -121,7 +101,7 @@ namespace Lanchonete {
             }
 
         } while (opcao != '0');
-        */
+        
     }
 
     bool bancoExisteProdutos() {
