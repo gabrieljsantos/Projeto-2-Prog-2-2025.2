@@ -45,6 +45,7 @@ void abrir_menu_admin(Usuario* usuario);
 namespace mod_ADM {
     int listar_usuarios_especificos(Funcao tipo_usuario, int ativo, std::string dados[100][6]);
     int listar_disciplinas_especificas(int ativo, std::string dados[100][6]);
+    int listar_disciplinas_avancado(int ativo, int comProfessor, std::string dados[100][6]);
     int listar_eventos_especificos(int autorizado, std::string dados[100][5]);
     int listar_instrumentos_especificos(int autorizado, std::string dados[100][6]);
     
@@ -55,17 +56,29 @@ namespace mod_ADM {
     void menuEventos(std::fstream &file);
     void menuCadastroInstrumentos();
     
+    // Funções de gerenciamento de disciplinas
+    void gerenciar_disciplina_menu(int idDisciplina);
+    void vincular_professor_disciplina(int idDisciplina, const std::string &nomeDisciplina);
+    void vincular_professor_por_tabela(int idDisciplina, const std::string &nomeDisciplina);
+    void vincular_professor_por_id(int idDisciplina, const std::string &nomeDisciplina);
+    void remover_vinculo_professor_disciplina(const std::string &nomeDisciplina);
+    
     void gerarRelatorioFinanceiro();
     void gerarRelatorioPatrimonial();
     
     void realizarBackup();
     void restaurarBackup();
     
-    void cadastrarProdutos();
-    
     bool verificaTurmasProf(Professor &prof, int &Index_turma);
     void cadastrarTurma();
     void matricularAlunoTurma();
+    
+    // Menus reorganizados
+    void menuGestaoAcademica();
+    void menuConsultarPendencias();
+    void menuGestaoLanchonete();
+    void menuRelatorios();
+    void menuBackup();
 }
 
 #endif

@@ -16,11 +16,11 @@ using namespace std;
 void pausar();
 // void exibirCabecalhoSistema();
 saida_menu exibirMenuLogin();
-void exibirMenuProfessor();
 void exibirMenuAluno();
 
 int main() {
     cout << "Bem-vindo ao Sistema de Gestão da Escola de Música!" << endl;
+    
     Usuario usuario;
     saida_menu saidaLogin;
     bool executando = true;
@@ -39,12 +39,11 @@ int main() {
 
                     if (login) {
                         informacao = "Bem-vindo(a), " + string(usuario.nome) + "!";
+                        mostrar_caixa_informacao("AVISO", informacao);
                     } else {
-                        cout << "\nFalha no login. Verifique se o usuário existe e está ativo!" << endl;
+                        cout << "Falha no login. Verifique suas credenciais." << endl;
                         pausar();
                     }
-
-                    mostrar_caixa_informacao("AVISO", informacao);
                     break;
                 }
                 case 1: {
@@ -68,26 +67,7 @@ int main() {
                     break;
                 }
                 case PROFESSOR: {
-                    int opcao;
-                    float notas[10];
-                    int n = 2;
-                    exibirMenuProfessor();
-                    cin >> opcao;
-                    cin.ignore();
-
-                    switch (opcao) {
-                        case 1: Modulo_professor::registrarNotas(usuario.id, notas, n); break;
-                        case 2: Modulo_professor::registrarAvaliacoes(usuario.id); break;
-                        case 3: Modulo_professor::consultarAlunosMatriculados(usuario.id); break;
-                        case 4: Modulo_professor::calcularMediasTurma(usuario.id); break;
-                        case 5: Modulo_professor::consultarDesempenhoAcademico(usuario.id); break;
-                        case 6: Modulo_professor::consultarEventosDisponiveis(); break;
-                        case 7: Modulo_professor::consultarInstrumentosDisponiveis(); break;
-                        case 8: Lanchonete::consultarSaldo(usuario.id); break;
-                        case 9: Lanchonete::solicitarCreditosUsuario(usuario.id, usuario.categoria); break;
-                        case 0: usuario.logado = false; break;
-                        default: cout << "\nOpcao invalida!" << endl;
-                    }
+                    abrir_menu_professor(&usuario);
                     if (usuario.logado) pausar();
                     break;
                 }
@@ -157,23 +137,6 @@ saida_menu exibirMenuLogin() {
     return interface_para_menu(qtdOpcoes, opcoes, config);
 }
 
-
-void exibirMenuProfessor() {
-    system("cls || clear");
-    cout << "AREA DO PROFESSOR" << endl;
-    cout << "============================================" << endl;
-    cout << "1. Registrar Notas" << endl;
-    cout << "2. Registrar Avaliacoes" << endl;
-    cout << "3. Consultar Alunos Matriculados" << endl;
-    cout << "4. Calcular Medias da Turma" << endl;
-    cout << "5. Consultar Desempenho Academico" << endl;
-    cout << "6. Consultar Eventos" << endl;
-    cout << "7. Consultar Instrumentos" << endl;
-    cout << "8. Consultar Saldo Lanchonete" << endl;
-    cout << "9. Solicitar Creditos" << endl;
-    cout << "0. Logout" << endl;
-    cout << "Opcao: ";
-}
 
 void exibirMenuAluno() {
     system("cls || clear");

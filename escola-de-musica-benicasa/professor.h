@@ -1,16 +1,51 @@
-#ifndef MODULO_PROFESSOR_H
-#define MODULO_PROFESSOR_H
+#ifndef PROFESSOR_H
+#define PROFESSOR_H
 
-#include <string>
+#include <iostream>
+#include "headers.h"
 
-namespace Modulo_professor {
-    void registrarNotas(int idProfessor, float notas[], int n);
-    void registrarAvaliacoes(int idProfessor);
-    void consultarAlunosMatriculados(int idProfessor);
-    void calcularMediasTurma(int idProfessor);
-    void consultarDesempenhoAcademico(int idProfessor);
-    void consultarEventosDisponiveis();
-    void consultarInstrumentosDisponiveis();
+#define MAX_TURMAS 30
+#define MAX_ALUNOS 20
+#define MAX_TURMAS_PROF 5
+#define MEDIA_MINIMA 7.0
+#define FALTAS_MAXIMAS 10
+
+// ============================
+// Namespace de Cálculos
+// ============================
+
+namespace Calculos
+{
+    float somaRecursivaNotas(float notas[], int n);
+    float calcularMedia(float notas[], int n);
 }
+
+// ============================
+// Funções Auxiliares
+// ============================
+
+bool turmaPermitida(int id_prof, int turma_index);
+
+// ============================
+// Módulo Professor
+// ============================
+
+namespace ModuloProfessor
+{
+    void consultarSaldoLanchonete(int id_prof);
+    void consultarSaldoLanchonete(Professor &prof);
+
+    void registrarNotas(int id_prof);
+    void registrarNotasTodo(int id_prof);
+
+    void consultarAlunosMatriculados(int id_prof);
+    void consultarTurma(int id_prof); //
+    void consultarDesempenhoAcademico(int id_prof);
+
+    void registrarFaltas(int id_prof);
+    void registrarAvaliacao(int id_prof);
+}
+
+void abrir_menu_professor(Usuario* usuario);
 
 #endif

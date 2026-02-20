@@ -393,6 +393,73 @@ namespace mod_ADM {
         }
     }
 
+    void gerenciar_usuario_menu(int idUsuario) {
+        // Buscar usuario nos alunos e professores
+        bool encontrado = false;
+        string nome_usuario = "";
+        string email_usuario = "";
+        string status_usuario = "";
+        Funcao tipo_encontrado = ALUNO;
+        
+        // Buscar nos alunos e professores
+        Aluno aluno = Login_mat::lerAluno(idUsuario);
+        if (aluno.base.id == idUsuario) {
+            encontrado = true;
+            nome_usuario = string(aluno.base.nome);
+            email_usuario = string(aluno.base.email);
+            status_usuario = aluno.base.ativo ? "Ativo" : "Inativo";
+            tipo_encontrado = ALUNO;
+        } else {
+            Professor prof = Login_mat::lerProfessor(idUsuario);
+            if (prof.base.id == idUsuario) {
+                encontrado = true;
+                nome_usuario = string(prof.base.nome);
+                email_usuario = string(prof.base.email);
+                status_usuario = prof.base.ativo ? "Ativo" : "Inativo";
+                tipo_encontrado = PROFESSOR;
+            }
+        }
+        
+        if (!encontrado) {
+            mostrar_caixa_informacao("ERRO", "Usuario nao encontrado!");
+            return;
+        }
+        
+        // Exibir menu de gerenciamento
+        ConfigBotoes configBotoes;
+        configBotoes.titulo = "Gerenciar Usuario";
+        configBotoes.descricao = "ID: " + to_string(idUsuario) + " | Nome: " + nome_usuario + " | Email: " + email_usuario + " | Status: " + status_usuario;
+        configBotoes.botoes[0].label = "Ativa";
+        configBotoes.botoes[0].tecla = 'A';
+        configBotoes.botoes[0].valor_retorno = 1;
+        configBotoes.botoes[1].label = "Desativa";
+        configBotoes.botoes[1].tecla = 'D';
+        configBotoes.botoes[1].valor_retorno = 0;
+        configBotoes.botoes[2].label = "Modifica";
+        configBotoes.botoes[2].tecla = 'M';
+        configBotoes.botoes[2].valor_retorno = 2;
+        configBotoes.botoes[3].label = "Sobre";
+        configBotoes.botoes[3].tecla = 'S';
+        configBotoes.botoes[3].valor_retorno = 3;
+        configBotoes.numero_botoes = 4;
+        saida_botoes acao_sob_usuario = interface_para_botoes(configBotoes);
+        
+        if (acao_sob_usuario.confirmado) {
+            if (acao_sob_usuario.valor_retorno == 1) {
+                // Ativar usuario
+                atualizar_estado_de_usuario(idUsuario, tipo_encontrado, "Ativo");
+                mostrar_caixa_informacao("SUCESSO", "Usuario ativado com sucesso!");
+            }
+            if (acao_sob_usuario.valor_retorno == 0) {
+                // Desativar usuario
+                atualizar_estado_de_usuario(idUsuario, tipo_encontrado, "Inativo");
+                mostrar_caixa_informacao("SUCESSO", "Usuario desativado com sucesso!");
+            }
+            // valor_retorno == 2: Modifica (sem implementação)
+            // valor_retorno == 3: Sobre (sem implementação)
+        }
+    }
+
     int listar_usuarios_especificos(Funcao tipo_usuario, int ativo, string dados[100][6]){
             // Inicializar dados com valores vazios
             for(int i = 0; i < 100; i++) {
@@ -477,6 +544,265 @@ namespace mod_ADM {
         return contador;
     }
 
+    int listar_disciplinas_avancado(int ativo, int comProfessor, string dados[100][6]){
+        // ativo: 0=inativo, 1=ativo, 2=ambos
+        // comProfessor: 0=sem professor, 1=com professor, 2=ambos
+        int contador = 0;
+        std::fstream file;
+        std::fstream fileProf;
+        openFile(file, "disciplinas.dat");
+        openFile(fileProf, "professores.dat");
+        Disciplina disciplina;
+        
+        file.seekg(0);
+        while(file.read((char*)&disciplina, sizeof(Disciplina)) && contador < 100) {
+            if(disciplina.id == 0) continue;
+            if(ativo != 2 && disciplina.ativo != (ativo == 1)) continue;
+            
+            // Verificar se disciplina tem professor vinculado
+            bool temProfessor = false;
+            Professor prof;
+            fileProf.seekg(0);
+            while(fileProf.read((char*)&prof, sizeof(Professor))) {
+                if(prof.base.id > 0 && strcmp(prof.disciplina, disciplina.nome) == 0) {
+                    temProfessor = true;
+                    break;
+                }
+            }
+            fileProf.clear();
+            
+            // Aplicar filtro de professor
+            if(comProfessor == 0 && temProfessor) continue;  // Quer sem professor, mas tem
+            if(comProfessor == 1 && !temProfessor) continue; // Quer com professor, mas não tem
+            
+            dados[contador][0] = to_string(disciplina.id);
+            dados[contador][1] = disciplina.nome;
+            dados[contador][2] = to_string(disciplina.cargaHoraria);
+            dados[contador][3] = disciplina.ativo ? "Ativa" : "Inativa";
+            dados[contador][4] = temProfessor ? "Sim" : "Nao";
+            contador++;
+        }
+        file.close();
+        fileProf.close();
+        return contador;
+    }
+
+    void gerenciar_disciplina_menu(int idDisciplina) {
+        bool continuar_gerenciando = true;
+        
+        while(continuar_gerenciando) {
+            // Recarregar disciplina a cada iteração
+            std::fstream file;
+            openFile(file, "disciplinas.dat");
+            Disciplina disciplina = buscaDisciplina(file, idDisciplina);
+            file.close();
+            
+            if (disciplina.id == 0) {
+                mostrar_caixa_informacao("ERRO", "Disciplina nao encontrada!");
+                return;
+            }
+            
+            // Mostrar menu de gerenciamento
+            ConfigBotoes configBotoes;
+            configBotoes.titulo = "Gerenciar Disciplina";
+            configBotoes.descricao = "ID: " + to_string(idDisciplina) + " | Nome: " + string(disciplina.nome) + 
+                                     " | Carga Horaria: " + to_string(disciplina.cargaHoraria) + "h" +
+                                     " | Status: " + (disciplina.ativo ? "Ativa" : "Inativa");
+            configBotoes.botoes[0].label = "Ativar";
+            configBotoes.botoes[0].tecla = 'A';
+            configBotoes.botoes[0].valor_retorno = 1;
+            configBotoes.botoes[1].label = "Desativar";
+            configBotoes.botoes[1].tecla = 'D';
+            configBotoes.botoes[1].valor_retorno = 0;
+            configBotoes.botoes[2].label = "Excluir";
+            configBotoes.botoes[2].tecla = 'E';
+            configBotoes.botoes[2].valor_retorno = 3;
+            configBotoes.botoes[3].label = "Cancelar";
+            configBotoes.botoes[3].tecla = 'C';
+            configBotoes.botoes[3].valor_retorno = 4;
+            configBotoes.numero_botoes = 4;
+            
+            saida_botoes acao = interface_para_botoes(configBotoes);
+            
+            if (!acao.confirmado) return;
+            
+            openFile(file, "disciplinas.dat");
+            
+            if (acao.valor_retorno == 1) {
+                // Ativar disciplina
+                disciplina.ativo = 1;
+                file.seekp((idDisciplina - 1) * sizeof(Disciplina));
+                file.write((char*)&disciplina, sizeof(Disciplina));
+                file.close();
+                mostrar_caixa_informacao("SUCESSO", "Disciplina ativada com sucesso!");
+            }
+            else if (acao.valor_retorno == 0) {
+                // Desativar disciplina
+                disciplina.ativo = 0;
+                file.seekp((idDisciplina - 1) * sizeof(Disciplina));
+                file.write((char*)&disciplina, sizeof(Disciplina));
+                file.close();
+                mostrar_caixa_informacao("SUCESSO", "Disciplina desativada com sucesso!");
+            }
+            else if (acao.valor_retorno == 3) {
+                // Excluir disciplina
+                disciplina.id = 0;
+                file.seekp((idDisciplina - 1) * sizeof(Disciplina));
+                file.write((char*)&disciplina, sizeof(Disciplina));
+                file.close();
+                mostrar_caixa_informacao("SUCESSO", "Disciplina excluida com sucesso!");
+                continuar_gerenciando = false;
+            }
+            else if (acao.valor_retorno == 4) {
+                // Cancelar/Sair
+                file.close();
+                continuar_gerenciando = false;
+            }
+        }
+    }
+
+    void vincular_professor_disciplina(int idDisciplina, const string &nomeDisciplina) {
+        constexpr int Opcoes_vincular = 3;
+        string opcoes_vincular[Opcoes_vincular] = {
+            "Selecionar de Tabela",
+            "Digitar ID",
+            "Cancelar"
+        };
+        
+        ConfigMenu configVincular;
+        configVincular.titulo = "Vincular Professor";
+        configVincular.descricao = "Selecione como deseja vincular um professor a disciplina.";
+        saida_menu resultadoVincular = interface_para_menu(Opcoes_vincular, opcoes_vincular, configVincular);
+        
+        if (resultadoVincular.indice_da_opcao == 0) {
+            // Opção 1: Selecionar professor de uma tabela
+            vincular_professor_por_tabela(idDisciplina, nomeDisciplina);
+        }
+        else if (resultadoVincular.indice_da_opcao == 1) {
+            // Opção 2: Digitar ID do professor
+            vincular_professor_por_id(idDisciplina, nomeDisciplina);
+        }
+    }
+
+    void vincular_professor_por_tabela(int idDisciplina, const string &nomeDisciplina) {
+        // Carregar todos os professores ativos em uma tabela
+        string dados[100][4];
+        int total = 0;
+        std::fstream fileProfs;
+        openFile(fileProfs, "professores.dat");
+        Professor profAtivo;
+        
+        fileProfs.seekg(0);
+        while(fileProfs.read((char*)&profAtivo, sizeof(Professor)) && total < 100) {
+            if(profAtivo.base.id > 0 && profAtivo.base.ativo) {
+                dados[total][0] = to_string(profAtivo.base.id);
+                dados[total][1] = profAtivo.base.nome;
+                dados[total][2] = profAtivo.base.email;
+                dados[total][3] = profAtivo.disciplina[0] != '\0' ? string(profAtivo.disciplina) : "Nenhuma";
+                total++;
+            }
+        }
+        fileProfs.close();
+        
+        if (total == 0) {
+            mostrar_caixa_informacao("INFO", "Nenhum professor ativo disponivel para vincular.");
+            return;
+        }
+        
+        string titulos[4] = {"ID", "Nome", "Email", "Disc. Atual"};
+        const string* dados_ptr[100];
+        for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
+        
+        ConfigTabela configTab;
+        configTab.titulo = "Selecionar Professor - " + nomeDisciplina;
+        saida_tabela prof_selecionado = interface_para_tabela(total, 4, dados_ptr, titulos, 0, configTab);
+        
+        if (prof_selecionado.indice_linha != -1) {
+            int idProfessor = stoi(dados[prof_selecionado.indice_linha][0]);
+            openFile(fileProfs, "professores.dat");
+            Professor profVincular = buscaProf(fileProfs, idProfessor);
+            fileProfs.close();
+            
+            if(profVincular.base.id > 0) {
+                strncpy(profVincular.disciplina, nomeDisciplina.c_str(), 49);
+                profVincular.disciplina[49] = '\0';
+                
+                openFile(fileProfs, "professores.dat");
+                fileProfs.seekp((idProfessor - 20260000) * sizeof(Professor));
+                fileProfs.write((char*)&profVincular, sizeof(Professor));
+                fileProfs.close();
+                
+                mostrar_caixa_informacao("SUCESSO", "Professor " + string(profVincular.base.nome) + 
+                                      " vinculado com sucesso!");
+            }
+        }
+    }
+
+    void vincular_professor_por_id(int idDisciplina, const string &nomeDisciplina) {
+        ConfigEntradaTexto configProfId;
+        configProfId.titulo = "Vincular Professor por ID";
+        configProfId.label = "Digite o ID do Professor: ";
+        configProfId.tipo_entrada = TIPO_NUMERO;
+        configProfId.descricao = "Digite o ID do professor ativo que deseja vincular.";
+        saida_entrada_texto resultProfId = interface_para_entrada_texto(configProfId);
+        
+        if (!resultProfId.confirmado) return;
+        
+        int idProfessor = stoi(resultProfId.valor);
+        std::fstream fileProfs;
+        openFile(fileProfs, "professores.dat");
+        Professor profVincular = buscaProf(fileProfs, idProfessor);
+        fileProfs.close();
+        
+        if(profVincular.base.id == 0 || !profVincular.base.ativo) {
+            mostrar_caixa_informacao("ERRO", "Professor nao encontrado ou inativo!");
+            return;
+        }
+        
+        strncpy(profVincular.disciplina, nomeDisciplina.c_str(), 49);
+        profVincular.disciplina[49] = '\0';
+        
+        openFile(fileProfs, "professores.dat");
+        fileProfs.seekp((idProfessor - 20260000) * sizeof(Professor));
+        fileProfs.write((char*)&profVincular, sizeof(Professor));
+        fileProfs.close();
+        
+        mostrar_caixa_informacao("SUCESSO", "Professor " + string(profVincular.base.nome) + 
+                              " vinculado com sucesso!");
+    }
+
+    void remover_vinculo_professor_disciplina(const string &nomeDisciplina) {
+        // Encontrar o professor vinculado a esta disciplina e remover o vínculo
+        std::fstream fileProfs;
+        openFile(fileProfs, "professores.dat");
+        
+        Professor prof;
+        int index = 0;
+        bool encontrado = false;
+        
+        fileProfs.seekg(0);
+        while(fileProfs.read((char*)&prof, sizeof(Professor))) {
+            if(prof.base.id > 0 && strcmp(prof.disciplina, nomeDisciplina.c_str()) == 0) {
+                // Encontrou o professor vinculado
+                prof.disciplina[0] = '\0';  // Limpar o vínculo
+                
+                fileProfs.seekp(index * sizeof(Professor));
+                fileProfs.write((char*)&prof, sizeof(Professor));
+                encontrado = true;
+                
+                mostrar_caixa_informacao("SUCESSO", "Vínculo do professor " + 
+                                      string(prof.base.nome) + " removido com sucesso!");
+                break;
+            }
+            index++;
+        }
+        fileProfs.close();
+        
+        if(!encontrado) {
+            mostrar_caixa_informacao("INFO", "Nenhum professor vinculado a esta disciplina.");
+        }
+    }
+
     int listar_eventos_especificos(int autorizado, string dados[100][5]){
         int contador = 0;
         std::fstream file;
@@ -496,6 +822,65 @@ namespace mod_ADM {
         }
         file.close();
         return contador;
+    }
+
+    void gerenciar_evento_menu(int idEvento) {
+        std::fstream file;
+        openFile(file, "eventos.dat");
+        Evento evento;
+        file.seekg((idEvento - 1) * sizeof(Evento));
+        file.read((char*)&evento, sizeof(Evento));
+        file.close();
+        
+        if (evento.id == 0) {
+            mostrar_caixa_informacao("ERRO", "Evento nao encontrado!");
+            return;
+        }
+        
+        ConfigBotoes configBotoes;
+        configBotoes.titulo = "Gerenciar Evento";
+        configBotoes.descricao = "ID: " + to_string(idEvento) + " | Nome: " + string(evento.nome) + 
+                                 " | Data: " + string(evento.data) + " | Status: " + 
+                                 (evento.autorizado ? "Autorizado" : "Pendente");
+        configBotoes.botoes[0].label = "Autorizar";
+        configBotoes.botoes[0].tecla = 'A';
+        configBotoes.botoes[0].valor_retorno = 1;
+        configBotoes.botoes[1].label = "Desautorizar";
+        configBotoes.botoes[1].tecla = 'D';
+        configBotoes.botoes[1].valor_retorno = 0;
+        configBotoes.botoes[2].label = "Inativar";
+        configBotoes.botoes[2].tecla = 'I';
+        configBotoes.botoes[2].valor_retorno = 2;
+        configBotoes.botoes[3].label = "Cancelar";
+        configBotoes.botoes[3].tecla = 'C';
+        configBotoes.botoes[3].valor_retorno = 3;
+        configBotoes.numero_botoes = 4;
+        saida_botoes acao = interface_para_botoes(configBotoes);
+        
+        if (!acao.confirmado) return;
+        
+        openFile(file, "eventos.dat");
+        
+        if (acao.valor_retorno == 1) {
+            evento.autorizado = 1;
+            file.seekp((idEvento - 1) * sizeof(Evento));
+            file.write((char*)&evento, sizeof(Evento));
+            mostrar_caixa_informacao("SUCESSO", "Evento autorizado com sucesso!");
+        }
+        else if (acao.valor_retorno == 0) {
+            evento.autorizado = 0;
+            file.seekp((idEvento - 1) * sizeof(Evento));
+            file.write((char*)&evento, sizeof(Evento));
+            mostrar_caixa_informacao("SUCESSO", "Evento desautorizado com sucesso!");
+        }
+        else if (acao.valor_retorno == 2) {
+            evento.ativo = 0;
+            file.seekp((idEvento - 1) * sizeof(Evento));
+            file.write((char*)&evento, sizeof(Evento));
+            mostrar_caixa_informacao("SUCESSO", "Evento inativado com sucesso!");
+        }
+        
+        file.close();
     }
 
     int listar_instrumentos_especificos(int autorizado, string dados[100][6]){
@@ -518,6 +903,65 @@ namespace mod_ADM {
         }
         file.close();
         return contador;
+    }
+
+    void gerenciar_instrumento_menu(int idInstrumento) {
+        std::fstream file;
+        openFile(file, "instrumentos.dat");
+        Instrumento instrumento;
+        file.seekg((idInstrumento - 1) * sizeof(Instrumento));
+        file.read((char*)&instrumento, sizeof(Instrumento));
+        file.close();
+        
+        if (instrumento.id == 0) {
+            mostrar_caixa_informacao("ERRO", "Instrumento nao encontrado!");
+            return;
+        }
+        
+        ConfigBotoes configBotoes;
+        configBotoes.titulo = "Gerenciar Instrumento";
+        configBotoes.descricao = "ID: " + to_string(idInstrumento) + " | Nome: " + string(instrumento.nome) + 
+                                 " | Estoque: " + to_string(instrumento.estoque) + 
+                                 " | Status: " + (instrumento.autorizado ? "Autorizado" : "Pendente");
+        configBotoes.botoes[0].label = "Autorizar";
+        configBotoes.botoes[0].tecla = 'A';
+        configBotoes.botoes[0].valor_retorno = 1;
+        configBotoes.botoes[1].label = "Desautorizar";
+        configBotoes.botoes[1].tecla = 'D';
+        configBotoes.botoes[1].valor_retorno = 0;
+        configBotoes.botoes[2].label = "Inativar";
+        configBotoes.botoes[2].tecla = 'I';
+        configBotoes.botoes[2].valor_retorno = 2;
+        configBotoes.botoes[3].label = "Cancelar";
+        configBotoes.botoes[3].tecla = 'C';
+        configBotoes.botoes[3].valor_retorno = 3;
+        configBotoes.numero_botoes = 4;
+        saida_botoes acao = interface_para_botoes(configBotoes);
+        
+        if (!acao.confirmado) return;
+        
+        openFile(file, "instrumentos.dat");
+        
+        if (acao.valor_retorno == 1) {
+            instrumento.autorizado = 1;
+            file.seekp((idInstrumento - 1) * sizeof(Instrumento));
+            file.write((char*)&instrumento, sizeof(Instrumento));
+            mostrar_caixa_informacao("SUCESSO", "Instrumento autorizado com sucesso!");
+        }
+        else if (acao.valor_retorno == 0) {
+            instrumento.autorizado = 0;
+            file.seekp((idInstrumento - 1) * sizeof(Instrumento));
+            file.write((char*)&instrumento, sizeof(Instrumento));
+            mostrar_caixa_informacao("SUCESSO", "Instrumento desautorizado com sucesso!");
+        }
+        else if (acao.valor_retorno == 2) {
+            instrumento.ativo = 0;
+            file.seekp((idInstrumento - 1) * sizeof(Instrumento));
+            file.write((char*)&instrumento, sizeof(Instrumento));
+            mostrar_caixa_informacao("SUCESSO", "Instrumento inativado com sucesso!");
+        }
+        
+        file.close();
     }
 
     // ----- MENUS PRINCIPAIS -----
@@ -565,8 +1009,9 @@ namespace mod_ADM {
 
     void menuGerenciarUsuarios(){
 
-        constexpr int Quantidades_opcoes = 4;
+        constexpr int Quantidades_opcoes = 5;
         string texto_do_tipo_de_usuario;
+        string tipo_usuario_str = "Ambos"; // Controla se é Aluno, Professor ou Ambos
         Funcao tipo_usuario = ALUNO;
         int estado_selecionado = 2; // 1=Ativo, 0=Inativo, 2=Ambos (padrão)
         bool continuar = true;
@@ -579,15 +1024,13 @@ namespace mod_ADM {
                 case PROFESSOR:
                     texto_do_tipo_de_usuario = "Professor";
                     break;
-                case ADMINISTRADOR:
-                    texto_do_tipo_de_usuario = "Administrador";
-                    break;
                 default:
-                    texto_do_tipo_de_usuario = "Desconhecido";
+                    texto_do_tipo_de_usuario = "Aluno/Professor";
                     break;
             }
 
             string opcoes[Quantidades_opcoes] = {
+                "Cadastrar Usuario",
                 "Filtros de pesquisa",
                 "Listar Usuarios",
                 "Buscar Usuario por ID",
@@ -600,15 +1043,49 @@ namespace mod_ADM {
             
             switch (resultado.indice_da_opcao)
             {
-                case 0: {
+                case 0: { // Cadastrar Usuario
+                    constexpr int Quantidades_opcoes_cad = 3;
+                    string opcoes_cad[Quantidades_opcoes_cad] = {
+                        "Cadastrar Aluno",
+                        "Cadastrar Professor",
+                        "Voltar"
+                    };
+                    
+                    ConfigMenu config_cad;
+                    config_cad.titulo = "Cadastro de Usuarios";   
+                    config_cad.descricao = "Selecione uma opcao para cadastrar novo usuario.";
+                    saida_menu resultado_cad = interface_para_menu(Quantidades_opcoes_cad, opcoes_cad, config_cad);
+                    
+                    switch (resultado_cad.indice_da_opcao) {
+                        case 0: { // Cadastrar Aluno
+                            int novoId = Login_mat::realizarCadastroAluno();
+                            if (novoId > 0) {
+                                mostrar_caixa_informacao("SUCESSO", "Aluno cadastrado com sucesso!\nID: " + to_string(novoId));
+                            }
+                            break;
+                        }
+                        case 1: { // Cadastrar Professor
+                            int novoId = Login_mat::realizarCadastroProfessor();
+                            if (novoId > 0) {
+                                mostrar_caixa_informacao("SUCESSO", "Professor cadastrado com sucesso!\nID: " + to_string(novoId));
+                            }
+                            break;
+                        }
+                        case 2: { // Voltar
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case 1: {
                     constexpr int qtdVariaveis = 2;
                     string nomes_variaveis[qtdVariaveis] = {"Tipo de Usuario", "Estado do Usuario"};
                     
                     constexpr int qtdTipos = 3;
-                    string tipos[qtdTipos] = {"Aluno", "Professor", "Administrador"};
+                    string tipos[qtdTipos] = {"Aluno", "Professor", "Ambos"};
                     
                     constexpr int qtdEstados = 3;
-                    string estados[qtdEstados] = {"Ativo", "Inativo", "Ambos"};
+                    string estados[qtdEstados] = {"Inativo", "Ativo", "Ambos"};
                     
                     const string* opcoes_variaveis[] = {(const string*)tipos, (const string*)estados};
                     int num_opcoes[] = {qtdTipos, qtdEstados};
@@ -621,17 +1098,19 @@ namespace mod_ADM {
                     
                     if (resultadofiltro.confirmado && resultadofiltro.numero_variaveis >= 2) {
                         string tipo_str = resultadofiltro.valores_selecionados[0];
+                        tipo_usuario_str = tipo_str; // Armazenar o tipo selecionado
+                        
                         if (tipo_str == "Aluno") tipo_usuario = ALUNO;
                         else if (tipo_str == "Professor") tipo_usuario = PROFESSOR;
-                        else if (tipo_str == "Administrador") tipo_usuario = ADMINISTRADOR;
+                        else if (tipo_str == "Ambos") tipo_usuario = ALUNO; // Padrão "Ambos" inicializa com ALUNO
                         
                         // Converter estado do usuario
                         string estado_str = resultadofiltro.valores_selecionados[1];
-                        if (estado_str == "Ativo") {
-                            estado_selecionado = 1;
-                        }
-                        else if (estado_str == "Inativo") {
+                        if (estado_str == "Inativo") {
                             estado_selecionado = 0;
+                        }
+                        else if (estado_str == "Ativo") {
+                            estado_selecionado = 1;
                         }
                         else if (estado_str == "Ambos") {
                             estado_selecionado = 2;
@@ -641,9 +1120,33 @@ namespace mod_ADM {
                     }
                     break;
                 }
-                case 1: {
+                case 2: {
                     string dados[100][6];
-                    int total = listar_usuarios_especificos(tipo_usuario, estado_selecionado, dados);
+                    int total = 0;
+                    
+                    // Se tipo_usuario_str é "Ambos", listar tanto alunos quanto professores
+                    if (tipo_usuario_str == "Ambos") {
+                        string dados_alunos[100][6];
+                        string dados_profs[100][6];
+                        int total_alunos = listar_usuarios_especificos(ALUNO, estado_selecionado, dados_alunos);
+                        int total_profs = listar_usuarios_especificos(PROFESSOR, estado_selecionado, dados_profs);
+                        
+                        // Concatenar dados
+                        for(int i = 0; i < total_alunos && total < 100; i++) {
+                            for(int j = 0; j < 6; j++) {
+                                dados[total][j] = dados_alunos[i][j];
+                            }
+                            total++;
+                        }
+                        for(int i = 0; i < total_profs && total < 100; i++) {
+                            for(int j = 0; j < 6; j++) {
+                                dados[total][j] = dados_profs[i][j];
+                            }
+                            total++;
+                        }
+                    } else {
+                        total = listar_usuarios_especificos(tipo_usuario, estado_selecionado, dados);
+                    }
                     
                     if (total == 0) {
                         mostrar_caixa_informacao("INFO", "Nenhum usuario encontrado com os filtros selecionados.");
@@ -654,42 +1157,15 @@ namespace mod_ADM {
                     const string* dados_ptr[100]; 
                     for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
                     ConfigTabela configTab;
-                    configTab.titulo = "Todos os Usuarios (" + texto_do_tipo_de_usuario + "s)";
+                    configTab.titulo = "Todos os Usuarios (" + texto_do_tipo_de_usuario + ")";
                     saida_tabela usuario_selecionado = interface_para_tabela(total, 5, dados_ptr, titulos, 0, configTab);
                     if (usuario_selecionado.indice_linha != -1) {
-                        ConfigBotoes configBotoes;
-                        configBotoes.titulo = "Gerenciar Usuario ";
-                        configBotoes.descricao = "id: " + dados[usuario_selecionado.indice_linha][0] + " | Usuario: " + dados[usuario_selecionado.indice_linha][1] + " | Status: " + dados[usuario_selecionado.indice_linha][4];
-                        configBotoes.botoes[0].label = "Ativar";
-                        configBotoes.botoes[0].tecla = 'A';
-                        configBotoes.botoes[0].valor_retorno = 1;
-                        configBotoes.botoes[1].label = "Desativar";
-                        configBotoes.botoes[1].tecla = 'D';
-                        configBotoes.botoes[1].valor_retorno = 0;
-                        configBotoes.botoes[2].label = "modificar";
-                        configBotoes.botoes[2].tecla = 'M';
-                        configBotoes.botoes[2].valor_retorno = 2;
-                        configBotoes.numero_botoes = 3;
-                        saida_botoes acao_sob_usuario = interface_para_botoes(configBotoes);
-
-                        if(acao_sob_usuario.confirmado) {
-                            if(acao_sob_usuario.valor_retorno == 1) {
-                                // Ativar usuario
-                                int id = stoi(dados[usuario_selecionado.indice_linha][0]);
-                                atualizar_estado_de_usuario(id, tipo_usuario, "Ativo");
-                                mostrar_caixa_informacao("SUCESSO", "Usuario ativado com sucesso!");
-                            }
-                            if(acao_sob_usuario.valor_retorno == 0) {
-                                // Desativar usuario
-                                int id = stoi(dados[usuario_selecionado.indice_linha][0]);
-                                atualizar_estado_de_usuario(id, tipo_usuario, "Inativo");
-                                mostrar_caixa_informacao("SUCESSO", "Usuario desativado com sucesso!");
-                            }
-                        }
+                        int id = stoi(dados[usuario_selecionado.indice_linha][0]);
+                        gerenciar_usuario_menu(id);
                     }
                     break;
                 }
-                case 2: {
+                case 3: {
                     // Capturar ID usando interface gráfica
                     ConfigEntradaTexto configBusca;
                     configBusca.titulo = "Buscar Usuario";
@@ -708,46 +1184,11 @@ namespace mod_ADM {
                         break;
                     }
                     
-                    // Buscar usuario usando funcoes do modulo login_matricula
-                    bool encontrado = false;
-                    
-                    if (tipo_usuario == ALUNO) {
-                        Aluno aluno = Login_mat::lerAluno(idBusca);
-                        if (aluno.base.id == idBusca) {
-                            encontrado = true;
-                            string status_atual = aluno.base.ativo ? "Ativo" : "Inativo";
-                            
-                            mostrar_caixa_informacao("INFO", "Nome: " + string(aluno.base.nome) + "\nStatus: " + status_atual);
-                            
-                            aluno.base.ativo = !aluno.base.ativo;
-                            Login_mat::salvarAluno(aluno);
-                            
-                            string novo_status = aluno.base.ativo ? "Ativado" : "Desativado";
-                            mostrar_caixa_informacao("SUCESSO", "Usuario " + novo_status + " com sucesso!");
-                        }
-                    } 
-                    else if (tipo_usuario == PROFESSOR) {
-                        Professor prof = Login_mat::lerProfessor(idBusca);
-                        if (prof.base.id == idBusca) {
-                            encontrado = true;
-                            string status_atual = prof.base.ativo ? "Ativo" : "Inativo";
-                            
-                            mostrar_caixa_informacao("INFO", "Nome: " + string(prof.base.nome) + "\nStatus: " + status_atual);
-                            
-                            prof.base.ativo = !prof.base.ativo;
-                            Login_mat::salvarProfessor(prof);
-                            
-                            string novo_status = prof.base.ativo ? "Ativado" : "Desativado";
-                            mostrar_caixa_informacao("SUCESSO", "Usuario " + novo_status + " com sucesso!");
-                        }
-                    }
-                    
-                    if (!encontrado) {
-                        mostrar_caixa_informacao("ERRO", "Usuario nao encontrado!");
-                    }
+                    // Usar função auxiliar para gerenciar usuário
+                    gerenciar_usuario_menu(idBusca);
                     break;
                 }
-                case 3:
+                case 4:
                     continuar = false;
                     break;
             }
@@ -760,21 +1201,23 @@ namespace mod_ADM {
 // =====================================================================
 
 void menuCadastroCursos(){
-    constexpr int Quantidades_opcoes = 6;
+    constexpr int Quantidades_opcoes = 5;
     bool continuar = true;
+    int estado_selecionado = 2; // 0=inativo, 1=ativo, 2=ambos
 
     while (continuar) {
         string opcoes[Quantidades_opcoes] = {
             "Cadastrar Disciplina",
-            "Autorizar Disciplina",
-            "Inativar Disciplina",
-            "Vincular Professor",
+            "Filtros de pesquisa",
             "Listar Disciplinas",
+            "Buscar por ID",
             "Voltar"
         };
         
+        string titulo_estado = (estado_selecionado == 0 ? "Inativas" : (estado_selecionado == 1 ? "Ativas" : "Todas"));
+        
         ConfigMenu config;
-        config.titulo = "Gerenciar Disciplinas";   
+        config.titulo = "Gerenciar Disciplinas (" + titulo_estado + ")";
         config.descricao = "Selecione uma opcao para gerenciar as disciplinas do sistema.";
         saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
         
@@ -805,7 +1248,7 @@ void menuCadastroCursos(){
                 strncpy(disciplina_.nome, nome, 29);
                 disciplina_.nome[29] = '\0';
                 disciplina_.cargaHoraria = cargaHoraria;
-                disciplina_.ativo = 0; // Inativa por padrão até autorização
+                disciplina_.ativo = 1; // Ativa por padrão
                 
                 file.seekp(0, std::ios::end);
                 disciplina_.id = 1 + file.tellp() / sizeof(Disciplina);
@@ -816,198 +1259,68 @@ void menuCadastroCursos(){
                 break;
             }
             
-            case 1: { // Autorizar Disciplina - COM TABELA INTERATIVA
+            case 1: { // Filtros de pesquisa
+                constexpr int qtdEstados = 3;
+                string estados[qtdEstados] = {"Inativa", "Ativa", "Ambas"};
+                
+                ConfigMenu configFiltro;
+                configFiltro.titulo = "Filtros de Pesquisa";
+                configFiltro.descricao = "Selecione o estado das disciplinas que deseja listar.";
+                saida_menu resultadofiltro = interface_para_menu(qtdEstados, estados, configFiltro);
+                
+                if (resultadofiltro.indice_da_opcao == 0) estado_selecionado = 0;
+                else if (resultadofiltro.indice_da_opcao == 1) estado_selecionado = 1;
+                else if (resultadofiltro.indice_da_opcao == 2) estado_selecionado = 2;
+                break;
+            }
+            
+            case 2: { // Listar Disciplinas
                 string dados[100][6];
-                int total = listar_disciplinas_especificas(0, dados); // 0 = Inativas
+                int total = listar_disciplinas_especificas(estado_selecionado, dados);
                 
                 if (total == 0) {
-                    mostrar_caixa_informacao("INFO", "Nenhuma disciplina inativa para autorizar.");
+                    mostrar_caixa_informacao("INFO", "Nenhuma disciplina encontrada com os filtros selecionados.");
                     break;
                 }
                 
                 string titulos[4] = {"ID", "Nome", "Carga Hor.", "Status"};
                 const string* dados_ptr[100];
                 for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
-                
-                ConfigTabela configTab;
-                configTab.titulo = "Disciplinas para Autorizar (Inativas)";
-                saida_tabela disciplina_selecionada = interface_para_tabela(total, 4, dados_ptr, titulos, 0, configTab);
-                
-                if (disciplina_selecionada.indice_linha != -1) {
-                    int idDisc = stoi(dados[disciplina_selecionada.indice_linha][0]);
-                    disciplina_ = buscaDisciplina(file, idDisc);
-                    
-                    if (disciplina_.id != 0 && disciplina_.ativo == 0) {
-                        ConfigBotoes configBotoes;
-                        configBotoes.titulo = "Autorizar Disciplina";
-                        configBotoes.descricao = "ID: " + dados[disciplina_selecionada.indice_linha][0] + 
-                                                " | Nome: " + dados[disciplina_selecionada.indice_linha][1] + 
-                                                " | Status: Inativa";
-                        configBotoes.botoes[0].label = "Autorizar";
-                        configBotoes.botoes[0].tecla = 'A';
-                        configBotoes.botoes[0].valor_retorno = 1;
-                        configBotoes.botoes[1].label = "Cancelar";
-                        configBotoes.botoes[1].tecla = 'C';
-                        configBotoes.botoes[1].valor_retorno = 0;
-                        configBotoes.numero_botoes = 2;
-                        saida_botoes acao = interface_para_botoes(configBotoes);
-                        
-                        if(acao.confirmado && acao.valor_retorno == 1) {
-                            disciplina_.ativo = 1;
-                            file.seekp((idDisc - 1) * sizeof(Disciplina));
-                            file.write((char*)&disciplina_, sizeof(Disciplina));
-                            file.clear();
-                            mostrar_caixa_informacao("SUCESSO", "Disciplina " + string(disciplina_.nome) + " autorizada com sucesso!");
-                        }
-                    }
-                }
-                break;
-            }
-            
-            case 2: { // Inativar Disciplina - COM TABELA INTERATIVA
-                string dados[100][6];
-                int total = listar_disciplinas_especificas(1, dados); // 1 = Ativas
-                
-                if (total == 0) {
-                    mostrar_caixa_informacao("INFO", "Nenhuma disciplina ativa para inativar.");
-                    break;
-                }
-                
-                string titulos[4] = {"ID", "Nome", "Carga Hor.", "Status"};
-                const string* dados_ptr[100];
-                for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
-                
-                ConfigTabela configTab;
-                configTab.titulo = "Disciplinas para Inativar (Ativas)";
-                saida_tabela disciplina_selecionada = interface_para_tabela(total, 4, dados_ptr, titulos, 0, configTab);
-                
-                if (disciplina_selecionada.indice_linha != -1) {
-                    int idDisc = stoi(dados[disciplina_selecionada.indice_linha][0]);
-                    disciplina_ = buscaDisciplina(file, idDisc);
-                    
-                    if (disciplina_.id != 0 && disciplina_.ativo == 1) {
-                        ConfigBotoes configBotoes;
-                        configBotoes.titulo = "Inativar Disciplina";
-                        configBotoes.descricao = "ID: " + dados[disciplina_selecionada.indice_linha][0] + 
-                                                " | Nome: " + dados[disciplina_selecionada.indice_linha][1] + 
-                                                " | Status: Ativa";
-                        configBotoes.botoes[0].label = "Inativar";
-                        configBotoes.botoes[0].tecla = 'I';
-                        configBotoes.botoes[0].valor_retorno = 1;
-                        configBotoes.botoes[1].label = "Cancelar";
-                        configBotoes.botoes[1].tecla = 'C';
-                        configBotoes.botoes[1].valor_retorno = 0;
-                        configBotoes.numero_botoes = 2;
-                        saida_botoes acao = interface_para_botoes(configBotoes);
-                        
-                        if(acao.confirmado && acao.valor_retorno == 1) {
-                            disciplina_.ativo = 0;
-                            file.seekp((idDisc - 1) * sizeof(Disciplina));
-                            file.write((char*)&disciplina_, sizeof(Disciplina));
-                            file.clear();
-                            mostrar_caixa_informacao("SUCESSO", "Disciplina " + string(disciplina_.nome) + " inativada com sucesso!");
-                        }
-                    }
-                }
-                break;
-            }
-            
-            case 3: { // Vincular Professor - COM TABELA INTERATIVA
-                string dados[100][6];
-                int total = listar_disciplinas_especificas(1, dados); // 1 = Ativas
-                
-                if (total == 0) {
-                    mostrar_caixa_informacao("INFO", "Nenhuma disciplina ativa para vincular professor.");
-                    break;
-                }
-                
-                string titulos[4] = {"ID", "Nome", "Carga Hor.", "Status"};
-                const string* dados_ptr[100];
-                for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
-                
-                ConfigTabela configTab;
-                configTab.titulo = "Disciplinas para Vincular Professor";
-                saida_tabela disciplina_selecionada = interface_para_tabela(total, 4, dados_ptr, titulos, 0, configTab);
-                
-                if (disciplina_selecionada.indice_linha != -1) {
-                    int idDisc = stoi(dados[disciplina_selecionada.indice_linha][0]);
-                    disciplina_ = buscaDisciplina(file, idDisc);
-                    
-                    if (disciplina_.id != 0 && disciplina_.ativo == 1) {
-                        ConfigEntradaTexto configProfId;
-                        configProfId.titulo = "Vincular Professor";
-                        configProfId.label = "Digite o ID do Professor: ";
-                        configProfId.tipo_entrada = TIPO_NUMERO;
-                        saida_entrada_texto resultProfId = interface_para_entrada_texto(configProfId);
-                        if (!resultProfId.confirmado) break;
-                        int idProf = stoi(resultProfId.valor);
-                        
-                        std::fstream fileProfessores;
-                        openFile(fileProfessores, "professores.dat");
-                        Professor prof = buscaProf(fileProfessores, idProf);
-                        fileProfessores.close();
-                        
-                        if (prof.base.id == 0) {
-                            mostrar_caixa_informacao("ERRO", "Professor nao encontrado!");
-                            break;
-                        }
-                        
-                        if (prof.disciplina[0] != '\0') {
-                            mostrar_caixa_informacao("INFO", "Professor ja possui uma disciplina vinculada!");
-                            break;
-                        }
-                        
-                        strncpy(prof.disciplina, disciplina_.nome, 29);
-                        prof.disciplina[29] = '\0';
-                        
-                        openFile(fileProfessores, "professores.dat");
-                        fileProfessores.seekp((idProf - 20260000) * sizeof(Professor));
-                        fileProfessores.write((char*)&prof, sizeof(Professor));
-                        fileProfessores.close();
-                        file.clear();
-                        
-                        mostrar_caixa_informacao("SUCESSO", "Professor " + string(prof.base.nome) + " vinculado a disciplina " + string(disciplina_.nome) + "!");
-                    }
-                }
-                break;
-            }
-            
-            case 4: { // Listar Disciplinas
-                string dados[100][4];
-                int contador = 0;
-                
-                file.seekg(0);
-                while (file.read((char*)&disciplina_, sizeof(Disciplina)) && contador < 100) {
-                    if (disciplina_.id != 0) {
-                        dados[contador][0] = to_string(disciplina_.id);
-                        dados[contador][1] = disciplina_.nome;
-                        dados[contador][2] = to_string(disciplina_.cargaHoraria);
-                        dados[contador][3] = disciplina_.ativo ? "Ativa" : "Inativa";
-                        contador++;
-                    }
-                }
-                file.clear();
-                
-                if (contador == 0) {
-                    mostrar_caixa_informacao("INFO", "Nenhuma disciplina cadastrada!");
-                    break;
-                }
-                
-                string titulos[4] = {"ID", "Nome", "Carga Hor.", "Status"};
-                const string* dados_ptr[100];
-                for(int i = 0; i < contador; i++) dados_ptr[i] = dados[i];
                 
                 ConfigTabela configTab;
                 configTab.titulo = "Lista de Disciplinas";
-                saida_tabela selecionada = interface_para_tabela(contador, 4, dados_ptr, titulos, 0, configTab);
+                saida_tabela disciplina_selecionada = interface_para_tabela(total, 4, dados_ptr, titulos, 0, configTab);
                 
-                if (selecionada.indice_linha != -1) {
-                    mostrar_caixa_informacao("INFO", "Disciplina selecionada: " + dados[selecionada.indice_linha][1]);
+                if (disciplina_selecionada.indice_linha != -1) {
+                    int id = stoi(dados[disciplina_selecionada.indice_linha][0]);
+                    gerenciar_disciplina_menu(id);
                 }
                 break;
             }
             
-            case 5: { // Voltar
+            case 3: { // Buscar por ID
+                ConfigEntradaTexto configBusca;
+                configBusca.titulo = "Buscar Disciplina";
+                configBusca.label = "Digite o ID da disciplina: ";
+                configBusca.tipo_entrada = TIPO_NUMERO;
+                configBusca.descricao = "Digite o número de identificação da disciplina que deseja buscar.";
+                
+                saida_entrada_texto resultBusca = interface_para_entrada_texto(configBusca);
+                
+                if (!resultBusca.confirmado) break;
+                
+                int idBusca = stoi(resultBusca.valor);
+                
+                if (idBusca <= 0) {
+                    mostrar_caixa_informacao("ERRO", "ID invalido! Digite um numero positivo.");
+                    break;
+                }
+                
+                gerenciar_disciplina_menu(idBusca);
+                break;
+            }
+            
+            case 4: { // Voltar
                 continuar = false;
                 break;
             }
@@ -1058,18 +1371,21 @@ void menuCadastroCursos(){
     void menuEventos(std::fstream &file) {
         constexpr int Quantidades_opcoes = 5;
         bool continuar = true;
+        int filtro_selecionado = 2; // 0=pendente, 1=autorizado, 2=ambos
 
         while (continuar) {
+            string titulo_filtro = (filtro_selecionado == 0 ? "Pendentes" : (filtro_selecionado == 1 ? "Autorizados" : "Todos"));
+            
             string opcoes[Quantidades_opcoes] = {
                 "Cadastrar Evento",
-                "Autorizar Evento",
-                "Inativar Evento",
+                "Filtros de pesquisa",
                 "Listar Eventos",
+                "Buscar por ID",
                 "Voltar"
             };
             
             ConfigMenu config;
-            config.titulo = "Gerenciar Eventos";
+            config.titulo = "Gerenciar Eventos (" + titulo_filtro + ")";
             config.descricao = "Selecione uma opcao para gerenciar eventos.";
             saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
             
@@ -1148,12 +1464,27 @@ void menuCadastroCursos(){
                     break;
                 }
                 
-                case 1: { // Autorizar Evento - COM TABELA INTERATIVA
+                case 1: { // Filtros de pesquisa
+                    constexpr int qtdEstados = 3;
+                    string estados[qtdEstados] = {"Pendente", "Autorizado", "Ambos"};
+                    
+                    ConfigMenu configFiltro;
+                    configFiltro.titulo = "Filtros de Pesquisa";
+                    configFiltro.descricao = "Selecione o filtro para gerenciar eventos.";
+                    saida_menu resultadofiltro = interface_para_menu(qtdEstados, estados, configFiltro);
+                    
+                    if (resultadofiltro.indice_da_opcao == 0) filtro_selecionado = 0;
+                    else if (resultadofiltro.indice_da_opcao == 1) filtro_selecionado = 1;
+                    else if (resultadofiltro.indice_da_opcao == 2) filtro_selecionado = 2;
+                    break;
+                }
+                
+                case 2: { // Listar Eventos
                     string dados[100][5];
-                    int total = listar_eventos_especificos(0, dados); // 0 = Não autorizados
+                    int total = listar_eventos_especificos(filtro_selecionado, dados);
                     
                     if (total == 0) {
-                        mostrar_caixa_informacao("INFO", "Nenhum evento pendente para autorizar.");
+                        mostrar_caixa_informacao("INFO", "Nenhum evento encontrado com os filtros selecionados.");
                         break;
                     }
                     
@@ -1162,152 +1493,35 @@ void menuCadastroCursos(){
                     for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
                     
                     ConfigTabela configTab;
-                    configTab.titulo = "Eventos para Autorizar (Pendentes)";
+                    configTab.titulo = "Lista de Eventos";
                     saida_tabela evento_selecionado = interface_para_tabela(total, 5, dados_ptr, titulos, 0, configTab);
                     
                     if (evento_selecionado.indice_linha != -1) {
-                        int idEvento = stoi(dados[evento_selecionado.indice_linha][0]);
-                        file.clear();
-                        file.seekg((idEvento - 1) * sizeof(Evento));
-                        file.read((char*)evento_, sizeof(Evento));
-                        
-                        if (evento_->id != 0 && evento_->autorizado == 0) {
-                            ConfigBotoes configBotoes;
-                            configBotoes.titulo = "Autorizar Evento";
-                            configBotoes.descricao = "ID: " + dados[evento_selecionado.indice_linha][0] + 
-                                                    " | Nome: " + dados[evento_selecionado.indice_linha][1] + 
-                                                    " | Data: " + dados[evento_selecionado.indice_linha][2];
-                            configBotoes.botoes[0].label = "Autorizar";
-                            configBotoes.botoes[0].tecla = 'A';
-                            configBotoes.botoes[0].valor_retorno = 1;
-                            configBotoes.botoes[1].label = "Cancelar";
-                            configBotoes.botoes[1].tecla = 'C';
-                            configBotoes.botoes[1].valor_retorno = 0;
-                            configBotoes.numero_botoes = 2;
-                            saida_botoes acao = interface_para_botoes(configBotoes);
-                            
-                            if(acao.confirmado && acao.valor_retorno == 1) {
-                                evento_->autorizado = 1;
-                                file.clear();
-                                file.seekp((idEvento - 1) * sizeof(Evento));
-                                file.write((char*)evento_, sizeof(Evento));
-                                file.clear();
-                                mostrar_caixa_informacao("SUCESSO", "Evento " + string(evento_->nome) + " autorizado com sucesso!");
-                            }
-                        }
+                        int id = stoi(dados[evento_selecionado.indice_linha][0]);
+                        gerenciar_evento_menu(id);
                     }
                     break;
                 }
                 
-                case 2: { // Inativar Evento - COM TABELA INTERATIVA
-                    string dados[100][5];
-                    int total = listar_eventos_especificos(2, dados); // 2 = Ambos (filtrar apenas ativos)
+                case 3: { // Buscar por ID
+                    ConfigEntradaTexto configBusca;
+                    configBusca.titulo = "Buscar Evento";
+                    configBusca.label = "Digite o ID do evento: ";
+                    configBusca.tipo_entrada = TIPO_NUMERO;
+                    configBusca.descricao = "Digite o número de identificação do evento que deseja buscar.";
                     
-                    if (total == 0) {
-                        mostrar_caixa_informacao("INFO", "Nenhum evento ativo para inativar.");
+                    saida_entrada_texto resultBusca = interface_para_entrada_texto(configBusca);
+                    
+                    if (!resultBusca.confirmado) break;
+                    
+                    int idBusca = stoi(resultBusca.valor);
+                    
+                    if (idBusca <= 0) {
+                        mostrar_caixa_informacao("ERRO", "ID invalido! Digite um numero positivo.");
                         break;
                     }
                     
-                    string titulos[5] = {"ID", "Nome", "Data", "Local", "Vagas"};
-                    const string* dados_ptr[100];
-                    for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
-                    
-                    ConfigTabela configTab;
-                    configTab.titulo = "Eventos para Inativar";
-                    saida_tabela evento_selecionado = interface_para_tabela(total, 5, dados_ptr, titulos, 0, configTab);
-                    
-                    if (evento_selecionado.indice_linha != -1) {
-                        int idEvento = stoi(dados[evento_selecionado.indice_linha][0]);
-                        file.clear();
-                        file.seekg((idEvento - 1) * sizeof(Evento));
-                        file.read((char*)evento_, sizeof(Evento));
-                        
-                        if (evento_->id != 0 && evento_->ativo == 1) {
-                            ConfigBotoes configBotoes;
-                            configBotoes.titulo = "Inativar Evento";
-                            configBotoes.descricao = "ID: " + dados[evento_selecionado.indice_linha][0] + 
-                                                    " | Nome: " + dados[evento_selecionado.indice_linha][1] + 
-                                                    " | Data: " + dados[evento_selecionado.indice_linha][2];
-                            configBotoes.botoes[0].label = "Inativar";
-                            configBotoes.botoes[0].tecla = 'I';
-                            configBotoes.botoes[0].valor_retorno = 1;
-                            configBotoes.botoes[1].label = "Cancelar";
-                            configBotoes.botoes[1].tecla = 'C';
-                            configBotoes.botoes[1].valor_retorno = 0;
-                            configBotoes.numero_botoes = 2;
-                            saida_botoes acao = interface_para_botoes(configBotoes);
-                            
-                            if(acao.confirmado && acao.valor_retorno == 1) {
-                                evento_->ativo = 0;
-                                file.clear();
-                                file.seekp((idEvento - 1) * sizeof(Evento));
-                                file.write((char*)evento_, sizeof(Evento));
-                                file.clear();
-                                mostrar_caixa_informacao("SUCESSO", "Evento " + string(evento_->nome) + " inativado com sucesso!");
-                            }
-                        }
-                    }
-                    break;
-                }
-                
-                case 3: { // Listar Eventos
-                    constexpr int Opcoes_listar = 3;
-                    string opcoes_listar[Opcoes_listar] = {
-                        "Listar Autorizados",
-                        "Listar Pendentes",
-                        "Voltar"
-                    };
-                    
-                    ConfigMenu configLista;
-                    configLista.titulo = "Filtrar Eventos";
-                    configLista.descricao = "Selecione qual lista deseja visualizar.";
-                    saida_menu resultado_lista = interface_para_menu(Opcoes_listar, opcoes_listar, configLista);
-                    
-                    if (resultado_lista.indice_da_opcao == 0 || resultado_lista.indice_da_opcao == 1) {
-                        string dados[100][5];
-                        int contador = 0;
-                        bool autorizado_filtro = (resultado_lista.indice_da_opcao == 0);
-                        
-                        file.clear();
-                        file.seekg(0);
-                        
-                        while (file.read((char*)evento_, sizeof(Evento)) && contador < 100) {
-                            if (evento_->ativo) {
-                                if ((autorizado_filtro && evento_->autorizado) || (!autorizado_filtro && !evento_->autorizado)) {
-                                    dados[contador][0] = to_string(evento_->id);
-                                    dados[contador][1] = evento_->nome;
-                                    dados[contador][2] = evento_->data;
-                                    dados[contador][3] = evento_->local;
-                                    dados[contador][4] = to_string(evento_->vagasOcupadas) + "/" + to_string(evento_->totalVagas);
-                                    contador++;
-                                }
-                            }
-                        }
-                        file.clear();
-                        
-                        if (contador == 0) {
-                            string tipo = autorizado_filtro ? "Nenhum evento autorizado" : "Nenhum evento pendente";
-                            mostrar_caixa_informacao("INFO", tipo + " encontrado!");
-                            break;
-                        }
-                        
-                        string titulos[5] = {"ID", "Nome", "Data", "Local", "Vagas"};
-                        const string* dados_ptr[100];
-                        for(int i = 0; i < contador; i++) dados_ptr[i] = dados[i];
-                        
-                        ConfigTabela configTab;
-                        configTab.titulo = autorizado_filtro ? "Eventos Autorizados" : "Eventos Pendentes";
-                        saida_tabela selecionada = interface_para_tabela(contador, 5, dados_ptr, titulos, 0, configTab);
-                        
-                        if (selecionada.indice_linha != -1) {
-                            string detalhes = "ID: " + dados[selecionada.indice_linha][0] + 
-                                            "\nNome: " + dados[selecionada.indice_linha][1] + 
-                                            "\nData: " + dados[selecionada.indice_linha][2] + 
-                                            "\nLocal: " + dados[selecionada.indice_linha][3] + 
-                                            "\nVagas: " + dados[selecionada.indice_linha][4];
-                            mostrar_caixa_informacao("DETALHES", detalhes);
-                        }
-                    }
+                    gerenciar_evento_menu(idBusca);
                     break;
                 }
                 
@@ -1320,6 +1534,104 @@ void menuCadastroCursos(){
             delete evento_;
             evento_ = nullptr;
         }
+    }
+
+    // ----- FUNÇÕES AUXILIARES DE TURMAS E MATRÍCULA -----
+
+    int listar_disciplinas_para_turma(string dados[100][4]) {
+        int contador = 0;
+        std::fstream file;
+        openFile(file, "disciplinas.dat");
+        Disciplina disciplina;
+        
+        file.seekg(0);
+        while(file.read((char*)&disciplina, sizeof(Disciplina)) && contador < 100) {
+            if(disciplina.id != 0 && disciplina.ativo) {
+                dados[contador][0] = to_string(disciplina.id);
+                dados[contador][1] = disciplina.nome;
+                dados[contador][2] = to_string(disciplina.cargaHoraria);
+                dados[contador][3] = "Ativa";
+                contador++;
+            }
+        }
+        file.close();
+        return contador;
+    }
+
+    int listar_professores_para_turma(string dados[100][4]) {
+        int contador = 0;
+        std::fstream file;
+        openFile(file, "professores.dat");
+        Professor professor;
+        
+        file.seekg(0);
+        while(file.read((char*)&professor, sizeof(Professor)) && contador < 100) {
+            if(professor.base.id > 0 && professor.base.ativo) {
+                int vagasDisponiveis = 0;
+                for(int i = 0; i < 5; i++) {
+                    if(professor.turmas[i] == 0) vagasDisponiveis++;
+                }
+                
+                if(vagasDisponiveis > 0) {
+                    dados[contador][0] = to_string(professor.base.id);
+                    dados[contador][1] = professor.base.nome;
+                    dados[contador][2] = professor.base.email;
+                    dados[contador][3] = to_string(vagasDisponiveis) + " vaga(s)";
+                    contador++;
+                }
+            }
+        }
+        file.close();
+        return contador;
+    }
+
+    int listar_turmas_para_matricula(string dados[100][5]) {
+        int contador = 0;
+        std::fstream file;
+        openFile(file, "turmas.dat");
+        Disciplina disc;
+        std::fstream fileDisc;
+        openFile(fileDisc, "disciplinas.dat");
+        
+        Turma turma;
+        file.seekg(0);
+        while(file.read((char*)&turma, sizeof(Turma)) && contador < 100) {
+            if(turma.id != 0 && turma.ativo && turma.qtdAlunos < MAX_ALUNOS) {
+                fileDisc.seekg((turma.idDisciplina - 1) * sizeof(Disciplina));
+                fileDisc.read((char*)&disc, sizeof(Disciplina));
+                
+                dados[contador][0] = to_string(turma.id);
+                dados[contador][1] = disc.nome;
+                dados[contador][2] = to_string(turma.idProfessor);
+                dados[contador][3] = to_string(turma.qtdAlunos) + "/" + to_string(MAX_ALUNOS);
+                dados[contador][4] = "Ativa";
+                contador++;
+            }
+        }
+        file.close();
+        fileDisc.close();
+        return contador;
+    }
+
+    int listar_alunos_para_matricula(string dados[100][5]) {
+        int contador = 0;
+        std::fstream file;
+        openFile(file, "alunos.dat");
+        Aluno aluno;
+        
+        file.seekg(0);
+        while(file.read((char*)&aluno, sizeof(Aluno)) && contador < 100) {
+            if(aluno.base.id > 0 && aluno.base.ativo && aluno.base.categoria == ALUNO) {
+                dados[contador][0] = to_string(aluno.base.id);
+                dados[contador][1] = aluno.base.nome;
+                dados[contador][2] = aluno.base.email;
+                dados[contador][3] = "Ativo";
+                dados[contador][4] = "";
+                contador++;
+            }
+        }
+        file.close();
+        return contador;
     }
 
     // ----- FUNÇÕES DE TURMAS E MATRÍCULA -----
@@ -1335,485 +1647,275 @@ void menuCadastroCursos(){
     }
 
     void cadastrarTurma(){
-        Turma turma;
-        Disciplina* disc = new Disciplina;
-        Professor* prof = new Professor;
-        int buscaId;
+        string dados_disc[100][4];
+        string dados_prof[100][4];
+        
         std::fstream file;
         std::fstream fileDisc;
         std::fstream fileProf;
         openFile(file, "turmas.dat");
         openFile(fileDisc, "disciplinas.dat");
         openFile(fileProf, "professores.dat");
-
+        
+        // ===== SELECIONAR DISCIPLINA =====
+        int total_disc = listar_disciplinas_para_turma(dados_disc);
+        
+        if (total_disc == 0) {
+            mostrar_caixa_informacao("INFO", "Nenhuma disciplina ativa disponivel.");
+            file.close();
+            fileDisc.close();
+            fileProf.close();
+            return;
+        }
+        
+        string titulos_disc[4] = {"ID", "Nome", "Carga Hor.", "Status"};
+        const string* dados_ptr_disc[100];
+        for(int i = 0; i < total_disc; i++) dados_ptr_disc[i] = dados_disc[i];
+        
+        ConfigTabela configTab_disc;
+        configTab_disc.titulo = "Selecionar Disciplina para Nova Turma";
+        saida_tabela disc_selecionada = interface_para_tabela(total_disc, 4, dados_ptr_disc, titulos_disc, 0, configTab_disc);
+        
+        if (disc_selecionada.indice_linha == -1) {
+            file.close();
+            fileDisc.close();
+            fileProf.close();
+            return; // Cancelado
+        }
+        
+        int idDisciplina = stoi(dados_disc[disc_selecionada.indice_linha][0]);
+        
+        // ===== SELECIONAR PROFESSOR =====
+        int total_prof = listar_professores_para_turma(dados_prof);
+        
+        if (total_prof == 0) {
+            mostrar_caixa_informacao("INFO", "Nenhum professor ativo com vagas disponiveis.");
+            file.close();
+            fileDisc.close();
+            fileProf.close();
+            return;
+        }
+        
+        string titulos_prof[4] = {"ID", "Nome", "Email", "Vagas"};
+        const string* dados_ptr_prof[100];
+        for(int i = 0; i < total_prof; i++) dados_ptr_prof[i] = dados_prof[i];
+        
+        ConfigTabela configTab_prof;
+        configTab_prof.titulo = "Selecionar Professor para a Turma";
+        saida_tabela prof_selecionado = interface_para_tabela(total_prof, 4, dados_ptr_prof, titulos_prof, 0, configTab_prof);
+        
+        if (prof_selecionado.indice_linha == -1) {
+            file.close();
+            fileDisc.close();
+            fileProf.close();
+            return; // Cancelado
+        }
+        
+        int idProfessor = stoi(dados_prof[prof_selecionado.indice_linha][0]);
+        
+        // ===== CRIAR E SALVAR TURMA =====
+        Turma turma;
         turma.id = gerarNovoId(file, sizeof(Turma));
         turma.ativo = 1;
-
-        ConfigEntradaTexto configDisc;
-        configDisc.titulo = "Cadastrar Turma";
-        configDisc.label = "ID da Disciplina: ";
-        configDisc.tipo_entrada = TIPO_NUMERO;
-        saida_entrada_texto resultDisc = interface_para_entrada_texto(configDisc);
-        if (!resultDisc.confirmado) {
-            file.close();
-            fileDisc.close();
-            fileProf.close();
-            delete prof;
-            delete disc;
-            return;
+        turma.idDisciplina = idDisciplina;
+        turma.idProfessor = idProfessor;
+        turma.qtdAlunos = 0;
+        
+        for(int i = 0; i < MAX_ALUNOS; i++) {
+            turma.alunos[i].base.id = 0;
+            turma.alunos[i].base.ativo = 0;
         }
         
-        buscaId = stoi(resultDisc.valor);
-        *disc = buscaDisciplina(fileDisc, buscaId);
-        if (disc->id == 0){
-            file.close();
-            fileDisc.close();
-            fileProf.close();
-            delete prof;
-            delete disc;
-            return;
-        }
-        turma.idDisciplina = disc->id;
-
-        ConfigEntradaTexto configProf;
-        configProf.titulo = "Cadastrar Turma";
-        configProf.label = "ID do Professor: ";
-        configProf.tipo_entrada = TIPO_NUMERO;
-        saida_entrada_texto resultProf = interface_para_entrada_texto(configProf);
-        if (!resultProf.confirmado) {
-            file.close();
-            fileDisc.close();
-            fileProf.close();
-            delete prof;
-            delete disc;
-            return;
-        }
-        
-        buscaId = stoi(resultProf.valor);
-        *prof = buscaProf(fileProf, buscaId);
-        if(prof->base.id == 0){
-            file.close();
-            fileDisc.close();
-            fileProf.close();
-            delete prof;
-            delete disc;
-            return;
-        }
-        turma.idProfessor = prof->base.id;
+        // ===== VINCULAR TURMA AO PROFESSOR =====
+        Professor prof;
+        fileProf.seekg((idProfessor - 20260000) * sizeof(Professor));
+        fileProf.read((char*)&prof, sizeof(Professor));
         
         int indexVAGA;
-        if(verificaTurmasProf(*prof, indexVAGA)){
-            prof->turmas[indexVAGA] = turma.id;
-            fileProf.seekp((prof->base.id - 20260000) * sizeof(Professor));
-            fileProf.write((const char*)prof, sizeof(Professor));
+        if(verificaTurmasProf(prof, indexVAGA)){
+            prof.turmas[indexVAGA] = turma.id;
+            fileProf.seekp((idProfessor - 20260000) * sizeof(Professor));
+            fileProf.write((char*)&prof, sizeof(Professor));
         }
         else{
             mostrar_caixa_informacao("ERRO", "Professor nao tem vaga para novas turmas.");
             file.close();
             fileDisc.close();
             fileProf.close();
-            delete prof;
-            delete disc;
             return;
         }
-
-        turma.qtdAlunos = 0;
-        for(int i = 0; i < MAX_ALUNOS; i++)
-            turma.alunos[i] = 0;
-
+        
+        // ===== SALVAR TURMA =====
         file.seekp((turma.id - 1) * sizeof(Turma));
         file.write((char*)&turma, sizeof(Turma));
-
+        
         file.close();
         fileProf.close();
         fileDisc.close();
-
-        delete prof;
-        delete disc;
         
         mostrar_caixa_informacao("SUCESSO", "Turma cadastrada com sucesso!\nID: " + to_string(turma.id));
     }
 
     void matricularAlunoTurma() {
-        std::fstream fileTurma;
+        string dados_alunos[100][5];
+        string dados_turmas[100][5];
+        
         std::fstream fileAluno;
+        std::fstream fileTurma;
+        std::fstream fileDisc;
         openFile(fileAluno, "alunos.dat");
         openFile(fileTurma, "turmas.dat");
+        openFile(fileDisc, "disciplinas.dat");
         
-        Turma turma;
-        Aluno aluno;
-        int idAluno, idTurma;
-
-        ConfigEntradaTexto configAluno;
-        configAluno.titulo = "Matricular Aluno em Turma";
-        configAluno.label = "ID do Aluno: ";
-        configAluno.tipo_entrada = TIPO_NUMERO;
-        saida_entrada_texto resultAluno = interface_para_entrada_texto(configAluno);
-        if (!resultAluno.confirmado) {
-            fileTurma.close();
+        // ===== SELECIONAR ALUNO =====
+        int total_alunos = listar_alunos_para_matricula(dados_alunos);
+        
+        if (total_alunos == 0) {
+            mostrar_caixa_informacao("INFO", "Nenhum aluno ativo disponivel.");
             fileAluno.close();
+            fileTurma.close();
+            fileDisc.close();
             return;
         }
         
-        idAluno = stoi(resultAluno.valor);
-        aluno = buscaAluno(fileAluno, idAluno);
+        string titulos_alunos[4] = {"ID", "Nome", "Email", "Status"};
+        const string* dados_ptr_alunos[100];
+        for(int i = 0; i < total_alunos; i++) dados_ptr_alunos[i] = dados_alunos[i];
         
+        ConfigTabela configTab_alunos;
+        configTab_alunos.titulo = "Selecionar Aluno para Matricula";
+        saida_tabela aluno_selecionado = interface_para_tabela(total_alunos, 4, dados_ptr_alunos, titulos_alunos, 0, configTab_alunos);
+        
+        if (aluno_selecionado.indice_linha == -1) {
+            fileAluno.close();
+            fileTurma.close();
+            fileDisc.close();
+            return; // Cancelado
+        }
+        
+        int idAluno = stoi(dados_alunos[aluno_selecionado.indice_linha][0]);
+        
+        // ===== VERIFICAR ALUNO =====
+        Aluno aluno = buscaAluno(fileAluno, idAluno);
         if (aluno.base.id != idAluno) {
             mostrar_caixa_informacao("ERRO", "Aluno nao encontrado ou inativo.");
-            fileTurma.close();
             fileAluno.close();
-            return;
-        }
-
-        ConfigEntradaTexto configTurma;
-        configTurma.titulo = "Matricular Aluno em Turma";
-        configTurma.label = "ID da Turma: ";
-        configTurma.tipo_entrada = TIPO_NUMERO;
-        saida_entrada_texto resultTurma = interface_para_entrada_texto(configTurma);
-        if (!resultTurma.confirmado) {
             fileTurma.close();
-            fileAluno.close();
+            fileDisc.close();
             return;
         }
         
-        idTurma = stoi(resultTurma.valor);
+        // ===== SELECIONAR TURMA =====
+        int total_turmas = listar_turmas_para_matricula(dados_turmas);
+        
+        if (total_turmas == 0) {
+            mostrar_caixa_informacao("INFO", "Nenhuma turma disponivel com vagas.");
+            fileAluno.close();
+            fileTurma.close();
+            fileDisc.close();
+            return;
+        }
+        
+        string titulos_turmas[5] = {"ID Turma", "Disciplina", "Prof. ID", "Alunos", "Status"};
+        const string* dados_ptr_turmas[100];
+        for(int i = 0; i < total_turmas; i++) dados_ptr_turmas[i] = dados_turmas[i];
+        
+        ConfigTabela configTab_turmas;
+        configTab_turmas.titulo = "Selecionar Turma para Matricula";
+        saida_tabela turma_selecionada = interface_para_tabela(total_turmas, 5, dados_ptr_turmas, titulos_turmas, 0, configTab_turmas);
+        
+        if (turma_selecionada.indice_linha == -1) {
+            fileAluno.close();
+            fileTurma.close();
+            fileDisc.close();
+            return; // Cancelado
+        }
+        
+        int idTurma = stoi(dados_turmas[turma_selecionada.indice_linha][0]);
+        
+        // ===== VERIFICAR TURMA E MATRICULAR =====
+        Turma turma;
         fileTurma.seekg((idTurma - 1) * sizeof(Turma));
         fileTurma.read((char*)&turma, sizeof(Turma));
-
+        
         if (turma.id != idTurma || !turma.ativo) {
             mostrar_caixa_informacao("ERRO", "Turma invalida ou inativa.");
-            fileTurma.close();
             fileAluno.close();
+            fileTurma.close();
+            fileDisc.close();
             return;
         }
-
+        
         if (turma.qtdAlunos >= MAX_ALUNOS) {
             mostrar_caixa_informacao("ERRO", "Turma cheia.");
-            fileTurma.close();
             fileAluno.close();
+            fileTurma.close();
+            fileDisc.close();
             return;
         }
-
+        
+        // Verificar se já está matriculado
         for (int i = 0; i < MAX_ALUNOS; i++) {
-            if (turma.alunos[i] == aluno.base.id) {
+            if (turma.alunos[i].base.id == aluno.base.id) {
                 mostrar_caixa_informacao("ERRO", "Aluno ja matriculado nesta turma.");
-                fileTurma.close();
                 fileAluno.close();
+                fileTurma.close();
+                fileDisc.close();
                 return;
             }
         }
         
+        // Encontrar vaga
         int index = -1;
         for (int i = 0; i < MAX_ALUNOS; i++) {
-            if (turma.alunos[i] == 0) {
+            if (turma.alunos[i].base.id == 0) {
                 index = i;
                 break;
             }
         }
-
+        
         if (index == -1) {
             mostrar_caixa_informacao("ERRO", "Nao foi possivel encontrar vaga.");
-            fileTurma.close();
             fileAluno.close();
+            fileTurma.close();
+            fileDisc.close();
             return;
         }
-
-        turma.alunos[index] = aluno.base.id;
+        
+        // Matricular aluno
+        turma.alunos[index] = aluno;
         turma.qtdAlunos++;
-
+        
         fileTurma.seekp((turma.id - 1) * sizeof(Turma));
         fileTurma.write((char*)&turma, sizeof(Turma));
-
-        fileTurma.close();
+        
         fileAluno.close();
+        fileTurma.close();
+        fileDisc.close();
         
         mostrar_caixa_informacao("SUCESSO", "Aluno matriculado com sucesso na turma!");
-    }
-
-    // ----- MENU DE PRODUTOS (LANCHONETE) -----
-
-    void cadastrarProdutos(){
-        constexpr int Quantidades_opcoes = 6;
-        bool continuar = true;
-
-        while (continuar) {
-            string opcoes[Quantidades_opcoes] = {
-                "Cadastrar Produto",
-                "Ativar Produto",
-                "Inativar Produto",
-                "Editar Produto",
-                "Listar Produtos",
-                "Voltar"
-            };
-            
-            ConfigMenu config;
-            config.titulo = "Gerenciar Produtos da Lanchonete";
-            config.descricao = "Selecione uma opcao para gerenciar os produtos.";
-            saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
-            
-            std::fstream file;
-            openFile(file, "lanchonete.dat");
-            Produto produto_;
-            
-            switch (resultado.indice_da_opcao) {
-                case 0: { // Cadastrar Produto
-                    ConfigEntradaTexto configNome;
-                    configNome.titulo = "Cadastrar Produto";
-                    configNome.label = "Nome do Produto: ";
-                    saida_entrada_texto resultNome = interface_para_entrada_texto(configNome);
-                    if (!resultNome.confirmado) break;
-                    
-                    ConfigEntradaTexto configPreco;
-                    configPreco.titulo = "Cadastrar Produto";
-                    configPreco.label = "Preco (R$): ";
-                    configPreco.tipo_entrada = TIPO_NUMERO;
-                    saida_entrada_texto resultPreco = interface_para_entrada_texto(configPreco);
-                    if (!resultPreco.confirmado) break;
-                    
-                    ConfigEntradaTexto configEstoque;
-                    configEstoque.titulo = "Cadastrar Produto";
-                    configEstoque.label = "Quantidade em Estoque: ";
-                    configEstoque.tipo_entrada = TIPO_NUMERO;
-                    saida_entrada_texto resultEstoque = interface_para_entrada_texto(configEstoque);
-                    if (!resultEstoque.confirmado) break;
-                    
-                    char nome[50];
-                    strncpy(nome, resultNome.valor.c_str(), 49);
-                    nome[49] = '\0';
-                    double preco = stod(resultPreco.valor);
-                    int estoque = stoi(resultEstoque.valor);
-                    
-                    strncpy(produto_.nome, nome, 49);
-                    produto_.nome[49] = '\0';
-                    produto_.preco = preco;
-                    produto_.estoque = estoque;
-                    produto_.ativo = 1;
-                    
-                    file.seekp(0, std::ios::end);
-                    produto_.id = gerarNovoId(file, sizeof(Produto));
-                    file.write((char*)&produto_, sizeof(Produto));
-                    file.clear();
-                    
-                    mostrar_caixa_informacao("SUCESSO", "Produto cadastrado com sucesso!\nID: " + to_string(produto_.id));
-                    break;
-                }
-                
-                case 1: { // Ativar Produto
-                    ConfigEntradaTexto configId;
-                    configId.titulo = "Ativar Produto";
-                    configId.label = "ID do Produto: ";
-                    configId.tipo_entrada = TIPO_NUMERO;
-                    saida_entrada_texto resultId = interface_para_entrada_texto(configId);
-                    if (!resultId.confirmado) break;
-                    
-                    int idProduto = stoi(resultId.valor);
-                    produto_ = buscaProduto(file, idProduto);
-                    
-                    if (produto_.id == 0) {
-                        mostrar_caixa_informacao("ERRO", "Produto nao encontrado!");
-                        break;
-                    }
-                    
-                    if (produto_.ativo == 1) {
-                        mostrar_caixa_informacao("INFO", "Produto ja esta ativo!");
-                    } else {
-                        ConfigBotoes configBotoes;
-                        configBotoes.titulo = "Ativar Produto";
-                        configBotoes.descricao = "ID: " + to_string(produto_.id) + " | Nome: " + string(produto_.nome);
-                        configBotoes.botoes[0].label = "Ativar";
-                        configBotoes.botoes[0].tecla = 'A';
-                        configBotoes.botoes[0].valor_retorno = 1;
-                        configBotoes.botoes[1].label = "Cancelar";
-                        configBotoes.botoes[1].tecla = 'C';
-                        configBotoes.botoes[1].valor_retorno = 0;
-                        configBotoes.numero_botoes = 2;
-                        saida_botoes acao = interface_para_botoes(configBotoes);
-                        
-                        if(acao.confirmado && acao.valor_retorno == 1) {
-                            produto_.ativo = 1;
-                            file.seekp((idProduto - 1) * sizeof(Produto));
-                            file.write((char*)&produto_, sizeof(Produto));
-                            file.clear();
-                            mostrar_caixa_informacao("SUCESSO", "Produto " + string(produto_.nome) + " ativado com sucesso!");
-                        }
-                    }
-                    break;
-                }
-                
-                case 2: { // Inativar Produto
-                    ConfigEntradaTexto configId;
-                    configId.titulo = "Inativar Produto";
-                    configId.label = "ID do Produto: ";
-                    configId.tipo_entrada = TIPO_NUMERO;
-                    saida_entrada_texto resultId = interface_para_entrada_texto(configId);
-                    if (!resultId.confirmado) break;
-                    
-                    int idProduto = stoi(resultId.valor);
-                    produto_ = buscaProduto(file, idProduto);
-                    
-                    if (produto_.id == 0) {
-                        mostrar_caixa_informacao("ERRO", "Produto nao encontrado!");
-                        break;
-                    }
-                    
-                    if (produto_.ativo == 0) {
-                        mostrar_caixa_informacao("INFO", "Produto ja esta inativo!");
-                    } else {
-                        ConfigBotoes configBotoes;
-                        configBotoes.titulo = "Inativar Produto";
-                        configBotoes.descricao = "ID: " + to_string(produto_.id) + " | Nome: " + string(produto_.nome);
-                        configBotoes.botoes[0].label = "Inativar";
-                        configBotoes.botoes[0].tecla = 'I';
-                        configBotoes.botoes[0].valor_retorno = 1;
-                        configBotoes.botoes[1].label = "Cancelar";
-                        configBotoes.botoes[1].tecla = 'C';
-                        configBotoes.botoes[1].valor_retorno = 0;
-                        configBotoes.numero_botoes = 2;
-                        saida_botoes acao = interface_para_botoes(configBotoes);
-                        
-                        if(acao.confirmado && acao.valor_retorno == 1) {
-                            produto_.ativo = 0;
-                            file.seekp((idProduto - 1) * sizeof(Produto));
-                            file.write((char*)&produto_, sizeof(Produto));
-                            file.clear();
-                            mostrar_caixa_informacao("SUCESSO", "Produto " + string(produto_.nome) + " inativado com sucesso!");
-                        }
-                    }
-                    break;
-                }
-                
-                case 3: { // Editar Produto
-                    ConfigEntradaTexto configId;
-                    configId.titulo = "Editar Produto";
-                    configId.label = "ID do Produto: ";
-                    configId.tipo_entrada = TIPO_NUMERO;
-                    saida_entrada_texto resultId = interface_para_entrada_texto(configId);
-                    if (!resultId.confirmado) break;
-                    
-                    int idProduto = stoi(resultId.valor);
-                    produto_ = buscaProduto(file, idProduto);
-                    
-                    if (produto_.id == 0 || produto_.ativo == 0) {
-                        mostrar_caixa_informacao("ERRO", "Produto nao encontrado ou inativo!");
-                        break;
-                    }
-                    
-                    ConfigBotoes configBotoes;
-                    configBotoes.titulo = "Editar Produto";
-                    configBotoes.descricao = "ID: " + to_string(produto_.id) + " | Nome: " + string(produto_.nome) + 
-                                           " | Preco: R$ " + to_string(produto_.preco);
-                    configBotoes.botoes[0].label = "Editar";
-                    configBotoes.botoes[0].tecla = 'E';
-                    configBotoes.botoes[0].valor_retorno = 1;
-                    configBotoes.botoes[1].label = "Cancelar";
-                    configBotoes.botoes[1].tecla = 'C';
-                    configBotoes.botoes[1].valor_retorno = 0;
-                    configBotoes.numero_botoes = 2;
-                    saida_botoes acao = interface_para_botoes(configBotoes);
-                    
-                    if(acao.confirmado && acao.valor_retorno == 1) {
-                        ConfigEntradaTexto configNovoNome;
-                        configNovoNome.titulo = "Editar Produto";
-                        configNovoNome.label = "Novo nome: ";
-                        saida_entrada_texto resultNovoNome = interface_para_entrada_texto(configNovoNome);
-                        if (!resultNovoNome.confirmado) break;
-                        
-                        ConfigEntradaTexto configNovoPreco;
-                        configNovoPreco.titulo = "Editar Produto";
-                        configNovoPreco.label = "Novo preco (R$): ";
-                        configNovoPreco.tipo_entrada = TIPO_NUMERO;
-                        saida_entrada_texto resultNovoPreco = interface_para_entrada_texto(configNovoPreco);
-                        if (!resultNovoPreco.confirmado) break;
-                        
-                        ConfigEntradaTexto configNovoEstoque;
-                        configNovoEstoque.titulo = "Editar Produto";
-                        configNovoEstoque.label = "Novo estoque: ";
-                        configNovoEstoque.tipo_entrada = TIPO_NUMERO;
-                        saida_entrada_texto resultNovoEstoque = interface_para_entrada_texto(configNovoEstoque);
-                        if (!resultNovoEstoque.confirmado) break;
-                        
-                        char nome[50];
-                        strncpy(nome, resultNovoNome.valor.c_str(), 49);
-                        nome[49] = '\0';
-                        
-                        strncpy(produto_.nome, nome, 49);
-                        produto_.nome[49] = '\0';
-                        produto_.preco = stod(resultNovoPreco.valor);
-                        produto_.estoque = stoi(resultNovoEstoque.valor);
-                        
-                        file.seekp((idProduto - 1) * sizeof(Produto));
-                        file.write((char*)&produto_, sizeof(Produto));
-                        file.clear();
-                        
-                        mostrar_caixa_informacao("SUCESSO", "Produto " + string(produto_.nome) + " editado com sucesso!");
-                    }
-                    break;
-                }
-                
-                case 4: { // Listar Produtos
-                    string dados[100][5];
-                    int contador = 0;
-                    
-                    file.seekg(0);
-                    while (file.read((char*)&produto_, sizeof(Produto)) && contador < 100) {
-                        if (produto_.id != 0 && produto_.ativo) {
-                            dados[contador][0] = to_string(produto_.id);
-                            dados[contador][1] = produto_.nome;
-                            dados[contador][2] = to_string(produto_.estoque);
-                            dados[contador][3] = "R$ " + to_string(produto_.preco);
-                            dados[contador][4] = produto_.ativo ? "Ativo" : "Inativo";
-                            contador++;
-                        }
-                    }
-                    file.clear();
-                    
-                    if (contador == 0) {
-                        mostrar_caixa_informacao("INFO", "Nenhum produto cadastrado!");
-                        break;
-                    }
-                    
-                    string titulos[5] = {"ID", "Nome", "Estoque", "Preco", "Status"};
-                    const string* dados_ptr[100];
-                    for(int i = 0; i < contador; i++) dados_ptr[i] = dados[i];
-                    
-                    ConfigTabela configTab;
-                    configTab.titulo = "Lista de Produtos";
-                    saida_tabela selecionada = interface_para_tabela(contador, 5, dados_ptr, titulos, 0, configTab);
-                    
-                    if (selecionada.indice_linha != -1) {
-                        mostrar_caixa_informacao("INFO", "Produto selecionado: " + dados[selecionada.indice_linha][1] + 
-                                              " | Estoque: " + dados[selecionada.indice_linha][2]);
-                    }
-                    break;
-                }
-                
-                case 5: { // Voltar
-                    continuar = false;
-                    break;
-                }
-            }
-            
-            file.close();
-        }
     }
 
     // ----- MENU DE INSTRUMENTOS -----
 
     void menuCadastroInstrumentos() {
-        constexpr int Quantidades_opcoes = 6;
+        constexpr int Quantidades_opcoes = 5;
         bool continuar = true;
+        int filtro_selecionado = 2; // 0=pendente, 1=autorizado, 2=ambos
 
         while (continuar) {
+            string titulo_filtro = (filtro_selecionado == 0 ? "Pendentes" : (filtro_selecionado == 1 ? "Autorizados" : "Todos"));
+            
             string opcoes[Quantidades_opcoes] = {
                 "Cadastrar Instrumento",
-                "Autorizar Instrumento",
-                "Inativar Instrumento",
+                "Filtros de pesquisa",
                 "Listar Instrumentos",
+                "Buscar por ID",
                 "Voltar"
             };
             
             ConfigMenu config;
-            config.titulo = "Gerenciar Instrumentos";   
+            config.titulo = "Gerenciar Instrumentos (" + titulo_filtro + ")";
             config.descricao = "Selecione uma opcao para gerenciar os instrumentos.";
             saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
             
@@ -1845,7 +1947,7 @@ void menuCadastroCursos(){
                     instrumento_.nome[29] = '\0';
                     instrumento_.estoque = estoque;
                     instrumento_.ativo = 1;
-                    instrumento_.autorizado = 0; // Inativo por padrão até autorização
+                    instrumento_.autorizado = 0; // Pendente por padrão
                     instrumento_.disponivel = 1;
                     
                     file.seekp(0, std::ios::end);
@@ -1857,141 +1959,64 @@ void menuCadastroCursos(){
                     break;
                 }
                 
-                case 1: { // Autorizar Instrumento - COM TABELA INTERATIVA
+                case 1: { // Filtros de pesquisa
+                    constexpr int qtdEstados = 3;
+                    string estados[qtdEstados] = {"Pendente", "Autorizado", "Ambos"};
+                    
+                    ConfigMenu configFiltro;
+                    configFiltro.titulo = "Filtros de Pesquisa";
+                    configFiltro.descricao = "Selecione o filtro para gerenciar instrumentos.";
+                    saida_menu resultadofiltro = interface_para_menu(qtdEstados, estados, configFiltro);
+                    
+                    if (resultadofiltro.indice_da_opcao == 0) filtro_selecionado = 0;
+                    else if (resultadofiltro.indice_da_opcao == 1) filtro_selecionado = 1;
+                    else if (resultadofiltro.indice_da_opcao == 2) filtro_selecionado = 2;
+                    break;
+                }
+                
+                case 2: { // Listar Instrumentos
                     string dados[100][6];
-                    int total = listar_instrumentos_especificos(0, dados); // 0 = Não autorizados
+                    int total = listar_instrumentos_especificos(filtro_selecionado, dados);
                     
                     if (total == 0) {
-                        mostrar_caixa_informacao("INFO", "Nenhum instrumento pendente para autorizar.");
+                        mostrar_caixa_informacao("INFO", "Nenhum instrumento encontrado com os filtros selecionados.");
                         break;
                     }
                     
                     string titulos[6] = {"ID", "Nome", "Estoque", "Autorizado", "Status", "Disp"};
                     const string* dados_ptr[100];
                     for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
-                    
-                    ConfigTabela configTab;
-                    configTab.titulo = "Instrumentos para Autorizar (Pendentes)";
-                    saida_tabela instrumento_selecionado = interface_para_tabela(total, 6, dados_ptr, titulos, 0, configTab);
-                    
-                    if (instrumento_selecionado.indice_linha != -1) {
-                        int idInst = stoi(dados[instrumento_selecionado.indice_linha][0]);
-                        file.clear();
-                        file.seekg((idInst - 1) * sizeof(Instrumento));
-                        file.read((char*)&instrumento_, sizeof(Instrumento));
-                        
-                        if (instrumento_.id != 0 && instrumento_.autorizado == 0) {
-                            ConfigBotoes configBotoes;
-                            configBotoes.titulo = "Autorizar Instrumento";
-                            configBotoes.descricao = "ID: " + dados[instrumento_selecionado.indice_linha][0] + 
-                                                    " | Nome: " + dados[instrumento_selecionado.indice_linha][1] + 
-                                                    " | Estoque: " + dados[instrumento_selecionado.indice_linha][2];
-                            configBotoes.botoes[0].label = "Autorizar";
-                            configBotoes.botoes[0].tecla = 'A';
-                            configBotoes.botoes[0].valor_retorno = 1;
-                            configBotoes.botoes[1].label = "Cancelar";
-                            configBotoes.botoes[1].tecla = 'C';
-                            configBotoes.botoes[1].valor_retorno = 0;
-                            configBotoes.numero_botoes = 2;
-                            saida_botoes acao = interface_para_botoes(configBotoes);
-                            
-                            if(acao.confirmado && acao.valor_retorno == 1) {
-                                instrumento_.autorizado = 1;
-                                file.seekp((idInst - 1) * sizeof(Instrumento));
-                                file.write((char*)&instrumento_, sizeof(Instrumento));
-                                file.clear();
-                                mostrar_caixa_informacao("SUCESSO", "Instrumento " + string(instrumento_.nome) + " autorizado com sucesso!");
-                            }
-                        }
-                    }
-                    break;
-                }
-                
-                case 2: { // Inativar Instrumento - COM TABELA INTERATIVA
-                    string dados[100][6];
-                    int total = listar_instrumentos_especificos(1, dados); // 1 = Autorizados
-                    
-                    if (total == 0) {
-                        mostrar_caixa_informacao("INFO", "Nenhum instrumento autorizado para inativar.");
-                        break;
-                    }
-                    
-                    string titulos[6] = {"ID", "Nome", "Estoque", "Autorizado", "Status", "Disp"};
-                    const string* dados_ptr[100];
-                    for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
-                    
-                    ConfigTabela configTab;
-                    configTab.titulo = "Instrumentos para Inativar (Autorizados)";
-                    saida_tabela instrumento_selecionado = interface_para_tabela(total, 6, dados_ptr, titulos, 0, configTab);
-                    
-                    if (instrumento_selecionado.indice_linha != -1) {
-                        int idInst = stoi(dados[instrumento_selecionado.indice_linha][0]);
-                        file.clear();
-                        file.seekg((idInst - 1) * sizeof(Instrumento));
-                        file.read((char*)&instrumento_, sizeof(Instrumento));
-                        
-                        if (instrumento_.id != 0 && instrumento_.ativo == 1) {
-                            ConfigBotoes configBotoes;
-                            configBotoes.titulo = "Inativar Instrumento";
-                            configBotoes.descricao = "ID: " + dados[instrumento_selecionado.indice_linha][0] + 
-                                                    " | Nome: " + dados[instrumento_selecionado.indice_linha][1] + 
-                                                    " | Status: Ativo";
-                            configBotoes.botoes[0].label = "Inativar";
-                            configBotoes.botoes[0].tecla = 'I';
-                            configBotoes.botoes[0].valor_retorno = 1;
-                            configBotoes.botoes[1].label = "Cancelar";
-                            configBotoes.botoes[1].tecla = 'C';
-                            configBotoes.botoes[1].valor_retorno = 0;
-                            configBotoes.numero_botoes = 2;
-                            saida_botoes acao = interface_para_botoes(configBotoes);
-                            
-                            if(acao.confirmado && acao.valor_retorno == 1) {
-                                instrumento_.ativo = 0;
-                                file.seekp((idInst - 1) * sizeof(Instrumento));
-                                file.write((char*)&instrumento_, sizeof(Instrumento));
-                                file.clear();
-                                mostrar_caixa_informacao("SUCESSO", "Instrumento " + string(instrumento_.nome) + " inativado com sucesso!");
-                            }
-                        }
-                    }
-                    break;
-                }
-                
-                case 3: { // Listar Instrumentos
-                    string dados[100][6];
-                    int contador = 0;
-                    
-                    file.seekg(0);
-                    while (file.read((char*)&instrumento_, sizeof(Instrumento)) && contador < 100) {
-                        if (instrumento_.id != 0) {
-                            dados[contador][0] = to_string(instrumento_.id);
-                            dados[contador][1] = instrumento_.nome;
-                            dados[contador][2] = to_string(instrumento_.estoque);
-                            dados[contador][3] = instrumento_.autorizado ? "Autorizado" : "Pendente";
-                            dados[contador][4] = instrumento_.ativo ? "Ativo" : "Inativo";
-                            dados[contador][5] = instrumento_.disponivel ? "Disp" : "Indisp";
-                            contador++;
-                        }
-                    }
-                    file.clear();
-                    
-                    if (contador == 0) {
-                        mostrar_caixa_informacao("INFO", "Nenhum instrumento cadastrado!");
-                        break;
-                    }
-                    
-                    string titulos[6] = {"ID", "Nome", "Estoque", "Autorizado", "Status", "Disp"};
-                    const string* dados_ptr[100];
-                    for(int i = 0; i < contador; i++) dados_ptr[i] = dados[i];
                     
                     ConfigTabela configTab;
                     configTab.titulo = "Lista de Instrumentos";
-                    saida_tabela selecionada = interface_para_tabela(contador, 6, dados_ptr, titulos, 0, configTab);
+                    saida_tabela instrumento_selecionado = interface_para_tabela(total, 6, dados_ptr, titulos, 0, configTab);
                     
-                    if (selecionada.indice_linha != -1) {
-                        mostrar_caixa_informacao("INFO", "Instrumento selecionado: " + dados[selecionada.indice_linha][1] + 
-                                              " | Estoque: " + dados[selecionada.indice_linha][2]);
+                    if (instrumento_selecionado.indice_linha != -1) {
+                        int id = stoi(dados[instrumento_selecionado.indice_linha][0]);
+                        gerenciar_instrumento_menu(id);
                     }
+                    break;
+                }
+                
+                case 3: { // Buscar por ID
+                    ConfigEntradaTexto configBusca;
+                    configBusca.titulo = "Buscar Instrumento";
+                    configBusca.label = "Digite o ID do instrumento: ";
+                    configBusca.tipo_entrada = TIPO_NUMERO;
+                    configBusca.descricao = "Digite o número de identificação do instrumento que deseja buscar.";
+                    
+                    saida_entrada_texto resultBusca = interface_para_entrada_texto(configBusca);
+                    
+                    if (!resultBusca.confirmado) break;
+                    
+                    int idBusca = stoi(resultBusca.valor);
+                    
+                    if (idBusca <= 0) {
+                        mostrar_caixa_informacao("ERRO", "ID invalido! Digite um numero positivo.");
+                        break;
+                    }
+                    
+                    gerenciar_instrumento_menu(idBusca);
                     break;
                 }
                 
@@ -2300,80 +2325,219 @@ void menuCadastroCursos(){
 // Ponto de entrada para o módulo de administração
 // =====================================================================
 
+// ----- MENU DE GESTÃO ACADÊMICA -----
+namespace mod_ADM {
+    void menuGestaoAcademica() {
+        constexpr int Quantidades_opcoes = 5;
+        bool continuar = true;
+
+        while (continuar) {
+            string opcoes[Quantidades_opcoes] = {
+                "Consultar Pendencias",
+                "Gerenciar Disciplinas",
+                "Gerenciar Turmas",
+                "Gerenciar Usuarios",
+                "Voltar"
+            };
+            
+            ConfigMenu config;
+            config.titulo = "Gestao Academica";
+            config.descricao = "Selecione uma opcao para gerenciar aspectos academicos.";
+            saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
+            
+            switch (resultado.indice_da_opcao) {
+                case 0:
+                    menuConsultarPendencias();
+                    break;
+                case 1:
+                    mod_ADM::menuCadastroCursos();
+                    break;
+                case 2:
+                    mod_ADM::cadastrarTurma();
+                    break;
+                case 3:
+                    mod_ADM::menuGerenciarUsuarios();
+                    break;
+                case 4:
+                    continuar = false;
+                    break;
+            }
+        }
+    }
+
+    void menuConsultarPendencias() {
+        constexpr int Quantidades_opcoes = 2;
+        bool continuar = true;
+
+        while (continuar) {
+            string opcoes[Quantidades_opcoes] = {
+                "Pendencias de Instrumentos",
+                "Voltar"
+            };
+            
+            ConfigMenu config;
+            config.titulo = "Consultar Pendencias";
+            config.descricao = "Selecione o tipo de pendencia que deseja consultar.";
+            saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
+            
+            switch (resultado.indice_da_opcao) {
+                case 0:
+                    consultarPendenciasInstrumentos();
+                    break;
+                case 1:
+                    continuar = false;
+                    break;
+            }
+        }
+    }
+
+    // ----- MENU DE LANCHONETE -----
+    void menuGestaoLanchonete() {
+        constexpr int Quantidades_opcoes = 3;
+        bool continuar = true;
+
+        while (continuar) {
+            string opcoes[Quantidades_opcoes] = {
+                "Consultar Estoque",
+                "Gerenciar Produtos",
+                "Voltar"
+            };
+            
+            ConfigMenu config;
+            config.titulo = "Gestao Lanchonete";
+            config.descricao = "Selecione uma opcao para gerenciar a lanchonete.";
+            saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
+            
+            switch (resultado.indice_da_opcao) {
+                case 0:
+                    Lanchonete::consultarEstoque();
+                    break;
+                case 1:
+                    Lanchonete::menuCadastroProdutos();
+                    break;
+                case 2:
+                    continuar = false;
+                    break;
+            }
+        }
+    }
+
+    // ----- MENU DE RELATÓRIOS -----
+    void menuRelatorios() {
+        constexpr int Quantidades_opcoes = 4;
+        bool continuar = true;
+
+        while (continuar) {
+            string opcoes[Quantidades_opcoes] = {
+                "Relatorio Financeiro",
+                "Relatorio Patrimonial",
+                "Relatorios Academicos",
+                "Voltar"
+            };
+            
+            ConfigMenu config;
+            config.titulo = "Relatorios";
+            config.descricao = "Selecione um relatorio para visualizar.";
+            saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
+            
+            switch (resultado.indice_da_opcao) {
+                case 0:
+                    mod_ADM::gerarRelatorioFinanceiro();
+                    break;
+                case 1:
+                    mod_ADM::gerarRelatorioPatrimonial();
+                    break;
+                case 2:
+                    mod_ADM::consultarRelatoriosAcademicos();
+                    break;
+                case 3:
+                    continuar = false;
+                    break;
+            }
+        }
+    }
+
+    // ----- MENU DE BACKUP -----
+    void menuBackup() {
+        constexpr int Quantidades_opcoes = 3;
+        bool continuar = true;
+
+        while (continuar) {
+            string opcoes[Quantidades_opcoes] = {
+                "Realizar Backup",
+                "Restaurar Backup",
+                "Voltar"
+            };
+            
+            ConfigMenu config;
+            config.titulo = "Backup e Restauracao";
+            config.descricao = "Selecione uma opcao de backup para gerenciar.";
+            saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
+            
+            switch (resultado.indice_da_opcao) {
+                case 0:
+                    mod_ADM::realizarBackup();
+                    break;
+                case 1:
+                    mod_ADM::restaurarBackup();
+                    break;
+                case 2:
+                    continuar = false;
+                    break;
+            }
+        }
+    }
+}
+
 void abrir_menu_admin(Usuario* usuario) {
-    constexpr int qtdOpcoes = 14;
+    constexpr int qtdOpcoes = 7;
     string opcoes[qtdOpcoes] = {
-        "Ativar Creditos Pendentes",
-        "Cadastrar Cursos",
-        "Consultar Estoque",
-        "Consultar Pendencias",
+        "Gestao Academica",
         "Gerenciar Eventos",
         "Gerenciar Instrumentos",
-        "Gerenciar Produtos",
-        "Gerenciar Usuarios",
-        "Realizar Backup",
-        "** Relatorio Financeiro",
-        "** Relatorio Patrimonial",
-        "** Relatorios Academicos",
-        "Restaurar Backup",
+        "Gestao Lanchonete",
+        "Relatorios",
+        "Backup e Restauracao",
         "Logout"
     };
     
-
+    bool continuar = true;
     
-    ConfigMenu config;
-    config.titulo = "AREA DO ADMINISTRADOR";
-    config.descricao = "Bem-vindo(a), " + string(usuario->nome) + "!";
-    
-    saida_menu resultado = interface_para_menu(qtdOpcoes, opcoes, config);
-    
-    switch (resultado.indice_da_opcao) {
-        case 0: 
-            Lanchonete::ativarCreditosPendentes(); 
-            break;
-        case 1: 
-            mod_ADM::menuCadastroCursos(); 
-            break;
-        case 2: 
-            Lanchonete::consultarEstoque(); 
-            break;
-        case 3: 
-            consultarPendenciasInstrumentos(); 
-            break;
-        case 4: {
-            fstream file;
-            openFile(file, "eventos.dat");
-            mod_ADM::menuEventos(file);
-            file.close();
-            break;
+    while (continuar) {
+        ConfigMenu config;
+        config.titulo = "AREA DO ADMINISTRADOR";
+        config.descricao = "Bem-vindo(a), " + string(usuario->nome) + "!";
+        
+        saida_menu resultado = interface_para_menu(qtdOpcoes, opcoes, config);
+        
+        switch (resultado.indice_da_opcao) {
+            case 0:
+                mod_ADM::menuGestaoAcademica();
+                break;
+            case 1: {
+                fstream file;
+                openFile(file, "eventos.dat");
+                mod_ADM::menuEventos(file);
+                file.close();
+                break;
+            }
+            case 2:
+                mod_ADM::menuCadastroInstrumentos();
+                break;
+            case 3:
+                mod_ADM::menuGestaoLanchonete();
+                break;
+            case 4:
+                mod_ADM::menuRelatorios();
+                break;
+            case 5:
+                mod_ADM::menuBackup();
+                break;
+            case 6:
+                usuario->logado = false;
+                continuar = false;
+                break;
         }
-        case 5: 
-            mod_ADM::menuCadastroInstrumentos(); 
-            break;
-        case 6: 
-            mod_ADM::cadastrarProdutos(); 
-            break;
-        case 7: 
-            mod_ADM::menuGerenciarUsuarios(); 
-            break;
-        case 8: 
-            mod_ADM::realizarBackup(); 
-            break;
-        case 9: 
-            mod_ADM::gerarRelatorioFinanceiro(); 
-            break;
-        case 10: 
-            mod_ADM::gerarRelatorioPatrimonial(); 
-            break;
-        case 11: 
-            mod_ADM::consultarRelatoriosAcademicos(); 
-            break;
-        case 12: 
-            mod_ADM::restaurarBackup(); 
-            break;
-        case 13: 
-            usuario->logado = false; 
-            break;
     }
 }
 

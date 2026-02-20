@@ -160,7 +160,7 @@
 	<string>
 	<iostream>
 
-1771516831 source:d:\projects\prog2\escola-de-musica-benicasa\admin.cpp
+1771547771 source:d:\projects\prog2\escola-de-musica-benicasa\admin.cpp
 	<iostream>
 	<fstream>
 	<ctime>
@@ -173,7 +173,7 @@
 	"lanchonete.h"
 	"login_matricula.h"
 
-1771513420 d:\projects\prog2\escola-de-musica-benicasa\admin.h
+1771545049 d:\projects\prog2\escola-de-musica-benicasa\admin.h
 	<iostream>
 	<fstream>
 	<string>
@@ -182,7 +182,7 @@
 	<limits>
 	"headers.h"
 
-1771511596 d:\projects\prog2\escola-de-musica-benicasa\headers.h
+1771547514 d:\projects\prog2\escola-de-musica-benicasa\headers.h
 
 1771439104 source:d:\projects\prog2\escola-de-musica-benicasa\aluno.cpp
 	<iostream>
@@ -201,7 +201,7 @@
 
 1771439104 d:\projects\prog2\escola-de-musica-benicasa\instrumentos.h
 
-1771506232 source:d:\projects\prog2\escola-de-musica-benicasa\interface_grafica.cpp
+1771535701 source:d:\projects\prog2\escola-de-musica-benicasa\interface_grafica.cpp
 	<iostream>
 	<curses.h>
 	<algorithm>
@@ -225,7 +225,7 @@
 	"headers.h"
 	<fstream>
 
-1771460417 source:d:\projects\prog2\escola-de-musica-benicasa\main.cpp
+1771547974 source:d:\projects\prog2\escola-de-musica-benicasa\main.cpp
 	<iostream>
 	<string>
 	<iomanip>
@@ -243,17 +243,19 @@
 	"headers.h"
 	"interface_grafica.h"
 
-1771439104 d:\projects\prog2\escola-de-musica-benicasa\professor.h
-	<string>
+1771547513 d:\projects\prog2\escola-de-musica-benicasa\professor.h
+	<iostream>
+	"headers.h"
 
 1771439104 d:\projects\prog2\escola-de-musica-benicasa\eventos.h
 
-1771439104 source:d:\projects\prog2\escola-de-musica-benicasa\professor.cpp
+1771543134 source:d:\projects\prog2\escola-de-musica-benicasa\professor.cpp
 	"professor.h"
+	"login_matricula.h"
 	"headers.h"
 	<fstream>
-	<string>
 	<iostream>
+	<iomanip>
 
 1771511752 source:d:\projects\prog2\escola-de-musica-benicasa\login_matricula.cpp
 	<iostream>
