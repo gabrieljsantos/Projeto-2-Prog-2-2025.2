@@ -347,6 +347,18 @@ namespace Lanchonete {
         creditos[vaga].saldo = valor;
         creditos[vaga].realizado = false;
 
+        // DEBUG
+        cout << "\n===== DEBUG: SOLICITACAO DE CREDITOS =====\n";
+        cout << "ID Usuario: " << idUsuario << "\n";
+        cout << "Tipo Usuario: " << tipo_user << "\n";
+        cout << "Valor Solicitado: " << valor << "\n";
+        cout << "ID Operacao: " << creditos[vaga].id_opera << "\n";
+        cout << "Status: PENDENTE (realizado = false)\n";
+        cout << "==========================================\n";
+        cout << "\n[DEBUG] Pressione ENTER para continuar...";
+        limparBuffer();
+        cin.get();
+
         if (!escreverTodosCreditos(creditos)) {
             cout << "Erro ao salvar saldo!\n";
             delete[] creditos;
@@ -354,6 +366,9 @@ namespace Lanchonete {
         }
 
         cout << "Solicitação enviada!\n";
+        cout << "\n[DEBUG] Pressione ENTER para retornar...";
+        limparBuffer();
+        cin.get();
         delete[] creditos;
     }
 
@@ -411,6 +426,18 @@ namespace Lanchonete {
         if (resposta == 'S' || resposta == 's') {
             creditos[posicao].realizado = true;
 
+            // DEBUG
+            cout << "\n===== DEBUG: ATIVAR CREDITOS PENDENTES =====\n";
+            cout << "ID Operacao: " << creditos[posicao].id_opera << "\n";
+            cout << "ID Usuario: " << creditos[posicao].id_user << "\n";
+            cout << "Valor: " << creditos[posicao].saldo << "\n";
+            cout << "Status Anterior: PENDENTE\n";
+            cout << "Status Novo: ATIVADO (realizado = true)\n";
+            cout << "=============================================\n";
+            cout << "\n[DEBUG] Pressione ENTER para confirmar salvamento...";
+            limparBuffer();
+            cin.get();
+
             if (!escreverTodosCreditos(creditos)) {
                 cout << "Erro ao salvar!\n";
                 delete[] creditos;
@@ -418,11 +445,17 @@ namespace Lanchonete {
             }
 
             cout << "Crédito ativado!\n";
+            cout << "\n[DEBUG] Pressione ENTER para retornar...";
+            limparBuffer();
+            cin.get();
             delete[] creditos;
             return;
         }
 
         cout << "Operação cancelada!\n";
+        cout << "\n[DEBUG] Pressione ENTER para retornar...";
+        limparBuffer();
+        cin.get();
         delete[] creditos;
     }
 

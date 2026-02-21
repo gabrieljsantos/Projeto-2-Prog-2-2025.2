@@ -2,6 +2,7 @@
 #include "login_matricula.h"
 #include "headers.h"
 #include "interface_grafica.h"
+#include "lanchonete.h"
 #include <fstream>
 #include <iostream>
 #include <iomanip>
@@ -692,7 +693,7 @@ void abrir_menu_professor(Usuario* usuario) {
             case 5: ModuloProfessor::consultarTurma(usuario->id); break;
             case 6: ModuloProfessor::registrarFaltas(usuario->id); break;
             case 7: ModuloProfessor::consultarSaldoLanchonete(usuario->id); break;
-            case 8: break;
+            case 8: Lanchonete::solicitarCreditosUsuario(usuario->id, PROFESSOR); break;
             case 9:
                 usuario->logado = false;
                 emMenuProfessor = false;

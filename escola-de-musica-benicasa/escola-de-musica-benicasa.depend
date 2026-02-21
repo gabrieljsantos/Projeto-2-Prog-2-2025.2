@@ -208,7 +208,7 @@
 	"headers.h"
 	"login_matricula.h"
 
-1771632030 source:d:\projects\prog2\escola-de-musica-benicasa\interface_grafica.cpp
+1771636490 source:d:\projects\prog2\escola-de-musica-benicasa\interface_grafica.cpp
 	<iostream>
 	<curses.h>
 	<algorithm>
@@ -220,7 +220,7 @@
 1771635862 d:\projects\prog2\escola-de-musica-benicasa\interface_grafica.h
 	<string>
 
-1771623845 source:d:\projects\prog2\escola-de-musica-benicasa\lanchonete.cpp
+1771638562 source:d:\projects\prog2\escola-de-musica-benicasa\lanchonete.cpp
 	<iostream>
 	<fstream>
 	"lanchonete.h"
@@ -256,11 +256,12 @@
 
 1771604284 d:\projects\prog2\escola-de-musica-benicasa\eventos.h
 
-1771634796 source:d:\projects\prog2\escola-de-musica-benicasa\professor.cpp
+1771638143 source:d:\projects\prog2\escola-de-musica-benicasa\professor.cpp
 	"professor.h"
 	"login_matricula.h"
 	"headers.h"
 	"interface_grafica.h"
+	"lanchonete.h"
 	<fstream>
 	<iostream>
 	<iomanip>
