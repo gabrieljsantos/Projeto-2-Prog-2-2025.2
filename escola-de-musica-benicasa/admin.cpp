@@ -1219,39 +1219,195 @@ void menuCadastroCursos(){
 }
 
     void consultarRelatoriosAcademicos() {
-        std::fstream fileAlunos;
-        openFile(fileAlunos, "alunos.dat");
-        
-        Aluno aluno;
-        string dados[100][5];
-        int total = 0;
-        
-        fileAlunos.seekg(0);
-        while(fileAlunos.read((char*)&aluno, sizeof(Aluno)) && total < 100) {
-            if(aluno.base.ativo && aluno.base.categoria == ALUNO && aluno.base.id != 20260000) {
-                dados[total][0] = to_string(aluno.base.id);
-                dados[total][1] = aluno.base.nome;
-                dados[total][2] = aluno.base.email;
-                dados[total][3] = to_string(aluno.faltas);
-                dados[total][4] = aluno.base.ativo ? "Ativo" : "Inativo";
-                total++;
-            }
-        }
-        
-        fileAlunos.close();
-        
-        if(total == 0) {
-            mostrar_caixa_informacao("INFO", "Nenhum aluno encontrado no sistema.");
+        std::fstream fileTurmas;
+        std::fstream fileDisc;
+        std::fstream fileProf;
+
+        openFile(fileTurmas, "turmas.dat");
+        openFile(fileDisc, "disciplinas.dat");
+        openFile(fileProf, "professores.dat");
+
+        if (!fileTurmas.is_open() || !fileDisc.is_open() || !fileProf.is_open()) {
+            mostrar_caixa_informacao("ERRO", "Nao foi possivel abrir os arquivos necessarios.");
+            if (fileTurmas.is_open()) fileTurmas.close();
+            if (fileDisc.is_open()) fileDisc.close();
+            if (fileProf.is_open()) fileProf.close();
             return;
         }
+
+        Turma turma;
+        Disciplina disciplina;
+        Professor professor;
         
-        string titulos[5] = {"ID", "Nome", "Email", "Faltas", "Status"};
-        const string* dados_ptr[100];
-        for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
+        int totalTurmas = 0;
+        int totalAlunos = 0;
+        float somaMedias = 0.0;
+
+        // ===== CONTABILIZAR TOTAIS =====
+        fileTurmas.seekg(0, ios::beg);
+        memset(&turma, 0, sizeof(Turma));
+
+        while (fileTurmas.read((char*)&turma, sizeof(Turma))) {
+            if (turma.ativo && turma.id != 0) {
+                totalTurmas++;
+                totalAlunos += turma.qtdAlunos;
+                for(int i = 0; i < turma.qtdAlunos; i++) {
+                    if(turma.alunos[i].base.id > 0) {
+                        somaMedias += turma.alunos[i].media;
+                    }
+                }
+            }
+            memset(&turma, 0, sizeof(Turma));
+        }
+        fileTurmas.clear();
+
+        if (totalTurmas == 0) {
+            mostrar_caixa_informacao("INFO", "Nenhuma turma encontrada no sistema.");
+            fileTurmas.close();
+            fileDisc.close();
+            fileProf.close();
+            return;
+        }
+
+        float mediaGeral = (totalAlunos > 0) ? (somaMedias / totalAlunos) : 0.0;
+
+        // ===== MONTAR TEXTO CORRIDO =====
+        string texto = "";
+
+        // ── RESUMO ACADEMICO GERAL ─────────────────
+        texto += "========== RESUMO ACADEMICO GERAL ==========\n";
+        texto += "\n";
+        texto += "Total de Turmas Ativas: " + to_string(totalTurmas) + "\n";
+        texto += "Total de Alunos Matriculados: " + to_string(totalAlunos) + "\n";
         
-        ConfigTabela configTab;
-        configTab.titulo = "Relatorio Academico - Total de Alunos: " + to_string(total);
-        interface_para_tabela(total, 5, dados_ptr, titulos, 0, configTab);
+        {
+            char buf[32];
+            sprintf(buf, "%.2f", mediaGeral);
+            texto += "Media Geral do Sistema: " + string(buf) + "\n";
+        }
+        texto += "\n\n";
+
+        // ── DETALHES DE CADA TURMA ────────────────
+        fileTurmas.seekg(0, ios::beg);
+        memset(&turma, 0, sizeof(Turma));
+        int numTurma = 0;
+
+        while (fileTurmas.read((char*)&turma, sizeof(Turma))) {
+            if (turma.ativo && turma.id != 0) {
+                numTurma++;
+                
+                // Buscar informações da disciplina
+                string nomeDisciplina = "Nao atribuida";
+                if(turma.idDisciplina > 0) {
+                    fileDisc.clear();
+                    fileDisc.seekg((turma.idDisciplina - 1) * sizeof(Disciplina));
+                    fileDisc.read((char*)&disciplina, sizeof(Disciplina));
+                    if(disciplina.id == turma.idDisciplina) {
+                        nomeDisciplina = disciplina.nome;
+                    }
+                }
+
+                // Buscar informações do professor
+                string nomeProfessor = "Nao atribuido";
+                if(turma.idProfessor > 0) {
+                    fileProf.clear();
+                    fileProf.seekg((turma.idProfessor - 20260001) * sizeof(Professor));
+                    fileProf.read((char*)&professor, sizeof(Professor));
+                    if(professor.base.id == turma.idProfessor) {
+                        nomeProfessor = professor.base.nome;
+                    }
+                }
+
+                // Calcular média da turma
+                float somaMediasTurma = 0.0;
+                int alunosComNota = 0;
+                for(int i = 0; i < turma.qtdAlunos; i++) {
+                    if(turma.alunos[i].base.id > 0) {
+                        somaMediasTurma += turma.alunos[i].media;
+                        alunosComNota++;
+                    }
+                }
+                float mediaTurma = (alunosComNota > 0) ? (somaMediasTurma / alunosComNota) : 0.0;
+
+                // Cabeçalho da turma
+                texto += "======================================\n";
+                texto += "TURMA #" + to_string(numTurma) + " | ID: " + to_string(turma.id) + " | " + string(turma.nome) + "\n";
+                texto += "======================================\n";
+                texto += "Disciplina: " + nomeDisciplina + "\n";
+                texto += "Professor: " + nomeProfessor + "\n";
+                texto += "\n";
+
+                // Estatísticas da turma
+                texto += "--- ESTATISTICAS DA TURMA ---\n";
+                texto += "Total de Alunos: " + to_string(turma.qtdAlunos) + "\n";
+                
+                {
+                    char buf[32];
+                    sprintf(buf, "%.2f", mediaTurma);
+                    texto += "Media da Turma: " + string(buf) + "\n";
+                }
+                
+                texto += "Total de Avaliacoes: " + to_string(turma.qtdAvaliacoes) + "\n";
+                texto += "Faltas acumuladas: ";
+                
+                int totalFaltas = 0;
+                for(int i = 0; i < turma.qtdAlunos; i++) {
+                    if(turma.alunos[i].base.id > 0) {
+                        totalFaltas += turma.alunos[i].faltas;
+                    }
+                }
+                texto += to_string(totalFaltas) + "\n";
+                texto += "\n";
+
+                // Lista de alunos com notas
+                if(turma.qtdAlunos > 0) {
+                    texto += "--- ALUNOS MATRICULADOS ---\n";
+                    int cont = 0;
+                    for(int i = 0; i < MAX_ALUNOS && cont < turma.qtdAlunos; i++) {
+                        if(turma.alunos[i].base.id > 0) {
+                            cont++;
+                            texto += "[" + to_string(cont) + "] " + string(turma.alunos[i].base.nome) + "\n";
+                            texto += "  ID: " + to_string(turma.alunos[i].base.id);
+                            
+                            char bufNota1[32], bufNota2[32], bufMedia[32];
+                            sprintf(bufNota1, "%.2f", turma.alunos[i].notas[0]);
+                            sprintf(bufNota2, "%.2f", turma.alunos[i].notas[1]);
+                            sprintf(bufMedia, "%.2f", turma.alunos[i].media);
+                            
+                            texto += " | Nota 1: " + string(bufNota1);
+                            texto += " | Nota 2: " + string(bufNota2);
+                            texto += " | Media: " + string(bufMedia);
+                            texto += " | Faltas: " + to_string(turma.alunos[i].faltas) + "\n";
+                        }
+                    }
+                    texto += "\n";
+                }
+
+                // Lista de avaliações
+                if(turma.qtdAvaliacoes > 0) {
+                    texto += "--- AVALIACOES REALIZADAS ---\n";
+                    for(int i = 0; i < turma.qtdAvaliacoes; i++) {
+                        texto += "[" + to_string(i+1) + "] " + string(turma.avaliacoes[i].descricao);
+                        texto += " - Data: " + string(turma.avaliacoes[i].data) + "\n";
+                    }
+                    texto += "\n";
+                }
+
+                texto += "\n";
+            }
+            memset(&turma, 0, sizeof(Turma));
+        }
+        fileTurmas.clear();
+
+        fileTurmas.close();
+        fileDisc.close();
+        fileProf.close();
+
+        // ===== EXIBIR COM TEXTO CORRIDO =====
+        ConfigTexto configTexto;
+        configTexto.titulo = "RELATORIO ACADEMICO";
+
+        mostrar_texto(texto, configTexto);
     }
 
 
@@ -1992,132 +2148,436 @@ void menuCadastroCursos(){
 
     // ----- FUNÇÕES DE RELATÓRIOS E BACKUP -----
 
-    void gerarRelatorioFinanceiro() {
-        std::fstream fileLanchonete;
-        openFile(fileLanchonete, "lanchonete.dat");
-        
-        Produto produto;
-        double totalEntradas = 0;
-        int totalOperacoes = 0;
-        
-        fileLanchonete.seekg(0);
-        
-        string dados[100][5];
-        int contador = 0;
-        
-        while(fileLanchonete.read((char*)&produto, sizeof(Produto)) && contador < 100) {
-            if(produto.id != 0) {
-                dados[contador][0] = to_string(produto.id);
-                dados[contador][1] = produto.nome;
-                dados[contador][2] = to_string(produto.estoque);
-                dados[contador][3] = "R$ " + to_string(produto.preco);
-                dados[contador][4] = to_string(produto.estoque * produto.preco);
-                
-                totalEntradas += produto.estoque * produto.preco;
-                totalOperacoes++;
-                contador++;
-            }
-        }
-        
-        fileLanchonete.close();
-        
-        if(contador == 0) {
-            mostrar_caixa_informacao("INFO", "Nenhuma operacao financeira encontrada.");
-            return;
-        }
-        
-        string titulos[5] = {"ID", "Produto", "QTD", "Preco", "Total"};
-        const string* dados_ptr[100];
-        for(int i = 0; i < contador; i++) dados_ptr[i] = dados[i];
-        
-        ConfigTabela configTab;
-        configTab.titulo = "Relatorio Financeiro - Lanchonete";
-        interface_para_tabela(contador, 5, dados_ptr, titulos, 0, configTab);
-        
-        string resumo = "Total de operacoes: " + to_string(totalOperacoes) + 
-                       "\nTotal de entradas: R$ " + to_string(totalEntradas);
-        mostrar_caixa_informacao("RESUMO FINANCEIRO", resumo);
-    }
-    void gerarRelatorioPatrimonial() {
-        std::fstream fileInstrumentos;
-        std::fstream fileEmprestimos;
-        
-        openFile(fileInstrumentos, "instrumentos.dat");
-        openFile(fileEmprestimos, "emprestimos.dat");
-        
-        Instrumento instrumento;
-        Emprestimo emprestimo;
-        
-        string dados[100][6];
-        int contador = 0;
-        int totalInstrumentos = 0;
-        int disponiveis = 0;
-        int emprestados = 0;
-        
-        fileInstrumentos.seekg(0);
-        
-        while(fileInstrumentos.read((char*)&instrumento, sizeof(Instrumento)) && contador < 100) {
-            if(instrumento.ativo) {
-                totalInstrumentos++;
-                dados[contador][0] = to_string(instrumento.id);
-                dados[contador][1] = instrumento.nome;
-                dados[contador][2] = to_string(instrumento.estoque);
-                
-                string status = "Disponivel";
-                string emprestadoPara = "";
-                string dataEmp = "";
-                string dataPrev = "";
-                
-                if(!instrumento.disponivel) {
-                    status = "Emprestado";
-                    emprestados++;
-                    
-                    fileEmprestimos.clear();
-                    fileEmprestimos.seekg(0);
-                    
-                    while(fileEmprestimos.read((char*)&emprestimo, sizeof(Emprestimo))) {
-                        if(emprestimo.idInstrumento == instrumento.id) {
-                            emprestadoPara = emprestimo.nome_Alu;
-                            dataEmp = emprestimo.dataEmprestimo;
-                            dataPrev = emprestimo.dataPrevista;
-                            break;
-                        }
-                    }
-                } else {
-                    disponiveis++;
-                }
-                
-                dados[contador][3] = status;
-                dados[contador][4] = emprestadoPara;
-                dados[contador][5] = dataPrev;
-                
-                contador++;
-            }
-        }
-        
-        fileInstrumentos.close();
-        fileEmprestimos.close();
-        
-        if(contador == 0) {
-            mostrar_caixa_informacao("INFO", "Nenhum instrumento encontrado no sistema.");
-            return;
-        }
-        
-        string titulos[6] = {"ID", "Nome", "Estoque", "Status", "Emprestado Para", "Data Prevista"};
-        const string* dados_ptr[100];
-        for(int i = 0; i < contador; i++) dados_ptr[i] = dados[i];
-        
-        ConfigTabela configTab;
-        configTab.titulo = "Relatorio Patrimonial - Instrumentos";
-        interface_para_tabela(contador, 6, dados_ptr, titulos, 0, configTab);
-        
-        string resumo = "Total de instrumentos: " + to_string(totalInstrumentos) + 
-                       "\nDisponveis: " + to_string(disponiveis) + 
-                       "\nEmprestados: " + to_string(emprestados);
-        mostrar_caixa_informacao("RESUMO PATRIMONIAL", resumo);
+void gerarRelatorioFinanceiro() {
+    std::fstream fileProdutos;
+    std::fstream fileAlunos;
+    std::fstream fileProfessores;
+
+    openFile(fileProdutos, "lanchonete.dat");
+    openFile(fileAlunos, "alunos.dat");
+    openFile(fileProfessores, "professores.dat");
+
+    if (!fileProdutos.is_open() || !fileAlunos.is_open() || !fileProfessores.is_open()) {
+        mostrar_caixa_informacao("ERRO", "Nao foi possivel abrir os arquivos necessarios.");
+        if (fileProdutos.is_open()) fileProdutos.close();
+        if (fileAlunos.is_open()) fileAlunos.close();
+        if (fileProfessores.is_open()) fileProfessores.close();
+        return;
     }
 
-    void realizarBackup() {
+    Produto produto;
+    Aluno aluno;
+    Professor professor;
+
+    int totalProdutos = 0;
+    int totalEstoque = 0;
+    double valorTotalEstoque = 0.0;
+
+    int totalAlunos = 0;
+    double somaSaldoAlunos = 0.0;
+
+    int totalProfessores = 0;
+    double somaSaldoProfessores = 0.0;
+
+    // ===== PRIMEIRA PASSAGEM: CONTAR TOTAIS PRODUTOS =====
+    fileProdutos.seekg(0, ios::beg);
+    memset(&produto, 0, sizeof(Produto));
+
+    while (fileProdutos.read((char*)&produto, sizeof(Produto))) {
+        if (produto.ativo) {
+            totalProdutos++;
+            totalEstoque += produto.estoque;
+            valorTotalEstoque += produto.preco * produto.estoque;
+        }
+        memset(&produto, 0, sizeof(Produto));
+    }
+    fileProdutos.clear();
+
+    // ===== PRIMEIRA PASSAGEM: CONTAR TOTAIS ALUNOS =====
+    fileAlunos.seekg(0, ios::beg);
+    memset(&aluno, 0, sizeof(Aluno));
+
+    while (fileAlunos.read((char*)&aluno, sizeof(Aluno))) {
+        if (aluno.base.ativo) {
+            totalAlunos++;
+            somaSaldoAlunos += aluno.saldo;
+        }
+        memset(&aluno, 0, sizeof(Aluno));
+    }
+    fileAlunos.clear();
+
+    // ===== PRIMEIRA PASSAGEM: CONTAR TOTAIS PROFESSORES =====
+    fileProfessores.seekg(0, ios::beg);
+    memset(&professor, 0, sizeof(Professor));
+
+    while (fileProfessores.read((char*)&professor, sizeof(Professor))) {
+        if (professor.base.ativo) {
+            totalProfessores++;
+            somaSaldoProfessores += professor.saldo;
+        }
+        memset(&professor, 0, sizeof(Professor));
+    }
+    fileProfessores.clear();
+
+    double saldoGeralSistema = somaSaldoAlunos + somaSaldoProfessores;
+
+    if (totalProdutos == 0 && totalAlunos == 0 && totalProfessores == 0) {
+        mostrar_caixa_informacao("INFO", "Nenhum dado financeiro encontrado no sistema.");
+        fileProdutos.close();
+        fileAlunos.close();
+        fileProfessores.close();
+        return;
+    }
+
+    // ===== MONTAR TEXTO CORRIDO =====
+    string texto = "";
+
+    // ── RESUMO FINANCEIRO GERAL ─────────────────
+    texto += "========== RESUMO FINANCEIRO GERAL ==========\n";
+    texto += "\n";
+    texto += "Total de Produtos Cadastrados: " + to_string(totalProdutos) + "\n";
+    texto += "Estoque Total (unidades): " + to_string(totalEstoque) + "\n";
+
+    {
+        char buf[32];
+        sprintf(buf, "%.2f", valorTotalEstoque);
+        texto += "Valor Total em Estoque: R$ " + string(buf) + "\n";
+    }
+
+    texto += "\n";
+    texto += "Total de Alunos Ativos: " + to_string(totalAlunos) + "\n";
+
+    {
+        char buf[32];
+        sprintf(buf, "%.2f", somaSaldoAlunos);
+        texto += "Soma dos Saldos dos Alunos: R$ " + string(buf) + "\n";
+    }
+
+    texto += "\n";
+    texto += "Total de Professores Ativos: " + to_string(totalProfessores) + "\n";
+
+    {
+        char buf[32];
+        sprintf(buf, "%.2f", somaSaldoProfessores);
+        texto += "Soma dos Saldos dos Professores: R$ " + string(buf) + "\n";
+    }
+
+    texto += "\n";
+
+    {
+        char buf[32];
+        sprintf(buf, "%.2f", saldoGeralSistema);
+        texto += ">> SALDO GERAL NO SISTEMA: R$ " + string(buf) + " <<\n";
+    }
+
+    texto += "\n";
+
+    // ── LISTA DE PRODUTOS A VENDA ───────────────
+    if (totalProdutos > 0) {
+        texto += "========== PRODUTOS DISPONIVEIS PARA VENDA ==========\n";
+        texto += "\n";
+
+        fileProdutos.seekg(0, ios::beg);
+        memset(&produto, 0, sizeof(Produto));
+        int cont = 0;
+
+        while (fileProdutos.read((char*)&produto, sizeof(Produto))) {
+            if (produto.ativo) {
+                cont++;
+                produto.nome[sizeof(produto.nome) - 1] = '\0';
+
+                char bufPreco[32];
+                char bufTotal[32];
+                sprintf(bufPreco, "%.2f", produto.preco);
+                sprintf(bufTotal, "%.2f", produto.preco * produto.estoque);
+
+                texto += "[" + to_string(cont) + "] " + string(produto.nome) + "\n";
+                texto += "  ID: " + to_string(produto.id);
+                texto += " | Preco: R$ " + string(bufPreco);
+                texto += " | Estoque: " + to_string(produto.estoque) + " un.\n";
+                texto += "  Valor em Estoque: R$ " + string(bufTotal) + "\n";
+                texto += "\n";
+            }
+            memset(&produto, 0, sizeof(Produto));
+        }
+        fileProdutos.clear();
+    }
+
+    // ── SALDOS DOS ALUNOS ───────────────────────
+    if (totalAlunos > 0) {
+        texto += "========== SALDOS DOS ALUNOS ==========\n";
+        texto += "\n";
+
+        fileAlunos.seekg(0, ios::beg);
+        memset(&aluno, 0, sizeof(Aluno));
+        int cont = 0;
+
+        while (fileAlunos.read((char*)&aluno, sizeof(Aluno))) {
+            if (aluno.base.ativo) {
+                cont++;
+                aluno.base.nome[sizeof(aluno.base.nome) - 1] = '\0';
+
+                char bufSaldo[32];
+                sprintf(bufSaldo, "%.2f", aluno.saldo);
+
+                texto += "[" + to_string(cont) + "] " + string(aluno.base.nome) + "\n";
+                texto += "  ID: " + to_string(aluno.base.id);
+                texto += " | Saldo: R$ " + string(bufSaldo) + "\n";
+                texto += "\n";
+            }
+            memset(&aluno, 0, sizeof(Aluno));
+        }
+        fileAlunos.clear();
+
+        char bufTotalAlunos[32];
+        sprintf(bufTotalAlunos, "%.2f", somaSaldoAlunos);
+        texto += ">> TOTAL SALDOS ALUNOS: R$ " + string(bufTotalAlunos) + " <<\n";
+        texto += "\n";
+    }
+
+    // ── SALDOS DOS PROFESSORES ──────────────────
+    if (totalProfessores > 0) {
+        texto += "========== SALDOS DOS PROFESSORES ==========\n";
+        texto += "\n";
+
+        fileProfessores.seekg(0, ios::beg);
+        memset(&professor, 0, sizeof(Professor));
+        int cont = 0;
+
+        while (fileProfessores.read((char*)&professor, sizeof(Professor))) {
+            if (professor.base.ativo) {
+                cont++;
+                professor.base.nome[sizeof(professor.base.nome) - 1] = '\0';
+
+                char bufSaldo[32];
+                sprintf(bufSaldo, "%.2f", professor.saldo);
+
+                texto += "[" + to_string(cont) + "] " + string(professor.base.nome) + "\n";
+                texto += "  ID: " + to_string(professor.base.id);
+                texto += " | Saldo: R$ " + string(bufSaldo) + "\n";
+                texto += "\n";
+            }
+            memset(&professor, 0, sizeof(Professor));
+        }
+        fileProfessores.clear();
+
+        char bufTotalProfs[32];
+        sprintf(bufTotalProfs, "%.2f", somaSaldoProfessores);
+        texto += ">> TOTAL SALDOS PROFESSORES: R$ " + string(bufTotalProfs) + " <<\n";
+        texto += "\n";
+    }
+
+    fileProdutos.close();
+    fileAlunos.close();
+    fileProfessores.close();
+
+    // ===== EXIBIR COM TEXTO CORRIDO =====
+    ConfigTexto configTexto;
+    configTexto.titulo = "RELATORIO FINANCEIRO";
+
+    mostrar_texto(texto, configTexto);
+}
+    void gerarRelatorioPatrimonial() {
+    std::fstream fileInstrumentos;
+    std::fstream fileEmprestimos;
+
+    openFile(fileInstrumentos, "instrumentos.dat");
+    openFile(fileEmprestimos, "emprestimos.dat");
+
+    if (!fileInstrumentos.is_open() || !fileEmprestimos.is_open()) {
+        mostrar_caixa_informacao("ERRO", "Nao foi possivel abrir os arquivos necessarios.");
+        if (fileInstrumentos.is_open()) fileInstrumentos.close();
+        if (fileEmprestimos.is_open()) fileEmprestimos.close();
+        return;
+    }
+
+    Instrumento instrumento;
+    Emprestimo emprestimo;
+
+    int totalInstrumentos = 0;
+    int disponiveis = 0;
+    int emprestados = 0;
+    int naoAutorizados = 0;
+
+    // ===== PRIMEIRA PASSAGEM: CONTAR TOTAIS =====
+    fileInstrumentos.seekg(0, ios::beg);
+    memset(&instrumento, 0, sizeof(Instrumento));
+
+    while (fileInstrumentos.read((char*)&instrumento, sizeof(Instrumento))) {
+        if (instrumento.ativo) {
+            totalInstrumentos++;
+            if (instrumento.disponivel)
+                disponiveis++;
+            else
+                emprestados++;
+            if (!instrumento.autorizado)
+                naoAutorizados++;
+        }
+        memset(&instrumento, 0, sizeof(Instrumento));
+    }
+    fileInstrumentos.clear();
+
+    if (totalInstrumentos == 0) {
+        mostrar_caixa_informacao("INFO", "Nenhum instrumento encontrado no sistema.");
+        fileInstrumentos.close();
+        fileEmprestimos.close();
+        return;
+    }
+
+    // ===== MONTAR TEXTO CORRIDO =====
+    string texto = "";
+
+    // ── RESUMO PATRIMONIAL ──────────────────────
+    texto += "========== RESUMO PATRIMONIAL ==========\n";
+    texto += "\n";
+    texto += "Total de Instrumentos: " + to_string(totalInstrumentos) + "\n";
+    texto += "Disponiveis: " + to_string(disponiveis) + "\n";
+    texto += "Emprestados: " + to_string(emprestados) + "\n";
+    texto += "Nao Autorizados: " + to_string(naoAutorizados) + "\n";
+    texto += "\n";
+
+    // ── LISTA COMPLETA ──────────────────────────
+    texto += "========== LISTA COMPLETA DE INSTRUMENTOS ==========\n";
+    texto += "\n";
+    {
+        fileInstrumentos.seekg(0, ios::beg);
+        memset(&instrumento, 0, sizeof(Instrumento));
+
+        while (fileInstrumentos.read((char*)&instrumento, sizeof(Instrumento))) {
+            if (instrumento.ativo) {
+                instrumento.nome[sizeof(instrumento.nome) - 1] = '\0';
+
+                texto += "[ID: " + to_string(instrumento.id) + "] ";
+                texto += string(instrumento.nome) + " | ";
+                texto += "Estoque: " + to_string(instrumento.estoque) + " | ";
+                texto += string(instrumento.autorizado ? "AUTORIZADO" : "PENDENTE") + " | ";
+                texto += string(instrumento.disponivel ? "DISPONIVEL" : "EMPRESTADO") + "\n";
+            }
+            memset(&instrumento, 0, sizeof(Instrumento));
+        }
+        fileInstrumentos.clear();
+    }
+    texto += "\n";
+
+    // ── INSTRUMENTOS DISPONÍVEIS ────────────────
+    if (disponiveis > 0)
+    {
+        texto += "========== INSTRUMENTOS DISPONIVEIS ==========\n";
+        texto += "\n";
+
+        fileInstrumentos.seekg(0, ios::beg);
+        memset(&instrumento, 0, sizeof(Instrumento));
+        int cont = 0;
+
+        while (fileInstrumentos.read((char*)&instrumento, sizeof(Instrumento))) {
+            if (instrumento.ativo && instrumento.disponivel) {
+                cont++;
+                instrumento.nome[sizeof(instrumento.nome) - 1] = '\0';
+
+                texto += "[" + to_string(cont) + "] " + string(instrumento.nome) + "\n";
+                texto += "  ID: " + to_string(instrumento.id);
+                texto += " | Estoque: " + to_string(instrumento.estoque) + " un.\n";
+                texto += "  Status: DISPONIVEL\n";
+                texto += "\n";
+            }
+            memset(&instrumento, 0, sizeof(Instrumento));
+        }
+        fileInstrumentos.clear();
+    }
+
+    // ── INSTRUMENTOS EMPRESTADOS ────────────────
+    if (emprestados > 0)
+    {
+        texto += "========== INSTRUMENTOS EMPRESTADOS ==========\n";
+        texto += "\n";
+
+        fileInstrumentos.seekg(0, ios::beg);
+        memset(&instrumento, 0, sizeof(Instrumento));
+        memset(&emprestimo, 0, sizeof(Emprestimo));
+        int cont = 0;
+
+        while (fileInstrumentos.read((char*)&instrumento, sizeof(Instrumento))) {
+            if (instrumento.ativo && !instrumento.disponivel) {
+                cont++;
+                instrumento.nome[sizeof(instrumento.nome) - 1] = '\0';
+
+                texto += "[" + to_string(cont) + "] " + string(instrumento.nome) + "\n";
+                texto += "  ID Instrumento: " + to_string(instrumento.id) + "\n";
+                texto += "  Estoque: " + to_string(instrumento.estoque) + " un.\n";
+
+                // Buscar empréstimo correspondente
+                fileEmprestimos.clear();
+                fileEmprestimos.seekg(0, ios::beg);
+                memset(&emprestimo, 0, sizeof(Emprestimo));
+
+                bool achou = false;
+
+                while (fileEmprestimos.read((char*)&emprestimo, sizeof(Emprestimo))) {
+                    if (emprestimo.idInstrumento == instrumento.id) {
+                        achou = true;
+
+                        emprestimo.nome_Alu[sizeof(emprestimo.nome_Alu) - 1] = '\0';
+                        emprestimo.dataEmprestimo[sizeof(emprestimo.dataEmprestimo) - 1] = '\0';
+                        emprestimo.dataPrevista[sizeof(emprestimo.dataPrevista) - 1] = '\0';
+
+                        texto += "  Aluno: " + string(emprestimo.nome_Alu);
+                        texto += " (ID: " + to_string(emprestimo.idAluno) + ")\n";
+                        texto += "  Data: " + string(emprestimo.dataEmprestimo) + "\n";
+                        texto += "  Devolucao: " + string(emprestimo.dataPrevista) + "\n";
+
+                        break;
+                    }
+                    memset(&emprestimo, 0, sizeof(Emprestimo));
+                }
+
+                if (!achou) {
+                    texto += "  Sem registro de emprestimo\n";
+                }
+                texto += "\n";
+            }
+            memset(&instrumento, 0, sizeof(Instrumento));
+        }
+        fileInstrumentos.clear();
+    }
+
+    // ── INSTRUMENTOS NÃO AUTORIZADOS ────────────
+    if (naoAutorizados > 0)
+    {
+        texto += "========== INSTRUMENTOS NAO AUTORIZADOS ==========\n";
+        texto += "\n";
+
+        fileInstrumentos.seekg(0, ios::beg);
+        memset(&instrumento, 0, sizeof(Instrumento));
+        int cont = 0;
+
+        while (fileInstrumentos.read((char*)&instrumento, sizeof(Instrumento))) {
+            if (instrumento.ativo && !instrumento.autorizado) {
+                cont++;
+                instrumento.nome[sizeof(instrumento.nome) - 1] = '\0';
+
+                texto += "[" + to_string(cont) + "] " + string(instrumento.nome) + "\n";
+                texto += "  ID: " + to_string(instrumento.id);
+                texto += " | Estoque: " + to_string(instrumento.estoque) + "\n";
+                texto += "  Status: PENDENTE DE AUTORIZACAO\n";
+                texto += "\n";
+            }
+            memset(&instrumento, 0, sizeof(Instrumento));
+        }
+        fileInstrumentos.clear();
+    }
+
+    fileInstrumentos.close();
+    fileEmprestimos.close();
+
+    // ===== EXIBIR COM TEXTO CORRIDO =====
+    ConfigTexto configTexto;
+    configTexto.titulo = "RELATORIO PATRIMONIAL - INSTRUMENTOS";
+
+    mostrar_texto(texto, configTexto);
+}
+
+
+void realizarBackup() {
         // Gerar timestamp para pasta do backup
         time_t agora = time(0);
         tm *timeinfo = localtime(&agora);

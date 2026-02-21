@@ -4,6 +4,7 @@
 #include <cmath>
 #include <string>
 #include <locale>
+#include <vector>
 
 #include "interface_grafica.h"
 
@@ -2106,7 +2107,6 @@ saida_botoes interface_para_botoes(
 // ═══════════════════════════════════════════════════════════════
 // MOSTRAR DETALHES - TÓPICOS COM DESCRIÇÕES E PAGINAÇÃO
 // ═══════════════════════════════════════════════════════════════
-
 saida_detalhes mostrar_detalhes(
     const TopicDetalhes topicos[],
     int numero_topicos,
@@ -2116,7 +2116,6 @@ saida_detalhes mostrar_detalhes(
     resultado.confirmado = false;
     resultado.pagina_atual = 0;
 
-    // Validações
     if (numero_topicos <= 0 || numero_topicos > 10)
         return resultado;
 
@@ -2126,42 +2125,38 @@ saida_detalhes mostrar_detalhes(
     keypad(stdscr, TRUE);
     curs_set(0);
 
-    int max_x, max_y;
-    getmaxyx(stdscr, max_y, max_x);
-
-    // Inicializar cores se disponível
     if (has_colors())
     {
         start_color();
-        init_pair(1,  22, 20);   // seleção: texto claro, fundo sombreado
-        init_pair(2,  17, 16);   // opções normais
-        init_pair(3,  17, 16);   // descrição
-        init_pair(4,  23, 16);   // instrução (bem apagada)
-        init_pair(5,  21, 19);   // título: texto claro, fundo sombreado
-        init_pair(6,  18, 16);   // caminho
-        init_pair(7,  18, 16);   // bordas
+        init_pair(1, 22, 20);
+        init_pair(2, 17, 16);
+        init_pair(3, 17, 16);
+        init_pair(4, 23, 16);
+        init_pair(5, 21, 19);
+        init_pair(6, 18, 16);
+        init_pair(7, 18, 16);
         init_pair(8, COLOR_YELLOW, COLOR_BLACK);
     }
 
-    int inicio_y = 2;
-    int altura_disponivel = max_y - 8;
     int topicos_por_pagina = config.topicos_por_pagina;
     if (topicos_por_pagina <= 0) topicos_por_pagina = 5;
 
     int total_paginas = (numero_topicos + topicos_por_pagina - 1) / topicos_por_pagina;
     int pagina_atual = 0;
-    int topico_selecionado = 0;
 
     while (true)
     {
         clear();
 
-        // ── Título ───────────────────────────────────────────
+        int max_x, max_y;
+        getmaxyx(stdscr, max_y, max_x);
+
+        // ── Título ──────────────────────────────────────
         attron(COLOR_PAIR(config.cores.cor_titulo) | A_BOLD);
         mvprintw(0, centro_x(max_x, (int)config.titulo.length()), "%s", config.titulo.c_str());
         attroff(COLOR_PAIR(config.cores.cor_titulo) | A_BOLD);
 
-        // ── Descrição geral ───────────────────────────────
+        // ── Descrição geral ─────────────────────────────
         if (!config.descricao.empty())
         {
             attron(COLOR_PAIR(config.cores.cor_descricao));
@@ -2169,147 +2164,132 @@ saida_detalhes mostrar_detalhes(
             attroff(COLOR_PAIR(config.cores.cor_descricao));
         }
 
-        // ── Linha separadora ──────────────────────────────
+        // ── Separador superior ──────────────────────────
         attron(COLOR_PAIR(config.cores.cor_borda));
         mvhline(2, 0, ACS_HLINE, max_x);
         attroff(COLOR_PAIR(config.cores.cor_borda));
 
-        // ── Renderizar tópicos da página atual ────────────
-        int inicio_topico = pagina_atual * topicos_por_pagina;
-        int fim_topico = inicio_topico + topicos_por_pagina;
-        if (fim_topico > numero_topicos) fim_topico = numero_topicos;
+        // ── Tópicos da página ───────────────────────────
+        int inicio = pagina_atual * topicos_por_pagina;
+        int fim = inicio + topicos_por_pagina;
+        if (fim > numero_topicos) fim = numero_topicos;
 
-        int linha_atual = inicio_y;
-        for (int i = inicio_topico; i < fim_topico; i++)
+        int linha = 3;
+        int largura_wrap = max_x - config.x - 4;
+        if (largura_wrap < 20) largura_wrap = 20;
+
+        int limite_inferior = max_y - 3;
+
+        for (int i = inicio; i < fim; i++)
         {
-            int indice_local = i - inicio_topico;
-            bool selecionado = (i == topico_selecionado);
+            if (linha >= limite_inferior) break;
 
-            // ── Título do tópico ──────────────────────────
-            if (selecionado)
+            // ── Título do tópico ────────────────────────
+            attron(COLOR_PAIR(config.cores.cor_opcao) | A_BOLD);
+            mvprintw(linha, config.x, "> %s", topicos[i].titulo.c_str());
+            attroff(COLOR_PAIR(config.cores.cor_opcao) | A_BOLD);
+            linha++;
+
+            // ── Descrição com word-wrap manual ──────────
+            if (!topicos[i].descricao.empty() && linha < limite_inferior)
             {
-                attron(COLOR_PAIR(config.cores.cor_opcao_selecionada) | A_BOLD);
-                preencher_linha(stdscr, linha_atual, 0, max_x, config.cores.cor_opcao_selecionada);
+                const string& desc = topicos[i].descricao;
+                int pos = 0;
+                int len = (int)desc.length();
+
+                while (pos < len && linha < limite_inferior)
+                {
+                    // Determinar quantos caracteres cabem nesta linha
+                    int restante = len - pos;
+                    int pedaco = (restante > largura_wrap) ? largura_wrap : restante;
+
+                    // Se não é o fim do texto e cortamos no meio,
+                    // recuar até o último espaço para não quebrar palavra
+                    if (pos + pedaco < len && pedaco == largura_wrap)
+                    {
+                        int ultimo_espaco = -1;
+                        for (int j = pedaco - 1; j >= 0; j--)
+                        {
+                            if (desc[pos + j] == ' ')
+                            {
+                                ultimo_espaco = j;
+                                break;
+                            }
+                        }
+                        if (ultimo_espaco > 0)
+                            pedaco = ultimo_espaco + 1; // inclui o espaço no pedaço
+                    }
+
+                    // Extrair a substring desta linha
+                    string linha_texto = desc.substr(pos, pedaco);
+
+                    // Remover espaços no início/fim da linha visual
+                    // (só trailing, para não desalinhar)
+                    while (!linha_texto.empty() && linha_texto.back() == ' ')
+                        linha_texto.pop_back();
+                    // Leading spaces só na continuação
+                    if (pos > 0)
+                    {
+                        size_t first = linha_texto.find_first_not_of(' ');
+                        if (first != string::npos && first > 0)
+                            linha_texto = linha_texto.substr(first);
+                    }
+
+                    attron(COLOR_PAIR(config.cores.cor_descricao));
+                    mvprintw(linha, config.x + 2, "%s", linha_texto.c_str());
+                    attroff(COLOR_PAIR(config.cores.cor_descricao));
+
+                    linha++;
+                    pos += pedaco;
+
+                    // Pular espaços no início do próximo pedaço
+                    while (pos < len && desc[pos] == ' ')
+                        pos++;
+                }
             }
-            else
-            {
-                attron(COLOR_PAIR(config.cores.cor_opcao));
-            }
 
-            string titulo_display = "> " + topicos[i].titulo;
-            mvprintw(linha_atual, config.x, "%s", titulo_display.c_str());
-
-            if (selecionado)
-                attroff(COLOR_PAIR(config.cores.cor_opcao_selecionada) | A_BOLD);
-            else
-                attroff(COLOR_PAIR(config.cores.cor_opcao));
-
-            linha_atual++;
-
-            // ── Descrição do tópico (com word wrap) ───────
-            if (selecionado || topicos[i].descricao.length() <= 60)
-            {
-                attron(COLOR_PAIR(config.cores.cor_descricao));
-                int largura_desc = max_x - config.x - 4;
-                if (largura_desc < 20) largura_desc = 20;
-
-                desenhar_texto_wrap(stdscr, linha_atual, config.x + 2, topicos[i].descricao,
-                                   max_x - config.x - 2, config.cores.cor_descricao);
-
-                int linhas_desc = contar_linhas_com_wrap(topicos[i].descricao, max_x - config.x - 2);
-                linha_atual += linhas_desc;
-
-                attroff(COLOR_PAIR(config.cores.cor_descricao));
-            }
-
-            linha_atual++;
-            if (linha_atual >= max_y - 3) break;
+            // ── Espaço entre tópicos ────────────────────
+            linha++;
         }
 
-        // ── Linha separadora inferior ──────────────────────
-        int linha_rodape = max_y - 3;
+        // ── Separador inferior ──────────────────────────
         attron(COLOR_PAIR(config.cores.cor_borda));
-        mvhline(linha_rodape, 0, ACS_HLINE, max_x);
+        mvhline(max_y - 3, 0, ACS_HLINE, max_x);
         attroff(COLOR_PAIR(config.cores.cor_borda));
 
-        // ── Informação de paginação ───────────────────────
+        // ── Paginação ───────────────────────────────────
         if (total_paginas > 1)
         {
-            string info_pagina = "Página " + to_string(pagina_atual + 1) + "/" + to_string(total_paginas);
+            string pg = "Pagina " + to_string(pagina_atual + 1) + "/" + to_string(total_paginas);
             attron(COLOR_PAIR(config.cores.cor_paginacao));
-            mvprintw(linha_rodape, config.x, "%s", info_pagina.c_str());
+            mvprintw(max_y - 2, config.x, "%s", pg.c_str());
             attroff(COLOR_PAIR(config.cores.cor_paginacao));
         }
 
-        // ── Instruções de controle ────────────────────────
-        {
-            int linha_ctrl = max_y - 1;
-            move(linha_ctrl, 0);
-            clrtoeol();
-
-            attron(COLOR_PAIR(config.cores.cor_controles) | A_DIM);
-            mvprintw(
-                linha_ctrl,
-                centro_x(max_x, (int)config.instrucao_controles.length()),
-                "%s", config.instrucao_controles.c_str()
-            );
-            attroff(COLOR_PAIR(config.cores.cor_controles) | A_DIM);
-        }
+        // ── Controles ──────────────────────────────────
+        attron(COLOR_PAIR(config.cores.cor_controles) | A_DIM);
+        mvprintw(max_y - 1,
+                 centro_x(max_x, (int)config.instrucao_controles.length()),
+                 "%s", config.instrucao_controles.c_str());
+        attroff(COLOR_PAIR(config.cores.cor_controles) | A_DIM);
 
         refresh();
 
-        // ── Input ───────────────────────────────────────────
+        // ── Input ───────────────────────────────────────
         int tecla = getch();
 
-        if (tecla == KEY_DOWN || tecla == 'j' || tecla == 'J')
+        if (tecla == KEY_RIGHT || tecla == 'l' || tecla == 'L')
         {
-            // Próximo tópico
-            if (topico_selecionado < numero_topicos - 1)
-            {
-                topico_selecionado++;
-
-                // Ajustar página se necessário
-                if (topico_selecionado >= (pagina_atual + 1) * topicos_por_pagina)
-                {
-                    pagina_atual++;
-                }
-            }
-        }
-        else if (tecla == KEY_UP || tecla == 'k' || tecla == 'K')
-        {
-            // Tópico anterior
-            if (topico_selecionado > 0)
-            {
-                topico_selecionado--;
-
-                // Ajustar página se necessário
-                if (topico_selecionado < pagina_atual * topicos_por_pagina)
-                {
-                    pagina_atual--;
-                }
-            }
-        }
-        else if (tecla == KEY_RIGHT || tecla == 'l' || tecla == 'L')
-        {
-            // Próxima página
             if (pagina_atual < total_paginas - 1)
-            {
                 pagina_atual++;
-                topico_selecionado = pagina_atual * topicos_por_pagina;
-            }
         }
         else if (tecla == KEY_LEFT || tecla == 'h' || tecla == 'H')
         {
-            // Página anterior
             if (pagina_atual > 0)
-            {
                 pagina_atual--;
-                topico_selecionado = pagina_atual * topicos_por_pagina;
-            }
         }
         else if (tecla == '\n' || tecla == 10 || tecla == 13)
         {
-            // Confirmar
             resultado.confirmado = true;
             resultado.pagina_atual = pagina_atual;
             endwin();
@@ -2317,7 +2297,6 @@ saida_detalhes mostrar_detalhes(
         }
         else if (tecla == 27 || tecla == 'q' || tecla == 'Q')
         {
-            // Cancelar
             resultado.confirmado = false;
             resultado.pagina_atual = pagina_atual;
             endwin();
@@ -2327,4 +2306,168 @@ saida_detalhes mostrar_detalhes(
 
     endwin();
     return resultado;
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// TEXTO CORRIDO COM PAGINAÇÃO
+// ═══════════════════════════════════════════════════════════════
+
+
+
+void mostrar_texto(const string& texto, const ConfigTexto& config)
+{
+    if (texto.empty()) return;
+
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    curs_set(0);
+
+    if (has_colors())
+    {
+        start_color();
+        init_pair(1, 22, 20);
+        init_pair(2, 17, 16);
+        init_pair(3, 17, 16);
+        init_pair(4, 10, 16);
+        init_pair(5, 21, 19);
+        init_pair(6, 18, 16);
+    }
+
+    int pagina_atual = 0;
+
+    while (true)
+    {
+        clear();
+        int max_x, max_y;
+        getmaxyx(stdscr, max_y, max_x);
+
+        int largura_wrap = max_x - config.x - 4;
+        if (largura_wrap < 20) largura_wrap = 20;
+
+        // ── Quebrar texto em linhas visuais ─────────
+        vector<string> linhas;
+        size_t pos = 0;
+
+        while (pos < texto.length())
+        {
+            size_t nl = texto.find('\n', pos);
+            string paragrafo;
+            if (nl != string::npos)
+            {
+                paragrafo = texto.substr(pos, nl - pos);
+                pos = nl + 1;
+            }
+            else
+            {
+                paragrafo = texto.substr(pos);
+                pos = texto.length();
+            }
+
+            if (paragrafo.empty())
+            {
+                linhas.push_back("");
+                continue;
+            }
+
+            int p = 0;
+            int len = (int)paragrafo.length();
+
+            while (p < len)
+            {
+                if (p > 0)
+                    while (p < len && paragrafo[p] == ' ') p++;
+                if (p >= len) break;
+
+                int restante = len - p;
+                int pedaco = (restante > largura_wrap) ? largura_wrap : restante;
+
+                if (p + pedaco < len && pedaco == largura_wrap)
+                {
+                    for (int j = pedaco - 1; j >= 0; j--)
+                    {
+                        if (paragrafo[p + j] == ' ')
+                        {
+                            pedaco = j + 1;
+                            break;
+                        }
+                    }
+                }
+
+                string lt = paragrafo.substr(p, pedaco);
+                while (!lt.empty() && lt.back() == ' ') lt.pop_back();
+                linhas.push_back(lt);
+                p += pedaco;
+            }
+        }
+
+        // ── Paginação ──────────────────────────────
+        int linhas_por_pagina = max_y - 6;
+        if (linhas_por_pagina < 1) linhas_por_pagina = 1;
+
+        int total_paginas = ((int)linhas.size() + linhas_por_pagina - 1) / linhas_por_pagina;
+        if (total_paginas < 1) total_paginas = 1;
+        if (pagina_atual >= total_paginas) pagina_atual = total_paginas - 1;
+
+        // ── Título ──────────────────────────────────
+        attron(COLOR_PAIR(config.cor_titulo) | A_BOLD);
+        mvprintw(0, centro_x(max_x, (int)config.titulo.length()), "%s", config.titulo.c_str());
+        attroff(COLOR_PAIR(config.cor_titulo) | A_BOLD);
+
+        attron(COLOR_PAIR(config.cor_borda));
+        mvhline(1, 0, ACS_HLINE, max_x);
+        attroff(COLOR_PAIR(config.cor_borda));
+
+        // ── Texto ───────────────────────────────────
+        int inicio = pagina_atual * linhas_por_pagina;
+        int fim = inicio + linhas_por_pagina;
+        if (fim > (int)linhas.size()) fim = (int)linhas.size();
+
+        int linha_tela = 2;
+        for (int i = inicio; i < fim; i++)
+        {
+            attron(COLOR_PAIR(config.cor_texto));
+            mvprintw(linha_tela, config.x, "%s", linhas[i].c_str());
+            attroff(COLOR_PAIR(config.cor_texto));
+            linha_tela++;
+        }
+
+        attron(COLOR_PAIR(config.cor_borda));
+        mvhline(max_y - 3, 0, ACS_HLINE, max_x);
+        attroff(COLOR_PAIR(config.cor_borda));
+
+        if (total_paginas > 1)
+        {
+            string pg = "Pagina " + to_string(pagina_atual + 1) + "/" + to_string(total_paginas);
+            attron(COLOR_PAIR(config.cor_paginacao));
+            mvprintw(max_y - 2, config.x, "%s", pg.c_str());
+            attroff(COLOR_PAIR(config.cor_paginacao));
+        }
+
+        attron(COLOR_PAIR(config.cor_controles) | A_DIM);
+        mvprintw(max_y - 1, centro_x(max_x, (int)config.instrucao_controles.length()),
+                 "%s", config.instrucao_controles.c_str());
+        attroff(COLOR_PAIR(config.cor_controles) | A_DIM);
+
+        refresh();
+
+        // ── Input ───────────────────────────────────
+        int tecla = getch();
+
+        if (tecla == KEY_RIGHT || tecla == 'l')
+        {
+            if (pagina_atual < total_paginas - 1) pagina_atual++;
+        }
+        else if (tecla == KEY_LEFT || tecla == 'h')
+        {
+            if (pagina_atual > 0) pagina_atual--;
+        }
+        else if (tecla == 27 || tecla == 'q' || tecla == '\n' || tecla == 10)
+        {
+            endwin();
+            return;
+        }
+    }
 }
