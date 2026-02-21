@@ -43,8 +43,8 @@ struct Admin {
 
 struct Avaliacao
 {
-    char data[12];        // dd/mm/aaaa
-    char descricao[100];  // assunto da avaliacao
+    char data[12];
+    char descricao[100];
 };
 
 struct Turma {
@@ -77,28 +77,27 @@ struct Produto {
 
 struct Instrumento {
     int id;
-    int ativo;          // 1 = ativo, 0 = removido
-    int autorizado;     // 0 = não autorizado, 1 = autorizado
+    int ativo;
+    int autorizado;
     char nome[30];
-    bool disponivel;    // 1 = disponível, 0 = indisponível
-    int estoque;        // Quantidade física disponível
-    int idAluno;        // ID do aluno que pegou o instrumento emprestado
+    bool disponivel;
+    int estoque;
+    int idAluno;
 };
 
 struct Emprestimo {
-    int idEmprestimo;        // Identificador único do empréstimo
-    int idAluno;             // ID do aluno que realizou o empréstimo
+    int idEmprestimo;
+    int idAluno;
     char nome_Alu[100];
 
-    int idInstrumento;       // ID do instrumento emprestado
+    int idInstrumento;
     char nome_In[15];
 
-    char dataEmprestimo[11]; // Data do empréstimo (dd/mm/aaaa)
-    char dataPrevista[11];   // Data prevista para devolução
+    char dataEmprestimo[11];
+    char dataPrevista[11];
 
 };
 
-// --- ESTRUTURAS DO NOVO MÓDULO DE EVENTOS ---
 struct Horario {
     int hora;
     int minuto;
@@ -111,32 +110,29 @@ struct Data {
 };
 
 struct Evento {
-    // Identificadores e status (Mantidos do sistema base)
+
     int id = 0;            
     int ativo = 0 ;               
     int autorizado = 0;          
 
-    // Informações gerais (Tamanhos expandidos para comportar o novo módulo)
     char nome[100] = "";           
     char descricao[200] = "";     
     char local[100] = "";          
     char professorResponsavel[100] = "";
     
-    // Data e Hora (Substituído o char data[11] pela nova struct Data)
+
     Data data;           
     Horario horario;
 
-    // Vagas e Inscrições (Unificando as lógicas antigas e novas)
-    int totalVagas = 0;          // Antigo: Número total de vagas criadas
-    int vagasOcupadas = 0;       // Antigo: Quantidade já inscrita
-    int vagasDisponiveis = 0;    // Novo: Vagas restantes
-    int totalinscritos = 0;      // Novo: Controle exato de alunos inscritos
+    int totalVagas = 0;
+    int vagasOcupadas = 0;
+    int vagasDisponiveis = 0;
+    int totalinscritos = 0;
     
-    // Controle de andamento e lista de alunos
+
     bool finalizado = false;
-    char alunos[100][100];       // Matriz com os nomes dos inscritos
+    char alunos[100][100];
 };
-// --------------------------------------------
 
 struct Credito {
     int id_opera = 0;

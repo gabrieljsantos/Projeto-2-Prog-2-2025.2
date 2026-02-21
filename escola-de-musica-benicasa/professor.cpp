@@ -158,7 +158,6 @@ namespace ModuloProfessor
         return (resultado.indice_linha == -1) ? -1 : indicesAluno[resultado.indice_linha];
     }
 
-    // NOVA SOBRECARGA INTEGRADA (Sem danificar a lógica original)
     void registrarNotas(int id_prof, int turma_index, int id_aluno)
     {
         if (!turmaPermitida(id_prof, turma_index))
@@ -398,7 +397,6 @@ namespace ModuloProfessor
         Turma turma;
         if (!lerTurma(turma_index, turma)) return;
 
-        // Histórico de avaliações via detalhes
         if (turma.qtdAvaliacoes > 0)
         {
             TopicDetalhes topicos[MAX_AVALIACOES];

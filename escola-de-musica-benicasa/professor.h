@@ -9,11 +9,7 @@
 #define MAX_TURMAS_PROF 5
 #define MEDIA_MINIMA 7.0
 #define FALTAS_MAXIMAS 10
-#define MAX_AVALIACOES 10 // Adicionado para suportar a estrutura de Avaliacao
-
-// ============================
-// Namespace de Cálculos
-// ============================
+#define MAX_AVALIACOES 10
 
 namespace Calculos
 {
@@ -21,22 +17,14 @@ namespace Calculos
     float calcularMedia(float notas[], int n);
 }
 
-// ============================
-// Funções Auxiliares
-// ============================
-
 bool turmaPermitida(int id_prof, int turma_index);
-
-// ============================
-// Módulo Professor
-// ============================
 
 namespace ModuloProfessor
 {
-    // Sobrecargas de Registro de Notas
-    void registrarNotas(int id_prof);                               // Via interface (Original)
-    void registrarNotasTodo(int id_prof);                           // Turma toda (Original)
-    void registrarNotas(int id_prof, int turma_index, int id_aluno); // Aluno específico (Nova sobrecarga)
+
+    void registrarNotas(int id_prof);
+    void registrarNotasTodo(int id_prof);
+    void registrarNotas(int id_prof, int turma_index, int id_aluno);
 
     void consultarAlunosMatriculados(int id_prof);
     void consultarTurma(int id_prof); 
@@ -45,7 +33,6 @@ namespace ModuloProfessor
     void registrarFaltas(int id_prof);
     void registrarAvaliacao(int id_prof);
 
-    // Seletores graficos
     int selecionarTurma(int id_prof);
     int selecionarAluno(Turma &turma);
 }

@@ -38,10 +38,6 @@ bool converterDouble(string valor, double &saida){
     }
 }
 
-// Observação: sempre que comparamos a posicao com o máximo,
-// como posicaoProduto == MAX_PRODUTOS, quer dizer que não
-// foi possivel encontrá-lo, pois o ultimo valor é MAX_PRODUTOS - 1
-
 namespace Lanchonete {
     int proximoIdOperacao(Credito lista[MAX_CREDITOS]){
         int maior = 0;
@@ -262,7 +258,7 @@ namespace Lanchonete {
         if (!arquivo.is_open()) return false;
 
         for (int i = 0; i < MAX_PRODUTOS; i++) {
-            arquivo.write((char*)&lista[i], sizeof(Produto)); //grava todos os produtos de volta
+            arquivo.write((char*)&lista[i], sizeof(Produto));
         }
 
         arquivo.close();

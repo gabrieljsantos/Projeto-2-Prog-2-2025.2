@@ -6,14 +6,11 @@
 
 using namespace std;
 
-// ─── Constante do Arquivo ═════════════════════════════════════
 extern const char* ARQUIVO_EVENTOS;
 
-// ─── Variáveis Globais ════════════════════════════════════════
 extern vector<Evento> eventos;
 extern int proximoID;
 
-// ─── Declaração das Funções ═══════════════════════════════════
 bool SalvarEventosNoArquivo(const vector<Evento>& eventos);
 void CarregarEventos();
 void adicionar_evento();
@@ -25,4 +22,4 @@ void listar_eventos(const vector<Evento>& eventos);
 void inscrever_alunos();
 void menu_eventos();
 
-#endif // EVENTOS_H
+#endif

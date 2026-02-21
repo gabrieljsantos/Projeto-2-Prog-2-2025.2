@@ -18,7 +18,7 @@ using namespace std;
 
 void pausar();
 void exibirCabecalhoEscola();
-// void exibirCabecalhoSistema();
+
 saida_menu exibirMenuLogin();
 
 int main() {
@@ -89,7 +89,7 @@ int main() {
 }
 
 void pausar() {
-    // Interface gráfica já trata as pausas
+
 }
 
 void exibirCabecalhoEscola() {
@@ -112,18 +112,17 @@ void exibirCabecalhoEscola() {
 
     clear();
 
-    // Gera padrão aleatório (0-3)
     srand(time(0));
     int padrao_escolhido = rand() % 4;
     
-    // Padrão gráfico de fundo - aleatório
+
     attron(COLOR_PAIR(4) | A_DIM);
     
     for (int y = 0; y < max_y; y++) {
         string linha;
         
         switch (padrao_escolhido) {
-            case 0: { // Xadrez
+            case 0: {
                 for (int x = 0; x < max_x; x++) {
                     if ((x + y) % 2 == 0) {
                         linha += ".";
@@ -133,7 +132,7 @@ void exibirCabecalhoEscola() {
                 }
                 break;
             }
-            case 1: { // Pontos Horizontal Alternado
+            case 1: {
                 string base = (y % 2 == 0) ? ". . . . " : "  .  .  ";
                 while ((int)linha.length() < max_x) {
                     linha += base;
@@ -141,7 +140,7 @@ void exibirCabecalhoEscola() {
                 linha = linha.substr(0, max_x);
                 break;
             }
-            case 2: { // Diagonal
+            case 2: {
                 for (int x = 0; x < max_x; x++) {
                     int diagonal = (x + y) % 4;
                     if (diagonal == 0 || diagonal == 1) {
@@ -152,7 +151,7 @@ void exibirCabecalhoEscola() {
                 }
                 break;
             }
-            case 3: { // Linhas Verticais
+            case 3: {
                 for (int x = 0; x < max_x; x++) {
                     if (x % 3 == 0) {
                         linha += ".";
@@ -168,7 +167,6 @@ void exibirCabecalhoEscola() {
     }
     attroff(COLOR_PAIR(4) | A_DIM);
 
-    // Título
     string titulo = "ESCOLA DE MUSICA BENICASA";
     int pos_titulo = (max_x - titulo.length()) / 2;
 
@@ -176,7 +174,6 @@ void exibirCabecalhoEscola() {
     mvprintw(max_y / 2 - 2, pos_titulo, "%s", titulo.c_str());
     attroff(COLOR_PAIR(1) | A_BOLD);
 
-    // Subtítulo
     string subtitulo = "Sistema de Gestao";
     int pos_subtitulo = (max_x - subtitulo.length()) / 2;
 
@@ -184,7 +181,6 @@ void exibirCabecalhoEscola() {
     mvprintw(max_y / 2, pos_subtitulo, "%s", subtitulo.c_str());
     attroff(COLOR_PAIR(2));
 
-    // Instrução
     string aviso = "Pressione ENTER para continuar...";
     int pos_aviso = (max_x - aviso.length()) / 2;
 
@@ -194,7 +190,6 @@ void exibirCabecalhoEscola() {
 
     refresh();
 
-    // Aguardar ENTER
     int ch;
     while ((ch = getch()) != '\n' && ch != KEY_ENTER) {}
 

@@ -50,12 +50,11 @@ void adicionar_evento() {
     
     e.id = proximoID;
     proximoID++;
-    e.ativo = 1;              // ✓ Evento ativo
-    e.autorizado = 0;         // ✗ Mas não autorizado (pendente)
+    e.ativo = 1;
+    e.autorizado = 0;
     e.finalizado = false;
     e.totalinscritos = 0;
 
-    // ─── Nome do evento ────────────────────────────────────
     ConfigEntradaTexto configNome;
     configNome.titulo = "CADASTRAR NOVO EVENTO";
     configNome.descricao = "Preencha os campos para criar um novo evento";
@@ -68,7 +67,6 @@ void adicionar_evento() {
     strncpy(e.nome, resNome.valor.c_str(), 99);
     e.nome[99] = '\0';
 
-    // ─── Local do evento ───────────────────────────────────
     ConfigEntradaTexto configLocal;
     configLocal.titulo = "CADASTRAR NOVO EVENTO";
     configLocal.descricao = "Evento: " + resNome.valor;
@@ -81,7 +79,6 @@ void adicionar_evento() {
     strncpy(e.local, resLocal.valor.c_str(), 99);
     e.local[99] = '\0';
 
-    // ─── Hora ──────────────────────────────────────────────
     ConfigEntradaTexto configHora;
     configHora.titulo = "CADASTRAR NOVO EVENTO";
     configHora.descricao = "Evento: " + resNome.valor + " | Local: " + resLocal.valor;
@@ -97,7 +94,6 @@ void adicionar_evento() {
         return;
     }
 
-    // ─── Minuto ────────────────────────────────────────────
     ConfigEntradaTexto configMinuto;
     configMinuto.titulo = "CADASTRAR NOVO EVENTO";
     configMinuto.descricao = "Evento: " + resNome.valor + " | Horário: " + resHora.valor + ":00";
@@ -113,7 +109,6 @@ void adicionar_evento() {
         return;
     }
 
-    // ─── Vagas ─────────────────────────────────────────────
     ConfigEntradaTexto configVagas;
     configVagas.titulo = "CADASTRAR NOVO EVENTO";
     configVagas.descricao = "Evento: " + resNome.valor;
@@ -129,7 +124,6 @@ void adicionar_evento() {
         return;
     }
 
-    // ─── Professor responsável ────────────────────────────
     ConfigEntradaTexto configProf;
     configProf.titulo = "CADASTRAR NOVO EVENTO";
     configProf.descricao = "Evento: " + resNome.valor + " | Vagas: " + resVagas.valor;
@@ -142,7 +136,6 @@ void adicionar_evento() {
     strncpy(e.professorResponsavel, resProf.valor.c_str(), 99);
     e.professorResponsavel[99] = '\0';
 
-    // ─── Data (Dia) ────────────────────────────────────────
     ConfigEntradaTexto configDia;
     configDia.titulo = "CADASTRAR NOVO EVENTO";
     configDia.descricao = "Evento: " + resNome.valor;
@@ -158,7 +151,6 @@ void adicionar_evento() {
         return;
     }
 
-    // ─── Data (Mês) ────────────────────────────────────────
     ConfigEntradaTexto configMes;
     configMes.titulo = "CADASTRAR NOVO EVENTO";
     configMes.descricao = "Evento: " + resNome.valor + " | Dia: " + resDia.valor;
@@ -174,7 +166,6 @@ void adicionar_evento() {
         return;
     }
 
-    // ─── Data (Ano) ────────────────────────────────────────
     ConfigEntradaTexto configAno;
     configAno.titulo = "CADASTRAR NOVO EVENTO";
     configAno.descricao = "Evento: " + resNome.valor + " | Data: " + resDia.valor + "/" + resMes.valor;
@@ -190,7 +181,6 @@ void adicionar_evento() {
         return;
     }
 
-    // ─── Descrição (GRANDE - até 200 caracteres) ──────────
     ConfigEntradaTexto configDesc;
     configDesc.titulo = "CADASTRAR NOVO EVENTO";
     configDesc.descricao = "Evento: " + resNome.valor + " | Data: " + resDia.valor + "/" + resMes.valor + "/" + resAno.valor;
@@ -261,7 +251,7 @@ void editar_evento(vector<Evento>& eventos) {
         saida_menu resultado = interface_para_menu(qtdOpcoes, opcoes, configMenu);
         
         switch (resultado.indice_da_opcao) {
-            case 0: { // Nome
+            case 0: {
                 ConfigEntradaTexto config;
                 config.titulo = "EDITAR EVENTO - NOME";
                 config.descricao = "Evento: " + string(e->nome);
@@ -278,7 +268,7 @@ void editar_evento(vector<Evento>& eventos) {
                 }
                 break;
             }
-            case 1: { // Local
+            case 1: {
                 ConfigEntradaTexto config;
                 config.titulo = "EDITAR EVENTO - LOCAL";
                 config.descricao = "Evento: " + string(e->nome);
@@ -295,7 +285,7 @@ void editar_evento(vector<Evento>& eventos) {
                 }
                 break;
             }
-            case 2: { // Professor
+            case 2: {
                 ConfigEntradaTexto config;
                 config.titulo = "EDITAR EVENTO - PROFESSOR";
                 config.descricao = "Evento: " + string(e->nome);
@@ -312,7 +302,7 @@ void editar_evento(vector<Evento>& eventos) {
                 }
                 break;
             }
-            case 3: { // Data
+            case 3: {
                 ConfigEntradaTexto configDia;
                 configDia.titulo = "EDITAR EVENTO - DATA";
                 configDia.descricao = "Evento: " + string(e->nome);
@@ -369,7 +359,7 @@ void editar_evento(vector<Evento>& eventos) {
                 mostrar_caixa_informacao("SUCESSO", "Data atualizada!");
                 break;
             }
-            case 4: { // Horário
+            case 4: {
                 ConfigEntradaTexto configHora;
                 configHora.titulo = "EDITAR EVENTO - HORÁRIO";
                 configHora.descricao = "Evento: " + string(e->nome);
@@ -408,7 +398,7 @@ void editar_evento(vector<Evento>& eventos) {
                 mostrar_caixa_informacao("SUCESSO", "Horário atualizado!");
                 break;
             }
-            case 5: { // Vagas
+            case 5: {
                 ConfigEntradaTexto config;
                 config.titulo = "EDITAR EVENTO - VAGAS";
                 config.descricao = "Evento: " + string(e->nome) + " | Inscritos: " + to_string(e->totalinscritos);
@@ -429,7 +419,7 @@ void editar_evento(vector<Evento>& eventos) {
                 }
                 break;
             }
-            case 6: { // Descrição
+            case 6: {
                 ConfigEntradaTexto config;
                 config.titulo = "EDITAR EVENTO - DESCRIÇÃO";
                 config.descricao = "Evento: " + string(e->nome);
@@ -446,7 +436,7 @@ void editar_evento(vector<Evento>& eventos) {
                 }
                 break;
             }
-            case 7: { // Voltar
+            case 7: {
                 continuar_editando = false;
                 break;
             }
