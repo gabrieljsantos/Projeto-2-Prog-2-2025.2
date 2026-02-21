@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="escola-de-musica-benicasa" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Option virtualFolders="modulo_admin/;modulo_aluno/;modulo_eventos/;modulo_instrumentos/;modulo_login_matricula/;dados/;headers/;modulo_professor/;modulo_lanchonete/;bibliotecas/" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/escola-de-musica-benicasa" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="PDCurses-3.9" />
+				</Compiler>
+				<Linker>
+					<Add library="PDCurses-3.9/wincon/pdcurses.a" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/escola-de-musica-benicasa" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+		</Compiler>
+		<Unit filename="admin.cpp">
+			<Option virtualFolder="modulo_admin/" />
+		</Unit>
+		<Unit filename="admin.h">
+			<Option virtualFolder="modulo_admin/" />
+		</Unit>
+		<Unit filename="aluno.cpp">
+			<Option virtualFolder="modulo_aluno/" />
+		</Unit>
+		<Unit filename="aluno.h">
+			<Option virtualFolder="modulo_aluno/" />
+		</Unit>
+		<Unit filename="cadastros.txt">
+			<Option virtualFolder="dados/" />
+		</Unit>
+		<Unit filename="eventos.cpp">
+			<Option virtualFolder="modulo_eventos/" />
+		</Unit>
+		<Unit filename="eventos.h">
+			<Option virtualFolder="modulo_eventos/" />
+		</Unit>
+		<Unit filename="eventos.txt">
+			<Option virtualFolder="dados/" />
+		</Unit>
+		<Unit filename="headers.h">
+			<Option virtualFolder="headers/" />
+		</Unit>
+		<Unit filename="instrumentos.cpp">
+			<Option virtualFolder="modulo_instrumentos/" />
+		</Unit>
+		<Unit filename="instrumentos.h">
+			<Option virtualFolder="modulo_instrumentos/" />
+		</Unit>
+		<Unit filename="instrumentos.txt">
+			<Option virtualFolder="dados/" />
+		</Unit>
+		<Unit filename="interface_grafica.cpp">
+			<Option virtualFolder="bibliotecas/" />
+		</Unit>
+		<Unit filename="interface_grafica.h">
+			<Option virtualFolder="bibliotecas/" />
+		</Unit>
+		<Unit filename="lanchonete.cpp">
+			<Option virtualFolder="modulo_lanchonete/" />
+		</Unit>
+		<Unit filename="lanchonete.h">
+			<Option virtualFolder="modulo_lanchonete/" />
+		</Unit>
+		<Unit filename="lanchonete.txt">
+			<Option virtualFolder="dados/" />
+		</Unit>
+		<Unit filename="login_matricula.cpp">
+			<Option virtualFolder="modulo_login_matricula/" />
+		</Unit>
+		<Unit filename="login_matricula.h">
+			<Option virtualFolder="modulo_login_matricula/" />
+		</Unit>
+		<Unit filename="main.cpp" />
+		<Unit filename="notas.txt">
+			<Option virtualFolder="dados/" />
+		</Unit>
+		<Unit filename="professor.cpp">
+			<Option virtualFolder="modulo_professor/" />
+		</Unit>
+		<Unit filename="professor.h">
+			<Option virtualFolder="modulo_professor/" />
+		</Unit>
+		<Extensions>
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -1,0 +1,80 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compilar Projeto",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-g",
+                "-o",
+                "escola-de-musica-benicasa/bin/Debug/escola-de-musica-benicasa.exe",
+                "escola-de-musica-benicasa/src/main.cpp",
+                "escola-de-musica-benicasa/admin/admin.cpp",
+                "escola-de-musica-benicasa/aluno/aluno.cpp",
+                "escola-de-musica-benicasa/professor/professor.cpp",
+                "escola-de-musica-benicasa/eventos/eventos.cpp",
+                "escola-de-musica-benicasa/instrumentos/instrumentos.cpp",
+                "escola-de-musica-benicasa/lanchonete/lanchonete.cpp",
+                "escola-de-musica-benicasa/login_matricula/login_matricula.cpp",
+                "escola-de-musica-benicasa/interface_grafica/interface_grafica.cpp",
+                "-I",
+                "escola-de-musica-benicasa",
+                "-I",
+                "escola-de-musica-benicasa/admin",
+                "-I",
+                "escola-de-musica-benicasa/aluno",
+                "-I",
+                "escola-de-musica-benicasa/professor",
+                "-I",
+                "escola-de-musica-benicasa/eventos",
+                "-I",
+                "escola-de-musica-benicasa/instrumentos",
+                "-I",
+                "escola-de-musica-benicasa/login_matricula",
+                "-I",
+                "escola-de-musica-benicasa/interface_grafica",
+                "-I",
+                "escola-de-musica-benicasa/include",
+                "-I",
+                "escola-de-musica-benicasa/PDCurses-3.9",
+                "escola-de-musica-benicasa/PDCurses-3.9/wincon/pdcurses.a",
+                "-Wall",
+                "-fexceptions"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Executar Programa",
+            "type": "shell",
+            "command": "escola-de-musica-benicasa/bin/Debug/escola-de-musica-benicasa.exe",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new"
+            },
+            "dependsOn": [
+                "Compilar Projeto"
+            ]
+        }
+    ]
+}

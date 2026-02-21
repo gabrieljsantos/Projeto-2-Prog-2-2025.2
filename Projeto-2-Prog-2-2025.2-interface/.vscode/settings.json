@@ -1,0 +1,13 @@
+{
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/escola-de-musica-benicasa",
+        "${workspaceFolder}/escola-de-musica-benicasa/include",
+        "${workspaceFolder}/escola-de-musica-benicasa/PDCurses-3.9"
+    ],
+    "C_Cpp.default.intelliSenseEngine": "Tag Parser",
+    "C_Cpp.default.compilerPath": "g++",
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools",
+        "editor.formatOnSave": false
+    }
+}
