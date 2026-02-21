@@ -98,15 +98,9 @@ namespace Modulo_aluno {
     // ===== CONSULTAS ACADÊMICAS =====
     void consultarNotas(int idAluno) {
         try {
-            cout << "[DEBUG] consultarNotas: Iniciando consulta de notas - ID=" << idAluno << endl;
-            Aluno aluno = carregarAluno(idAluno);
-            cout << "[DEBUG] consultarNotas: Aluno carregado - " << aluno.base.nome << endl;
-
             // Procurar iterativamente por todas as turmas
-            cout << "[DEBUG] consultarNotas: Abrindo arquivo turmas.dat" << endl;
             ifstream file("turmas.dat", ios::binary);
             if (!file) {
-                cout << "[DEBUG] consultarNotas: ERRO ao abrir turmas.dat" << endl;
                 mostrar_caixa_informacao("ERRO", "Arquivo turmas.dat nao encontrado!");
                 return;
             }
@@ -117,13 +111,10 @@ namespace Modulo_aluno {
 
             while (file.read((char*)&turma, sizeof(Turma))) {
                 turmaCount++;
-                cout << "[DEBUG] consultarNotas: Lendo turma " << turmaCount << " - ID=" << turma.id << " Nome=" << turma.nome << endl;
                 // Procurar o aluno nesta turma
                 Aluno *alunoNaTurma = procurarAlunoNaTurma(turma, idAluno);
                 if (alunoNaTurma != nullptr) {
                     encontrado = true;
-                    cout << "[DEBUG] consultarNotas: ENCONTRADO! Aluno na turma " << turma.nome << endl;
-                    cout << "[DEBUG] consultarNotas: Notas - N1=" << alunoNaTurma->notas[0] << " N2=" << alunoNaTurma->notas[1] << endl;
                     file.close();
 
                     // Montar topicos para mostrar notas
@@ -147,31 +138,23 @@ namespace Modulo_aluno {
                     configDet.descricao = "Aluno: " + string(alunoNaTurma->base.nome);
                     configDet.cores.cor_borda = 6;
 
-                    cout << "[DEBUG] consultarNotas: Exibindo interface grafica" << endl;
                     mostrar_detalhes(topicos, numTopicos, configDet);
-                    cout << "[DEBUG] consultarNotas: Interface exibida, aguardando pausa" << endl;
-                    system("pause");
                     return;
                 }
             }
 
             file.close();
-            cout << "[DEBUG] consultarNotas: Total de turmas lidas = " << turmaCount << endl;
             if (!encontrado) {
-                cout << "[DEBUG] consultarNotas: Aluno NAO encontrado em nenhuma turma!" << endl;
                 mostrar_caixa_informacao("ERRO", "Aluno nao encontrado em nenhuma turma!");
             }
 
         } catch (const exception &e) {
-            cout << "[DEBUG] consultarNotas: EXCECAO CAPTURADA - " << e.what() << endl;
             mostrar_caixa_informacao("ERRO", e.what());
         }
     }
 
     void consultarMedias(int idAluno) {
         try {
-            Aluno aluno = carregarAluno(idAluno);
-
             // Procurar iterativamente por todas as turmas
             ifstream file("turmas.dat", ios::binary);
             if (!file) {
@@ -207,7 +190,6 @@ namespace Modulo_aluno {
                     configDet.cores.cor_borda = 6;
 
                     mostrar_detalhes(topicos, numTopicos, configDet);
-                    system("pause");
                     return;
                 }
             }
@@ -224,8 +206,6 @@ namespace Modulo_aluno {
 
     void consultarSituacaoAcademica(int idAluno) {
         try {
-            Aluno aluno = carregarAluno(idAluno);
-
             // Procurar iterativamente por todas as turmas
             ifstream file("turmas.dat", ios::binary);
             if (!file) {
@@ -291,7 +271,6 @@ namespace Modulo_aluno {
                     configDet.cores.cor_borda = 6;
 
                     mostrar_detalhes(topicos, numTopicos, configDet);
-                    system("pause");
                     return;
                 }
             }
@@ -309,64 +288,69 @@ namespace Modulo_aluno {
 
     // ===== EVENTOS =====
     void visualizarEventosDisponiveis() {
-        system("cls || clear");
-        cout << "------ EVENTOS DISPONIVEIS ------\n\n";
-
         // Carregar eventos
         CarregarEventos();
 
         if (eventos.empty()) {
-            cout << "Nenhum evento disponivel no sistema.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
+            mostrar_caixa_informacao("INFO", "Nenhum evento disponivel no sistema.");
             return;
         }
 
         bool encontrou = false;
 
+        vector<TopicDetalhes> topicos_eventos;
         for (const Evento &e : eventos) {
             if (e.ativo == 1 && e.autorizado == 1 && !e.finalizado) {
-                cout << "[ID: " << e.id << "] " << e.nome << endl;
-                cout << "  Descricao: " << e.descricao << endl;
-                cout << "  Local: " << e.local << endl;
-                cout << "  Data: " << e.data.dia << "/" << e.data.mes << "/" 
-                     << e.data.ano << " - " << e.horario.hora << ":" 
-                     << (e.horario.minuto < 10 ? "0" : "") << e.horario.minuto << endl;
-                cout << "  Professor: " << e.professorResponsavel << endl;
-                cout << "  Vagas disponiveis: " << e.vagasDisponiveis << endl;
-                cout << "  Total de inscritos: " << e.totalinscritos << endl << endl;
+                TopicDetalhes t;
+                t.titulo = e.nome;
+                string info = string("Local: ") + e.local + "\n";
+                info += "Data: " + to_string(e.data.dia) + "/" + to_string(e.data.mes) + "/" + to_string(e.data.ano);
+                info += " - " + to_string(e.horario.hora) + ":" + (e.horario.minuto < 10 ? "0" : "") + to_string(e.horario.minuto);
+                info += "\nProfessor: " + string(e.professorResponsavel);
+                info += "\nVagas: " + to_string(e.vagasDisponiveis) + " | Inscritos: " + to_string(e.totalinscritos);
+                t.descricao = info;
+                topicos_eventos.push_back(t);
                 encontrou = true;
             }
         }
 
-        if (!encontrou)
-            cout << "Nenhum evento autorizado e ativo encontrado.\n";
-
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
+        if (!encontrou) {
+            mostrar_caixa_informacao("INFO", "Nenhum evento autorizado e ativo encontrado.");
+        } else {
+            ConfigDetalhes configDet;
+            configDet.titulo = "EVENTOS DISPONIVEIS";
+            configDet.descricao = "Eventos cadastrados no sistema";
+            configDet.cores.cor_borda = 6;
+            
+            TopicDetalhes* topicos_arr = new TopicDetalhes[topicos_eventos.size()];
+            for (size_t i = 0; i < topicos_eventos.size(); i++) {
+                topicos_arr[i] = topicos_eventos[i];
+            }
+            mostrar_detalhes(topicos_arr, topicos_eventos.size(), configDet);
+            delete[] topicos_arr;
+        }
     }
 
     void inscreverEmEvento(int idAluno) {
         try {
             Aluno aluno = carregarAluno(idAluno);
-            
-            system("cls || clear");
-            cout << "------ INSCREVER EM EVENTO ------\n";
 
             // Carregar eventos
             CarregarEventos();
 
             if (eventos.empty()) {
-                cout << "Nenhum evento disponivel.\n";
-                cout << "\nPressione ENTER para voltar...";
-                cin.get();
+                mostrar_caixa_informacao("INFO", "Nenhum evento disponivel.");
                 return;
             }
 
             int id;
-            cout << "Digite o ID do evento: ";
-            cin >> id;
-            limparBuffer();
+            ConfigEntradaTexto configId;
+            configId.titulo = "INSCREVER EM EVENTO";
+            configId.label = "ID do evento: ";
+            configId.tipo_entrada = TIPO_NUMERO;
+            saida_entrada_texto resId = interface_para_entrada_texto(configId);
+            if (!resId.confirmado) return;
+            id = stoi(resId.valor);
 
             Evento* eventoEncontrado = nullptr;
 
@@ -378,26 +362,20 @@ namespace Modulo_aluno {
             }
 
             if (eventoEncontrado == nullptr) {
-                cout << "Evento nao encontrado, nao autorizado ou ja finalizado.\n";
-                cout << "\nPressione ENTER para voltar...";
-                cin.get();
+                mostrar_caixa_informacao("ERRO", "Evento nao encontrado, nao autorizado ou ja finalizado.");
                 return;
             }
 
             // Verificar vagas
             if (eventoEncontrado->vagasDisponiveis <= 0) {
-                cout << "Nao ha vagas disponiveis para este evento!\n";
-                cout << "\nPressione ENTER para voltar...";
-                cin.get();
+                mostrar_caixa_informacao("ERRO", "Nao ha vagas disponiveis para este evento!");
                 return;
             }
 
             // Verificar se ja esta inscrito
             for (int i = 0; i < eventoEncontrado->totalinscritos; i++) {
                 if (strcmp(eventoEncontrado->alunos[i], aluno.base.nome) == 0) {
-                    cout << "Voce ja esta inscrito neste evento!\n";
-                    cout << "\nPressione ENTER para voltar...";
-                    cin.get();
+                    mostrar_caixa_informacao("ERRO", "Voce ja esta inscrito neste evento!");
                     return;
                 }
             }
@@ -412,18 +390,12 @@ namespace Modulo_aluno {
 
             // Salvar eventos
             if (SalvarEventosNoArquivo(eventos)) {
-                cout << "Inscricao no evento realizada com sucesso!\n";
-                cout << "Vagas restantes: " << eventoEncontrado->vagasDisponiveis << endl;
+                mostrar_caixa_informacao("SUCESSO", "Inscricao no evento realizada com sucesso!");
             } else {
-                cout << "Erro ao salvar inscricao.\n";
+                mostrar_caixa_informacao("ERRO", "Erro ao salvar inscricao.");
             }
-
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
         } catch (const exception &e) {
-            cout << "Erro: " << e.what() << endl;
-            cout << "Pressione ENTER para voltar...";
-            cin.get();
+            mostrar_caixa_informacao("ERRO", e.what());
         }
     }
 
@@ -431,49 +403,53 @@ namespace Modulo_aluno {
         try {
             Aluno aluno = carregarAluno(idAluno);
 
-            system("cls || clear");
-            cout << "------ MINHAS INSCRICOES ------\n";
-            cout << "Aluno: " << aluno.base.nome << endl << endl;
-
             // Carregar eventos
             CarregarEventos();
 
             if (eventos.empty()) {
-                cout << "Nenhum evento disponivel no sistema.\n";
-                cout << "\nPressione ENTER para voltar...";
-                cin.get();
+                mostrar_caixa_informacao("INFO", "Nenhum evento disponivel no sistema.");
                 return;
             }
 
             bool encontrouInscricao = false;
 
+            vector<TopicDetalhes> topicos_inscricoes;
             for (const Evento &e : eventos) {
                 // Procurar se o aluno esta inscrito neste evento
                 for (int i = 0; i < e.totalinscritos; i++) {
                     if (strcmp(e.alunos[i], aluno.base.nome) == 0) {
                         encontrouInscricao = true;
-                        cout << "\n[ID: " << e.id << "] " << e.nome << endl;
-                        cout << "  Data: " << e.data.dia << "/" << e.data.mes << "/" 
-                             << e.data.ano << " - " << e.horario.hora << ":" 
-                             << (e.horario.minuto < 10 ? "0" : "") << e.horario.minuto << endl;
-                        cout << "  Local: " << e.local << endl;
-                        cout << "  Professor: " << e.professorResponsavel << endl;
-                        cout << "  Total de inscritos: " << e.totalinscritos << endl;
+                        TopicDetalhes t;
+                        t.titulo = e.nome;
+                        string info = string("Data: ") + to_string(e.data.dia) + "/" + to_string(e.data.mes) + "/" + to_string(e.data.ano);
+                        info += " - " + to_string(e.horario.hora) + ":" + (e.horario.minuto < 10 ? "0" : "") + to_string(e.horario.minuto);
+                        info += "\nLocal: " + string(e.local);
+                        info += "\nProfessor: " + string(e.professorResponsavel);
+                        info += "\nInscritos: " + to_string(e.totalinscritos);
+                        t.descricao = info;
+                        topicos_inscricoes.push_back(t);
                         break;
                     }
                 }
             }
 
             if (!encontrouInscricao) {
-                cout << "Voce nao esta inscrito em nenhum evento.\n";
+                mostrar_caixa_informacao("INFO", "Voce nao esta inscrito em nenhum evento.");
+            } else {
+                ConfigDetalhes configDet;
+                configDet.titulo = "MINHAS INSCRICOES";
+                configDet.descricao = "Aluno: " + string(aluno.base.nome);
+                configDet.cores.cor_borda = 6;
+                
+                TopicDetalhes* topicos_arr = new TopicDetalhes[topicos_inscricoes.size()];
+                for (size_t i = 0; i < topicos_inscricoes.size(); i++) {
+                    topicos_arr[i] = topicos_inscricoes[i];
+                }
+                mostrar_detalhes(topicos_arr, topicos_inscricoes.size(), configDet);
+                delete[] topicos_arr;
             }
-
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
         } catch (const exception &e) {
-            cout << "Erro: " << e.what() << endl;
-            cout << "Pressione ENTER para voltar...";
-            cin.get();
+            mostrar_caixa_informacao("ERRO", e.what());
         }
     }
     // ===== INSTRUMENTOS =====

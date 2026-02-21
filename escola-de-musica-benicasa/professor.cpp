@@ -195,12 +195,9 @@ namespace ModuloProfessor
 
     void registrarNotas(int id_prof)
     {
-        cout << "[DEBUG] registrarNotas: Iniciando registro de notas" << endl;
         int turma_index = selecionarTurma(id_prof);
         if (turma_index == -1)
             return;
-
-        cout << "[DEBUG] registrarNotas: Turma selecionada - ID=" << turma_index << endl;
         fstream file("turmas.dat", ios::in | ios::out | ios::binary);
         if (!file)
             return;
@@ -208,7 +205,6 @@ namespace ModuloProfessor
         Turma turma;
         file.seekg((turma_index - 1) * sizeof(Turma));
         file.read((char *)&turma, sizeof(Turma));
-        cout << "[DEBUG] registrarNotas: Turma carregada - " << turma.nome << endl;
 
         int aluno_idx = selecionarAluno(turma);
         if (aluno_idx == -1)
@@ -217,7 +213,6 @@ namespace ModuloProfessor
             return;
         }
 
-        cout << "[DEBUG] registrarNotas: Aluno selecionado - " << turma.alunos[aluno_idx].base.nome << endl;
         float notas[2];
         for (int j = 0; j < 2; j++)
         {
@@ -235,29 +230,22 @@ namespace ModuloProfessor
             }
             notas[j] = stof(resultado.valor);
             turma.alunos[aluno_idx].notas[j] = notas[j];
-            cout << "[DEBUG] registrarNotas: Nota " << (j + 1) << " = " << notas[j] << endl;
         }
 
         turma.alunos[aluno_idx].media = Calculos::calcularMedia(notas, 2);
-        cout << "[DEBUG] registrarNotas: Media calculada = " << turma.alunos[aluno_idx].media << endl;
 
         file.seekp((turma_index - 1) * sizeof(Turma));
         file.write((char *)&turma, sizeof(Turma));
         file.close();
-        cout << "[DEBUG] registrarNotas: Notas salvas no arquivo" << endl;
 
         mostrar_caixa_informacao("SUCESSO", "Notas registradas com sucesso!");
-        system("pause");
     }
 
     void registrarNotasTodo(int id_prof)
     {
-        cout << "[DEBUG] registrarNotasTodo: Iniciando registro de notas para toda a turma" << endl;
         int turma_index = selecionarTurma(id_prof);
         if (turma_index == -1)
             return;
-
-        cout << "[DEBUG] registrarNotasTodo: Turma selecionada - ID=" << turma_index << endl;
         fstream file("turmas.dat", ios::in | ios::out | ios::binary);
         if (!file)
             return;
@@ -265,7 +253,6 @@ namespace ModuloProfessor
         Turma turma;
         file.seekg((turma_index - 1) * sizeof(Turma));
         file.read((char *)&turma, sizeof(Turma));
-        cout << "[DEBUG] registrarNotasTodo: Turma carregada - " << turma.nome << endl;
 
         int alunosProcessados = 0;
         for (int i = 0; i < MAX_ALUNOS; i++)
@@ -275,7 +262,6 @@ namespace ModuloProfessor
             if ((*aluno).base.id == 0)
                 continue;
 
-            cout << "[DEBUG] registrarNotasTodo: Processando aluno - " << (*aluno).base.nome << endl;
             float notas[2];
             for (int j = 0; j < 2; j++)
             {
@@ -292,24 +278,19 @@ namespace ModuloProfessor
                     return;
                 }
                 notas[j] = stof(resultado.valor);
-                cout << "[DEBUG] registrarNotasTodo: Nota " << (j + 1) << " = " << notas[j] << endl;
             }
 
             (*aluno).notas[0] = notas[0];
             (*aluno).notas[1] = notas[1];
             (*aluno).media = Calculos::calcularMedia(notas, 2);
-            cout << "[DEBUG] registrarNotasTodo: Media = " << (*aluno).media << endl;
             alunosProcessados++;
         }
 
-        cout << "[DEBUG] registrarNotasTodo: Total de alunos processados = " << alunosProcessados << endl;
         file.seekp((turma_index - 1) * sizeof(Turma));
         file.write((char *)&turma, sizeof(Turma));
         file.close();
-        cout << "[DEBUG] registrarNotasTodo: Dados salvos no arquivo" << endl;
 
         mostrar_caixa_informacao("SUCESSO", "Notas registradas para toda a turma!");
-        system("pause");
     }
 
     void consultarAlunosMatriculados(int id_prof)
