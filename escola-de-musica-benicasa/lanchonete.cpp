@@ -3,6 +3,7 @@
 #include "lanchonete.h"
 #include "interface_grafica.h"
 #include "headers.h"
+#include "login_matricula.h"
 #include <limits>
 
 using namespace std;
@@ -444,7 +445,35 @@ namespace Lanchonete {
                 return;
             }
 
-            cout << "Crédito ativado!\n";
+            // TRANSFERÊNCIA PARA BANCO DE DADOS DO USUÁRIO
+            cout << "\n===== DEBUG: TRANSFERENCIA DE SALDO =====\n";
+            cout << "Tipo de Usuario: " << creditos[posicao].tipo_user << "\n";
+            
+            if (creditos[posicao].tipo_user == ALUNO) {
+                cout << "Lendo ALUNO ID: " << creditos[posicao].id_user << "...\n";
+                Aluno aluno = Login_mat::lerAluno(creditos[posicao].id_user);
+                cout << "Saldo Anterior: " << aluno.saldo << "\n";
+                aluno.saldo += creditos[posicao].saldo;
+                cout << "Saldo Novo: " << aluno.saldo << "\n";
+                Login_mat::salvarAluno(aluno);
+                cout << "ALUNO atualizado com sucesso!\n";
+            } 
+            else if (creditos[posicao].tipo_user == PROFESSOR) {
+                cout << "Lendo PROFESSOR ID: " << creditos[posicao].id_user << "...\n";
+                Professor professor = Login_mat::lerProfessor(creditos[posicao].id_user);
+                cout << "Saldo Anterior: " << professor.saldo << "\n";
+                professor.saldo += creditos[posicao].saldo;
+                cout << "Saldo Novo: " << professor.saldo << "\n";
+                Login_mat::salvarProfessor(professor);
+                cout << "PROFESSOR atualizado com sucesso!\n";
+            }
+            else if (creditos[posicao].tipo_user == ADMINISTRADOR) {
+                cout << "ADMINISTRADOR nao possui saldo. Apenas credito ativado.\n";
+            }
+            
+            cout << "=========================================\n";
+            
+            cout << "\nCrédito ativado!\n";
             cout << "\n[DEBUG] Pressione ENTER para retornar...";
             limparBuffer();
             cin.get();

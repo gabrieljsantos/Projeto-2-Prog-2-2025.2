@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <cstdio>
 #include <ctime>
 #include <sstream>
 #include <iomanip>
@@ -7,6 +8,7 @@
 #include "admin.h"
 #include "headers.h"
 #include "interface_grafica.h"
+#include "eventos.h"
 #include "instrumentos.h"
 #include "lanchonete.h"
 #include "login_matricula.h"
@@ -818,85 +820,9 @@ namespace mod_ADM {
         }
     }
 
-    int listar_eventos_especificos(int autorizado, string dados[100][5]){
-        int contador = 0;
-        std::fstream file;
-        openFile(file, "eventos.dat");
-        Evento evento;
-        
-        file.seekg(0);
-        while(file.read((char*)&evento, sizeof(Evento)) && contador < 100) {
-            if(evento.id != 0 && evento.ativo && (evento.autorizado == autorizado || autorizado == 2)) {
-                dados[contador][0] = to_string(evento.id);
-                dados[contador][1] = evento.nome;
-                dados[contador][2] = evento.data;
-                dados[contador][3] = evento.local;
-                dados[contador][4] = to_string(evento.vagasOcupadas) + "/" + to_string(evento.totalVagas);
-                contador++;
-            }
-        }
-        file.close();
-        return contador;
-    }
 
-    void gerenciar_evento_menu(int idEvento) {
-        std::fstream file;
-        openFile(file, "eventos.dat");
-        Evento evento;
-        file.seekg((idEvento - 1) * sizeof(Evento));
-        file.read((char*)&evento, sizeof(Evento));
-        file.close();
-        
-        if (evento.id == 0) {
-            mostrar_caixa_informacao("ERRO", "Evento nao encontrado!");
-            return;
-        }
-        
-        ConfigBotoes configBotoes;
-        configBotoes.titulo = "Gerenciar Evento";
-        configBotoes.descricao = "ID: " + to_string(idEvento) + " | Nome: " + string(evento.nome) + 
-                                 " | Data: " + string(evento.data) + " | Status: " + 
-                                 (evento.autorizado ? "Autorizado" : "Pendente");
-        configBotoes.botoes[0].label = "Autorizar";
-        configBotoes.botoes[0].tecla = 'A';
-        configBotoes.botoes[0].valor_retorno = 1;
-        configBotoes.botoes[1].label = "Desautorizar";
-        configBotoes.botoes[1].tecla = 'D';
-        configBotoes.botoes[1].valor_retorno = 0;
-        configBotoes.botoes[2].label = "Inativar";
-        configBotoes.botoes[2].tecla = 'I';
-        configBotoes.botoes[2].valor_retorno = 2;
-        configBotoes.botoes[3].label = "Cancelar";
-        configBotoes.botoes[3].tecla = 'C';
-        configBotoes.botoes[3].valor_retorno = 3;
-        configBotoes.numero_botoes = 4;
-        saida_botoes acao = interface_para_botoes(configBotoes);
-        
-        if (!acao.confirmado) return;
-        
-        openFile(file, "eventos.dat");
-        
-        if (acao.valor_retorno == 1) {
-            evento.autorizado = 1;
-            file.seekp((idEvento - 1) * sizeof(Evento));
-            file.write((char*)&evento, sizeof(Evento));
-            mostrar_caixa_informacao("SUCESSO", "Evento autorizado com sucesso!");
-        }
-        else if (acao.valor_retorno == 0) {
-            evento.autorizado = 0;
-            file.seekp((idEvento - 1) * sizeof(Evento));
-            file.write((char*)&evento, sizeof(Evento));
-            mostrar_caixa_informacao("SUCESSO", "Evento desautorizado com sucesso!");
-        }
-        else if (acao.valor_retorno == 2) {
-            evento.ativo = 0;
-            file.seekp((idEvento - 1) * sizeof(Evento));
-            file.write((char*)&evento, sizeof(Evento));
-            mostrar_caixa_informacao("SUCESSO", "Evento inativado com sucesso!");
-        }
-        
-        file.close();
-    }
+
+
 
     int listar_instrumentos_especificos(int autorizado, string dados[100][6]){
         int contador = 0;
@@ -1381,175 +1307,7 @@ void menuCadastroCursos(){
         interface_para_tabela(total, 5, dados_ptr, titulos, 0, configTab);
     }
 
-    // ----- MENU DE EVENTOS -----
 
-    void menuEventos(std::fstream &file) {
-        constexpr int Quantidades_opcoes = 5;
-        bool continuar = true;
-        int filtro_selecionado = 2; // 0=pendente, 1=autorizado, 2=ambos
-
-        while (continuar) {
-            string titulo_filtro = (filtro_selecionado == 0 ? "Pendentes" : (filtro_selecionado == 1 ? "Autorizados" : "Todos"));
-            
-            string opcoes[Quantidades_opcoes] = {
-                "Cadastrar Evento",
-                "Filtros de pesquisa",
-                "Listar Eventos",
-                "Buscar por ID",
-                "Voltar"
-            };
-            
-            ConfigMenu config;
-            config.titulo = "Gerenciar Eventos (" + titulo_filtro + ")";
-            config.descricao = "Selecione uma opcao para gerenciar eventos.";
-            saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
-            
-            Evento *evento_ = new Evento;
-            
-            switch (resultado.indice_da_opcao) {
-                case 0: { // Cadastrar Evento
-                    ConfigEntradaTexto configNome;
-                    configNome.titulo = "Novo Evento";
-                    configNome.label = "Nome: ";
-                    saida_entrada_texto resultNome = interface_para_entrada_texto(configNome);
-                    if (!resultNome.confirmado) break;
-                    
-                    ConfigEntradaTexto configLocal;
-                    configLocal.titulo = "Novo Evento";
-                    configLocal.label = "Local do evento: ";
-                    saida_entrada_texto resultLocal = interface_para_entrada_texto(configLocal);
-                    if (!resultLocal.confirmado) break;
-                    
-                    ConfigEntradaTexto configDesc;
-                    configDesc.titulo = "Novo Evento";
-                    configDesc.label = "Descricao: ";
-                    saida_entrada_texto resultDesc = interface_para_entrada_texto(configDesc);
-                    if (!resultDesc.confirmado) break;
-                    
-                    ConfigEntradaTexto configData;
-                    configData.titulo = "Novo Evento";
-                    configData.label = "Data do evento [dd/mm/aaaa]: ";
-                    saida_entrada_texto resultData = interface_para_entrada_texto(configData);
-                    if (!resultData.confirmado) break;
-                    
-                    ConfigEntradaTexto configVagas;
-                    configVagas.titulo = "Novo Evento";
-                    configVagas.label = "Total de vagas: ";
-                    configVagas.tipo_entrada = TIPO_NUMERO;
-                    saida_entrada_texto resultVagas = interface_para_entrada_texto(configVagas);
-                    if (!resultVagas.confirmado) break;
-                    
-                    char nome[50];
-                    strncpy(nome, resultNome.valor.c_str(), 49);
-                    nome[49] = '\0';
-                    char local[50];
-                    strncpy(local, resultLocal.valor.c_str(), 49);
-                    local[49] = '\0';
-                    char descricao[100];
-                    strncpy(descricao, resultDesc.valor.c_str(), 99);
-                    descricao[99] = '\0';
-                    char data[11];
-                    strncpy(data, resultData.valor.c_str(), 10);
-                    data[10] = '\0';
-                    int vagas = stoi(resultVagas.valor);
-                    
-                    strncpy(evento_->nome, nome, 49);
-                    evento_->nome[49] = '\0';
-                    strncpy(evento_->local, local, 49);
-                    evento_->local[49] = '\0';
-                    strncpy(evento_->descricao, descricao, 99);
-                    evento_->descricao[99] = '\0';
-                    strncpy(evento_->data, data, 11);
-                    evento_->data[10] = '\0';
-                    
-                    evento_->totalVagas = vagas;
-                    evento_->vagasOcupadas = 0;
-                    evento_->autorizado = 0;
-                    evento_->ativo = 1;
-                    
-                    file.clear();
-                    file.seekg(0, std::ios::end);
-                    evento_->id = 1 + (file.tellg() / sizeof(Evento));
-                    
-                    file.seekp(0, std::ios::end);
-                    file.write((char*)(evento_), sizeof(Evento));
-                    file.clear();
-                    
-                    mostrar_caixa_informacao("SUCESSO", "Evento cadastrado com sucesso!\nID: " + to_string(evento_->id));
-                    break;
-                }
-                
-                case 1: { // Filtros de pesquisa
-                    constexpr int qtdEstados = 3;
-                    string estados[qtdEstados] = {"Pendente", "Autorizado", "Ambos"};
-                    
-                    ConfigMenu configFiltro;
-                    configFiltro.titulo = "Filtros de Pesquisa";
-                    configFiltro.descricao = "Selecione o filtro para gerenciar eventos.";
-                    saida_menu resultadofiltro = interface_para_menu(qtdEstados, estados, configFiltro);
-                    
-                    if (resultadofiltro.indice_da_opcao == 0) filtro_selecionado = 0;
-                    else if (resultadofiltro.indice_da_opcao == 1) filtro_selecionado = 1;
-                    else if (resultadofiltro.indice_da_opcao == 2) filtro_selecionado = 2;
-                    break;
-                }
-                
-                case 2: { // Listar Eventos
-                    string dados[100][5];
-                    int total = listar_eventos_especificos(filtro_selecionado, dados);
-                    
-                    if (total == 0) {
-                        mostrar_caixa_informacao("INFO", "Nenhum evento encontrado com os filtros selecionados.");
-                        break;
-                    }
-                    
-                    string titulos[5] = {"ID", "Nome", "Data", "Local", "Vagas"};
-                    const string* dados_ptr[100];
-                    for(int i = 0; i < total; i++) dados_ptr[i] = dados[i];
-                    
-                    ConfigTabela configTab;
-                    configTab.titulo = "Lista de Eventos";
-                    saida_tabela evento_selecionado = interface_para_tabela(total, 5, dados_ptr, titulos, 0, configTab);
-                    
-                    if (evento_selecionado.indice_linha != -1) {
-                        int id = stoi(dados[evento_selecionado.indice_linha][0]);
-                        gerenciar_evento_menu(id);
-                    }
-                    break;
-                }
-                
-                case 3: { // Buscar por ID
-                    ConfigEntradaTexto configBusca;
-                    configBusca.titulo = "Buscar Evento";
-                    configBusca.label = "Digite o ID do evento: ";
-                    configBusca.tipo_entrada = TIPO_NUMERO;
-                    configBusca.descricao = "Digite o número de identificação do evento que deseja buscar.";
-                    
-                    saida_entrada_texto resultBusca = interface_para_entrada_texto(configBusca);
-                    
-                    if (!resultBusca.confirmado) break;
-                    
-                    int idBusca = stoi(resultBusca.valor);
-                    
-                    if (idBusca <= 0) {
-                        mostrar_caixa_informacao("ERRO", "ID invalido! Digite um numero positivo.");
-                        break;
-                    }
-                    
-                    gerenciar_evento_menu(idBusca);
-                    break;
-                }
-                
-                case 4: { // Voltar
-                    continuar = false;
-                    break;
-                }
-            }
-            
-            delete evento_;
-            evento_ = nullptr;
-        }
-    }
 
     // ----- FUNÇÕES AUXILIARES DE TURMAS E MATRÍCULA -----
 
@@ -2964,13 +2722,9 @@ void abrir_menu_admin(Usuario* usuario) {
             case 0:
                 mod_ADM::menuGestaoAcademica();
                 break;
-            case 1: {
-                fstream file;
-                openFile(file, "eventos.dat");
-                mod_ADM::menuEventos(file);
-                file.close();
+            case 1:
+                menu_eventos();
                 break;
-            }
             case 2:
                 menuInstrumentos();
                 break;
