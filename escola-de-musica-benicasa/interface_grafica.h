@@ -236,5 +236,20 @@ saida_detalhes mostrar_detalhes(
     const ConfigDetalhes& config = ConfigDetalhes()
 );
 
+
+struct ConfigTexto
+{
+    string titulo              = "TITULO";
+    string instrucao_controles = "[<-/->] Paginar  [ESC] Voltar";
+    int    x                   = 2;
+    int    cor_titulo          = 1;
+    int    cor_texto           = 4;
+    int    cor_borda           = 3;
+    int    cor_paginacao       = 5;
+    int    cor_controles       = 6;
+};
+
+void mostrar_texto(const string& texto, const ConfigTexto& config);
 #endif
+
 
