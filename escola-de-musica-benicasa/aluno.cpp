@@ -3,12 +3,19 @@
 #include <string>
 #include <limits>
 #include <cstring>
+#include <vector>
 #include "aluno.h"
 #include "headers.h"
 #include "interface_grafica.h"
 #include "instrumentos.h"
+#include "eventos.h"
 
 using namespace std;
+
+// Declarações extern do módulo eventos
+extern vector<Evento> eventos;
+extern void CarregarEventos();
+extern bool SalvarEventosNoArquivo(const vector<Evento>& eventos);
 
 namespace Modulo_aluno {
     // ===== FUNÇÃO AUXILIAR =====
@@ -302,31 +309,37 @@ namespace Modulo_aluno {
     // ===== EVENTOS =====
     void visualizarEventosDisponiveis() {
         system("cls || clear");
-        cout << "------ EVENTOS DISPONIVEIS ------\n";
+        cout << "------ EVENTOS DISPONIVEIS ------\n\n";
 
-        ifstream arq("eventos.dat", ios::binary);
+        // Carregar eventos
+        CarregarEventos();
 
-        if (!arq) {
-            cout << "Arquivo eventos.dat nao encontrado.\n";
+        if (eventos.empty()) {
+            cout << "Nenhum evento disponivel no sistema.\n";
             cout << "\nPressione ENTER para voltar...";
             cin.get();
             return;
         }
 
-        Evento e;
         bool encontrou = false;
 
-        while (arq.read((char*)&e, sizeof(Evento))) {
-            if (e.ativo == 1 && e.autorizado == 1) {
-                cout << "\nID: " << e.id << " - " << e.nome << endl;
-                cout << "Descricao: " << e.descricao << endl;
-                cout << "Local: " << e.local << endl;
+        for (const Evento &e : eventos) {
+            if (e.ativo == 1 && e.autorizado == 1 && !e.finalizado) {
+                cout << "[ID: " << e.id << "] " << e.nome << endl;
+                cout << "  Descricao: " << e.descricao << endl;
+                cout << "  Local: " << e.local << endl;
+                cout << "  Data: " << e.data.dia << "/" << e.data.mes << "/" 
+                     << e.data.ano << " - " << e.horario.hora << ":" 
+                     << (e.horario.minuto < 10 ? "0" : "") << e.horario.minuto << endl;
+                cout << "  Professor: " << e.professorResponsavel << endl;
+                cout << "  Vagas disponiveis: " << e.vagasDisponiveis << endl;
+                cout << "  Total de inscritos: " << e.totalinscritos << endl << endl;
                 encontrou = true;
             }
         }
 
         if (!encontrou)
-            cout << "Nenhum evento autorizado encontrado.\n";
+            cout << "Nenhum evento autorizado e ativo encontrado.\n";
 
         cout << "\nPressione ENTER para voltar...";
         cin.get();
@@ -334,36 +347,75 @@ namespace Modulo_aluno {
 
     void inscreverEmEvento(int idAluno) {
         try {
+            Aluno aluno = carregarAluno(idAluno);
+            
             system("cls || clear");
             cout << "------ INSCREVER EM EVENTO ------\n";
+
+            // Carregar eventos
+            CarregarEventos();
+
+            if (eventos.empty()) {
+                cout << "Nenhum evento disponivel.\n";
+                cout << "\nPressione ENTER para voltar...";
+                cin.get();
+                return;
+            }
 
             int id;
             cout << "Digite o ID do evento: ";
             cin >> id;
             limparBuffer();
 
-            fstream arq("eventos.dat", ios::binary | ios::in | ios::out);
+            Evento* eventoEncontrado = nullptr;
 
-            if (!arq) {
-                cout << "Arquivo eventos.dat nao encontrado.\n";
+            for (Evento &e : eventos) {
+                if (e.id == id && e.ativo == 1 && e.autorizado == 1 && !e.finalizado) {
+                    eventoEncontrado = &e;
+                    break;
+                }
+            }
+
+            if (eventoEncontrado == nullptr) {
+                cout << "Evento nao encontrado, nao autorizado ou ja finalizado.\n";
                 cout << "\nPressione ENTER para voltar...";
                 cin.get();
                 return;
             }
 
-            Evento e;
-            bool encontrou = false;
+            // Verificar vagas
+            if (eventoEncontrado->vagasDisponiveis <= 0) {
+                cout << "Nao ha vagas disponiveis para este evento!\n";
+                cout << "\nPressione ENTER para voltar...";
+                cin.get();
+                return;
+            }
 
-            while (arq.read((char*)&e, sizeof(Evento))) {
-                if (e.id == id && e.ativo == 1 && e.autorizado == 1) {
-                    cout << "Inscricao no evento realizada com sucesso!\n";
-                    encontrou = true;
-                    break;
+            // Verificar se ja esta inscrito
+            for (int i = 0; i < eventoEncontrado->totalinscritos; i++) {
+                if (strcmp(eventoEncontrado->alunos[i], aluno.base.nome) == 0) {
+                    cout << "Voce ja esta inscrito neste evento!\n";
+                    cout << "\nPressione ENTER para voltar...";
+                    cin.get();
+                    return;
                 }
             }
 
-            if (!encontrou)
-                cout << "Evento nao encontrado ou nao autorizado.\n";
+            // Adicionar inscricao
+            strncpy(eventoEncontrado->alunos[eventoEncontrado->totalinscritos], 
+                    aluno.base.nome, 99);
+            eventoEncontrado->alunos[eventoEncontrado->totalinscritos][99] = '\0';
+            
+            eventoEncontrado->totalinscritos++;
+            eventoEncontrado->vagasDisponiveis--;
+
+            // Salvar eventos
+            if (SalvarEventosNoArquivo(eventos)) {
+                cout << "Inscricao no evento realizada com sucesso!\n";
+                cout << "Vagas restantes: " << eventoEncontrado->vagasDisponiveis << endl;
+            } else {
+                cout << "Erro ao salvar inscricao.\n";
+            }
 
             cout << "\nPressione ENTER para voltar...";
             cin.get();
@@ -380,17 +432,40 @@ namespace Modulo_aluno {
 
             system("cls || clear");
             cout << "------ MINHAS INSCRICOES ------\n";
+            cout << "Aluno: " << aluno.base.nome << endl << endl;
 
-            ifstream arq("eventos.dat", ios::binary);
+            // Carregar eventos
+            CarregarEventos();
 
-            if (!arq) {
-                cout << "Arquivo eventos.dat nao encontrado.\n";
+            if (eventos.empty()) {
+                cout << "Nenhum evento disponivel no sistema.\n";
                 cout << "\nPressione ENTER para voltar...";
                 cin.get();
                 return;
             }
 
-            cout << "Inscrições do aluno: " << aluno.base.nome << endl;
+            bool encontrouInscricao = false;
+
+            for (const Evento &e : eventos) {
+                // Procurar se o aluno esta inscrito neste evento
+                for (int i = 0; i < e.totalinscritos; i++) {
+                    if (strcmp(e.alunos[i], aluno.base.nome) == 0) {
+                        encontrouInscricao = true;
+                        cout << "\n[ID: " << e.id << "] " << e.nome << endl;
+                        cout << "  Data: " << e.data.dia << "/" << e.data.mes << "/" 
+                             << e.data.ano << " - " << e.horario.hora << ":" 
+                             << (e.horario.minuto < 10 ? "0" : "") << e.horario.minuto << endl;
+                        cout << "  Local: " << e.local << endl;
+                        cout << "  Professor: " << e.professorResponsavel << endl;
+                        cout << "  Total de inscritos: " << e.totalinscritos << endl;
+                        break;
+                    }
+                }
+            }
+
+            if (!encontrouInscricao) {
+                cout << "Voce nao esta inscrito em nenhum evento.\n";
+            }
 
             cout << "\nPressione ENTER para voltar...";
             cin.get();
