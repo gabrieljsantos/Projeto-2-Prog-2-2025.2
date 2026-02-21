@@ -51,6 +51,8 @@ void adicionar_evento() {
     
     e.id = proximoID;
     proximoID++;
+    e.ativo = 1;              // ✓ Evento ativo
+    e.autorizado = 0;         // ✗ Mas não autorizado (pendente)
     e.finalizado = false;
     e.totalinscritos = 0;
 

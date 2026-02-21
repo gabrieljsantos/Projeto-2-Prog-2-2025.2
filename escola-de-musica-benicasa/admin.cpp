@@ -286,6 +286,134 @@ void consultarPendenciasInstrumentos() {
     }
 }
 
+// =====================================================================
+// FUNÇÃO: AUTORIZAR EVENTOS
+// =====================================================================
+
+void autorizarEventos() {
+    bool continuar = true;
+
+    while (continuar) {
+        system("cls || clear");
+
+        // Carregar eventos
+        extern void CarregarEventos();
+        extern vector<Evento> eventos;
+        extern bool SalvarEventosNoArquivo(const vector<Evento>& eventos);
+        
+        CarregarEventos();
+
+        // Montar tabela com todos os eventos não autorizados
+        string dados[100][6];
+        int contador = 0;
+
+        for (size_t i = 0; i < eventos.size(); i++) {
+            if (eventos[i].ativo == 1 && eventos[i].autorizado == 0) {
+                dados[contador][0] = to_string(eventos[i].id);
+                dados[contador][1] = eventos[i].nome;
+                dados[contador][2] = eventos[i].professorResponsavel;
+                dados[contador][3] = to_string(eventos[i].data.dia) + "/" + 
+                                    to_string(eventos[i].data.mes) + "/" + 
+                                    to_string(eventos[i].data.ano);
+                dados[contador][4] = to_string(eventos[i].horario.hora) + ":" +
+                                    (eventos[i].horario.minuto < 10 ? "0" : "") +
+                                    to_string(eventos[i].horario.minuto);
+                dados[contador][5] = eventos[i].local;
+                contador++;
+            }
+        }
+
+        if (contador == 0) {
+            mostrar_caixa_informacao("INFO", "Nenhum evento pendente de autorizacao!");
+            continuar = false;
+            break;
+        }
+
+        string titulos[6] = {"ID", "Evento", "Professor", "Data", "Hora", "Local"};
+        const string* dados_ptr[100];
+        for(int i = 0; i < contador; i++) dados_ptr[i] = dados[i];
+
+        ConfigTabela configTab;
+        configTab.titulo = "EVENTOS PENDENTES DE AUTORIZACAO";
+        configTab.descricao = "Selecione um evento para autorizar ou recusar";
+        saida_tabela selecionada = interface_para_tabela(contador, 6, dados_ptr, titulos, 0, configTab);
+
+        if (selecionada.indice_linha == -1) {
+            continuar = false;
+            break;
+        }
+
+        // Encontrar o evento correspondente no vetor
+        int linhaAtual = 0;
+        int idxEvento = -1;
+        
+        for (size_t i = 0; i < eventos.size(); i++) {
+            if (eventos[i].ativo == 1 && eventos[i].autorizado == 0) {
+                if (linhaAtual == selecionada.indice_linha) {
+                    idxEvento = i;
+                    break;
+                }
+                linhaAtual++;
+            }
+        }
+
+        if (idxEvento == -1) {
+            mostrar_caixa_informacao("ERRO", "Evento nao encontrado!");
+            continue;
+        }
+
+        // Exibir detalhes e opcoes
+        string detalhes = "ID: " + to_string(eventos[idxEvento].id) + 
+                         "\nEvento: " + eventos[idxEvento].nome + 
+                         "\nDescricao: " + eventos[idxEvento].descricao + 
+                         "\nProfessor: " + eventos[idxEvento].professorResponsavel +
+                         "\nData: " + to_string(eventos[idxEvento].data.dia) + "/" + 
+                         to_string(eventos[idxEvento].data.mes) + "/" + 
+                         to_string(eventos[idxEvento].data.ano) +
+                         " as " + to_string(eventos[idxEvento].horario.hora) + ":" +
+                         (eventos[idxEvento].horario.minuto < 10 ? "0" : "") +
+                         to_string(eventos[idxEvento].horario.minuto) +
+                         "\nLocal: " + eventos[idxEvento].local +
+                         "\nVagas: " + to_string(eventos[idxEvento].vagasDisponiveis) +
+                         "\nInscritos: " + to_string(eventos[idxEvento].totalinscritos);
+        
+        // Menu para autorizar ou recusar
+        constexpr int qtdOpcoes = 3;
+        string opcoes[qtdOpcoes] = {"Autorizar", "Recusar", "Voltar"};
+        
+        ConfigMenu configMenu;
+        configMenu.titulo = "DETALHES DO EVENTO";
+        configMenu.descricao = detalhes;
+        
+        saida_menu resultado = interface_para_menu(qtdOpcoes, opcoes, configMenu);
+
+        switch (resultado.indice_da_opcao) {
+            case 0: { // Autorizar
+                eventos[idxEvento].autorizado = 1;
+                if (SalvarEventosNoArquivo(eventos)) {
+                    mostrar_caixa_informacao("SUCESSO", "Evento '" + string(eventos[idxEvento].nome) + "' autorizado com sucesso!");
+                } else {
+                    mostrar_caixa_informacao("ERRO", "Erro ao salvar autorizacao.");
+                }
+                break;
+            }
+            case 1: { // Recusar
+                eventos.erase(eventos.begin() + idxEvento);
+                if (SalvarEventosNoArquivo(eventos)) {
+                    mostrar_caixa_informacao("SUCESSO", "Evento recusado e removido!");
+                } else {
+                    mostrar_caixa_informacao("ERRO", "Erro ao remover evento.");
+                }
+                break;
+            }
+            case 2: { // Voltar
+                continuar = false;
+                break;
+            }
+        }
+    }
+}
+
 
 // =====================================================================
 // NAMESPACE: MÓDULO DE ADMINISTRAÇÃO (mod_ADM)
@@ -2786,12 +2914,13 @@ namespace mod_ADM {
     }
 
     void menuConsultarPendencias() {
-        constexpr int Quantidades_opcoes = 2;
+        constexpr int Quantidades_opcoes = 3;
         bool continuar = true;
 
         while (continuar) {
             string opcoes[Quantidades_opcoes] = {
                 "Pendencias de Instrumentos",
+                "Autorizar Eventos",
                 "Voltar"
             };
             
@@ -2805,6 +2934,9 @@ namespace mod_ADM {
                     consultarPendenciasInstrumentos();
                     break;
                 case 1:
+                    autorizarEventos();
+                    break;
+                case 2:
                     continuar = false;
                     break;
             }
