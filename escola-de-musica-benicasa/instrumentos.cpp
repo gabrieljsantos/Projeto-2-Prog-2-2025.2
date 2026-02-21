@@ -53,7 +53,6 @@ void carregarDadosInstrumentos() {
 void salvarDadosInstrumentos() {
     ofstream file(ARQUIVO_DADOS, ios::binary | ios::trunc);
     if (!file.is_open()) {
-        cout << "Erro ao salvar arquivo de instrumentos!" << endl;
         return;
     }
 
@@ -298,7 +297,6 @@ void editarInstrumento() {
 void salvarEmprestimo(Emprestimo emp) {
     std::ofstream file("emprestimos.dat", std::ios::binary | std::ios::app);
     if (!file.is_open()) {
-        cout << "Erro ao salvar emprestimo!" << endl;
         return;
     }
     file.write((char*)&emp, sizeof(Emprestimo));

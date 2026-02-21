@@ -16,7 +16,6 @@ bool SalvarEventosNoArquivo(const vector<Evento>& eventos) {
     ofstream arquivo(ARQUIVO_EVENTOS, ios::binary);
 
     if (!arquivo.is_open()) {
-        cout << "Erro ao abrir arquivo.\n";
         return false;
     }
     arquivo.write(reinterpret_cast<const char*>(&proximoID), sizeof(proximoID));

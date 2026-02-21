@@ -19,7 +19,6 @@ namespace Login_mat {
         ofstream outUsuarios(ARQUIVO_USUARIOS, ios::out | ios::binary);
 
         if (outUsuarios.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
             exit(1);
         }
 
@@ -39,7 +38,6 @@ namespace Login_mat {
         ofstream outAlunos(ARQUIVO_ALUNOS, ios::out | ios::binary);
 
         if (outAlunos.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
             exit(1);
         }
 
@@ -59,7 +57,6 @@ namespace Login_mat {
         ofstream outProfessores(ARQUIVO_PROFESSORES, ios::out | ios::binary);
 
         if (outProfessores.fail()) {
-            cout << "A abertura do aquivo falhou!\n";
             exit(1);
         }
 
@@ -80,7 +77,6 @@ namespace Login_mat {
         outAdmin.open(ARQUIVO_ADMINISTRADORES, ios::out|ios::binary);
 
         if(outAdmin.fail()){
-            cout << "A abertura do aquivo falhou!\n";
             exit(1);
         }
 
@@ -266,7 +262,6 @@ namespace Login_mat {
         arquivo.open(ARQUIVO_USUARIOS, ios::in | ios::out | ios::binary);
 
          if (arquivo.fail()){
-            cout << "A abertura do arquivo falhou!\n";
             exit(1);
         }
 
@@ -284,7 +279,6 @@ namespace Login_mat {
         arquivo.open(ARQUIVO_ALUNOS, ios::in | ios::out| ios::binary);
 
         if (arquivo.fail()) {
-            cout << "A abertura do arquivo falhou!\n";
             exit(1);
         }
 
@@ -302,7 +296,6 @@ namespace Login_mat {
         arquivo.open(ARQUIVO_PROFESSORES, ios::in | ios::out| ios::binary);
 
         if (arquivo.fail()) {
-            cout << "A abertura do arquivo falhou!\n";
             exit(1);
         }
 
@@ -320,7 +313,6 @@ namespace Login_mat {
         arquivo.open(ARQUIVO_ADMINISTRADORES, ios::in | ios::out| ios::binary);
 
         if (arquivo.fail()) {
-            cout << "A abertura do arquivo falhou!\n";
             exit(1);
         }
 
@@ -375,7 +367,6 @@ namespace Login_mat {
         inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary);
 
         if (inUsuarios.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
             exit(1);
         }
 
@@ -404,7 +395,6 @@ namespace Login_mat {
         inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary);
 
         if (inUsuarios.fail()) {
-            cout << "A abertura do arquivo de entrada falhou.\n";
             exit(1);
         }
 
@@ -424,7 +414,7 @@ namespace Login_mat {
         inAlunos.open(ARQUIVO_ALUNOS, ios::in | ios::binary);
 
         if (inAlunos.fail()) {
-            cout << "A abertura do arquivo de entrada falhou.\n";
+
             exit(1);
         }
 
@@ -444,7 +434,7 @@ namespace Login_mat {
         inProfessores.open(ARQUIVO_PROFESSORES, ios::in | ios::binary);
 
         if(inProfessores.fail()){
-            cout << "A abertura do arquivo falhou!\n";
+
             exit(1);
         }
 
@@ -460,7 +450,6 @@ namespace Login_mat {
 //======================================================================
     void atualizar(int id, Professor professor) {
         if (!verificarUsuarioExistente(id)) {
-            cout << "O usuário não existe";
             return;
         }
 
@@ -468,12 +457,10 @@ namespace Login_mat {
         professor.base.categoria = PROFESSOR;
 
         salvarProfessor(professor);
-        cout << "Usuário atualizado com sucesso!";
     }
 
     void atualizar(int id, Aluno aluno) {
         if (!verificarUsuarioExistente(id)) {
-            cout << "O usuário não existe";
             return;
         }
 
@@ -481,7 +468,6 @@ namespace Login_mat {
         aluno.base.categoria = ALUNO;
 
         salvarAluno(aluno);
-        cout << "Usuário atualizado com sucesso!";
     }
 
 
@@ -502,7 +488,6 @@ namespace Login_mat {
         inAlunos.open(ARQUIVO_ALUNOS, ios::in | ios::binary);
 
         if (inAlunos.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
             exit(1);
         }
 
@@ -523,7 +508,6 @@ namespace Login_mat {
         inProfessores.open(ARQUIVO_PROFESSORES, ios::in | ios::binary);
 
         if(inProfessores.fail()){
-            cout << "A abertura do arquivo falhou!\n";
             exit(1);
         }
 
@@ -551,7 +535,6 @@ namespace Login_mat {
         inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary );
 
         if (inUsuarios.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
             return false;
         }
 
@@ -574,7 +557,6 @@ namespace Login_mat {
         inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary);
 
         if (inUsuarios.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
             return false;
         }
 

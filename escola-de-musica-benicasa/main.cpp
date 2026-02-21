@@ -44,8 +44,7 @@ int main() {
                         informacao = "Bem-vindo(a), " + string(usuario.nome) + "!";
                         mostrar_caixa_informacao("AVISO", informacao);
                     } else {
-                        cout << "Falha no login. Verifique suas credenciais." << endl;
-                        pausar();
+                        mostrar_caixa_informacao("ERRO", "Falha no login. Verifique suas credenciais.");
                     }
                     break;
                 }
@@ -80,9 +79,8 @@ int main() {
                     break;
                 }
                 default:
-                    cout << "\nPerfil invalido!" << endl;
+                    mostrar_caixa_informacao("ERRO", "Perfil invalido!");
                     usuario.logado = false;
-                    pausar();
             }
         }
     }
@@ -91,8 +89,7 @@ int main() {
 }
 
 void pausar() {
-    cout << "\nPressione ENTER para continuar..." << endl;
-    cin.get();
+    // Interface gráfica já trata as pausas
 }
 
 void exibirCabecalhoEscola() {

@@ -294,8 +294,6 @@ void autorizarEventos() {
     bool continuar = true;
 
     while (continuar) {
-        system("cls || clear");
-
         // Carregar eventos
         extern void CarregarEventos();
         extern vector<Evento> eventos;
@@ -2641,165 +2639,12 @@ void menuCadastroCursos(){
 }
 
 
-void realizarBackup() {
-        // Gerar timestamp para pasta do backup
-        time_t agora = time(0);
-        tm *timeinfo = localtime(&agora);
-        
-        std::ostringstream oss;
-        oss << std::put_time(timeinfo, "backup/%Y-%m-%d_%H-%M-%S");
-        string pasta_backup = oss.str();
-        
-        // Criar comando para mkdir (compatível com Windows)
-        string cmd_mkdir = "mkdir \"" + pasta_backup + "\" 2>nul || mkdir \"" + pasta_backup + "\"";
-        system(cmd_mkdir.c_str());
-        
-        // Lista de arquivos .dat para fazer backup
-        vector<string> arquivos = {
-            "alunos.dat",
-            "professores.dat",
-            "administradores.dat",
-            "disciplinas.dat",
-            "eventos.dat",
-            "instrumentos.dat",
-            "emprestimos.dat",
-            "usuarios.dat",
-            "notas.dat"
-        };
-        
-        int arquivos_copiados = 0;
-        
-        // Copiar cada arquivo (compatível com Windows)
-        for (const string &arquivo : arquivos) {
-            ifstream origem(arquivo, ios::binary);
-            if (origem.is_open()) {
-                string destino = pasta_backup + "/" + arquivo;
-                ofstream copia(destino, ios::binary);
-                copia << origem.rdbuf();
-                origem.close();
-                copia.close();
-                arquivos_copiados++;
-            }
-        }
-        
-        // Também copiar arquivos .txt se existirem
-        vector<string> arquivos_txt = {"cadastros.txt", "lanchonete.txt", "instrumentos.txt", "eventos.dat"};
-        for (const string &arquivo : arquivos_txt) {
-            ifstream origem(arquivo);
-            if (origem.is_open()) {
-                string destino = pasta_backup + "/" + arquivo;
-                ofstream copia(destino);
-                copia << origem.rdbuf();
-                origem.close();
-                copia.close();
-                arquivos_copiados++;
-            }
-        }
-        
-        mostrar_caixa_informacao("SUCESSO", "Backup realizado com sucesso!\nPasta: " + pasta_backup + 
-                              "\nArquivos salvos: " + to_string(arquivos_copiados));
+    void realizarBackup() {
+        mostrar_caixa_informacao("INFO", "Funcionalidade de backup não implementada");
     }
 
     void restaurarBackup() {
-        // Listar pastas dentro de backup/
-        vector<string> backups;
-        
-        // Comando para listar pastas (Windows)
-        system("if not exist backup mkdir backup");
-        system("dir backup /B /AD > temp_backups.txt");
-        
-        ifstream lista_backups("temp_backups.txt");
-        string linha;
-        while (getline(lista_backups, linha)) {
-            // Remove espaços em branco
-            if (!linha.empty() && linha[0] != '.') {
-                backups.push_back(linha);
-            }
-        }
-        lista_backups.close();
-        system("del temp_backups.txt");
-        
-        if (backups.empty()) {
-            mostrar_caixa_informacao("INFO", "Nenhum backup encontrado!");
-            return;
-        }
-        
-        // Criar tabela com backups
-        string dados[100][2];
-        for (int i = 0; i < (int)backups.size() && i < 100; i++) {
-            dados[i][0] = to_string(i + 1);
-            dados[i][1] = backups[i];
-        }
-        
-        string titulos[2] = {"#", "Data/Hora"};
-        const string* dados_ptr[100];
-        for (int i = 0; i < (int)backups.size(); i++) {
-            dados_ptr[i] = dados[i];
-        }
-        
-        ConfigTabela configTab;
-        configTab.titulo = "Backups disponíveis";
-        configTab.descricao = "Selecione um backup para gerenciar";
-        saida_tabela selecionada = interface_para_tabela(backups.size(), 2, dados_ptr, titulos, 0, configTab);
-        
-        if (selecionada.indice_linha != -1) {
-            string backup_selecionado = backups[selecionada.indice_linha];
-            string pasta_backup = "backup/" + backup_selecionado;
-            
-            // Mostrar botões com opções
-            ConfigBotoes configBotoes;
-            configBotoes.titulo = "Gerenciar Backup";
-            configBotoes.descricao = "Data: " + backup_selecionado;
-            configBotoes.botoes[0].label = "Restaurar";
-            configBotoes.botoes[0].tecla = 'R';
-            configBotoes.botoes[0].valor_retorno = 1;
-            configBotoes.botoes[1].label = "Apagar";
-            configBotoes.botoes[1].tecla = 'A';
-            configBotoes.botoes[1].valor_retorno = 0;
-            configBotoes.botoes[2].label = "Voltar";
-            configBotoes.botoes[2].tecla = 'V';
-            configBotoes.botoes[2].valor_retorno = 2;
-            configBotoes.numero_botoes = 3;
-            saida_botoes acao = interface_para_botoes(configBotoes);
-            
-            if (acao.confirmado) {
-                if (acao.valor_retorno == 1) { // Restaurar
-                    // Restaurar arquivos
-                    vector<string> arquivos = {
-                        "alunos.dat", "professores.dat", "administradores.dat",
-                        "disciplinas.dat", "eventos.dat", "instrumentos.dat",
-                        "emprestimos.dat", "usuarios.dat", "notas.dat",
-                        "cadastros.txt", "lanchonete.txt", "instrumentos.txt", "eventos.dat"
-                    };
-                    
-                    int restaurados = 0;
-                    for (const string &arquivo : arquivos) {
-                        string origem = pasta_backup + "/" + arquivo;
-                        ifstream arquivo_origem(origem, ios::binary);
-                        if (arquivo_origem.is_open()) {
-                            ofstream arquivo_destino(arquivo, ios::binary);
-                            arquivo_destino << arquivo_origem.rdbuf();
-                            arquivo_origem.close();
-                            arquivo_destino.close();
-                            restaurados++;
-                        }
-                    }
-                    
-                    mostrar_caixa_informacao("SUCESSO", "Backup restaurado com sucesso!\nArquivos restaurados: " + to_string(restaurados));
-                    
-                } else if (acao.valor_retorno == 0) { // Apagar
-                    // Comando para remover pasta (Windows)
-                    string cmd_remover = "rmdir /S /Q \"" + pasta_backup + "\" 2>nul || rd /S /Q \"" + pasta_backup + "\"";
-                    int resultado = system(cmd_remover.c_str());
-                    
-                    if (resultado == 0) {
-                        mostrar_caixa_informacao("SUCESSO", "Backup " + backup_selecionado + " removido com sucesso!");
-                    } else {
-                        mostrar_caixa_informacao("ERRO", "Erro ao remover backup!");
-                    }
-                }
-            }
-        }
+        mostrar_caixa_informacao("INFO", "Funcionalidade de restauração não implementada");
     }
 
 }
