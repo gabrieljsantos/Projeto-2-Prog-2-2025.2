@@ -7,13 +7,15 @@
 
 using namespace std;
 
-namespace Modulo_aluno
-{
+namespace Modulo_aluno {
+    // ===== FUNÇÃO AUXILIAR =====
+    void limparBuffer() {
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
 
-    //  CARREGAR ALUNO POR ID
-
-    Aluno carregarAluno(int idAluno)
-    {
+    // ===== CARREGAR ALUNO POR ID =====
+    Aluno carregarAluno(int idAluno) {
         ifstream arq("alunos.dat", ios::binary);
 
         if (!arq)
@@ -21,8 +23,7 @@ namespace Modulo_aluno
 
         Aluno a;
 
-        while (arq.read((char*)&a, sizeof(Aluno)))
-        {
+        while (arq.read((char*)&a, sizeof(Aluno))) {
             if (a.base.id == idAluno)
                 return a;
         }
@@ -30,15 +31,11 @@ namespace Modulo_aluno
         throw runtime_error("Aluno nao encontrado!");
     }
 
-    //  SALVAR ALUNO POR ID
-
-    void salvarAluno(const Aluno &aluno)
-    {
+    // ===== SALVAR ALUNO POR ID =====
+    void salvarAluno(const Aluno &aluno) {
         fstream arq("alunos.dat", ios::binary | ios::in | ios::out);
 
-        if (!arq)
-        {
-            // cria arquivo
+        if (!arq) {
             ofstream novo("alunos.dat", ios::binary);
             novo.close();
             arq.open("alunos.dat", ios::binary | ios::in | ios::out);
@@ -49,10 +46,8 @@ namespace Modulo_aluno
 
         Aluno temp;
 
-        while (arq.read((char*)&temp, sizeof(Aluno)))
-        {
-            if (temp.base.id == aluno.base.id)
-            {
+        while (arq.read((char*)&temp, sizeof(Aluno))) {
+            if (temp.base.id == aluno.base.id) {
                 arq.seekp(-sizeof(Aluno), ios::cur);
                 arq.write((char*)&aluno, sizeof(Aluno));
                 return;
@@ -64,64 +59,74 @@ namespace Modulo_aluno
         arq.write((char*)&aluno, sizeof(Aluno));
     }
 
-    //  CONSULTAS ACADÊMICAS
 
-    void consultarNotas(int idAluno)
-    {
-        Aluno aluno = carregarAluno(idAluno);
+    // ===== CONSULTAS ACADÊMICAS =====
+    void consultarNotas(int idAluno) {
+        try {
+            Aluno aluno = carregarAluno(idAluno);
 
-        system("cls || clear");
-        cout << "----------- MINHAS NOTAS -----------\n";
-
-        cout << "Nota 1: " << aluno.notas[0] << endl;
-        cout << "Nota 2: " << aluno.notas[1] << endl;
-
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
+            system("cls || clear");
+            cout << "----------- MINHAS NOTAS -----------\n";
+            cout << "Nota 1: " << aluno.notas[0] << endl;
+            cout << "Nota 2: " << aluno.notas[1] << endl;
+            cout << "\nPressione ENTER para voltar...";
+            cin.get();
+        } catch (const exception &e) {
+            cout << "Erro: " << e.what() << endl;
+            cout << "Pressione ENTER para voltar...";
+            cin.get();
+        }
     }
 
-    void consultarMedias(int idAluno)
-    {
-        Aluno aluno = carregarAluno(idAluno);
+    void consultarMedias(int idAluno) {
+        try {
+            Aluno aluno = carregarAluno(idAluno);
 
-        system("cls || clear");
-        cout << "----------- MINHA MEDIA -----------\n";
-
-        cout << "Media: " << aluno.media << endl;
-
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
+            system("cls || clear");
+            cout << "----------- MINHA MEDIA -----------\n";
+            cout << "Media: " << aluno.media << endl;
+            cout << "\nPressione ENTER para voltar...";
+            cin.get();
+        } catch (const exception &e) {
+            cout << "Erro: " << e.what() << endl;
+            cout << "Pressione ENTER para voltar...";
+            cin.get();
+        }
     }
 
-    void consultarSituacaoAcademica(int idAluno)
-    {
-        Aluno aluno = carregarAluno(idAluno);
+    void consultarSituacaoAcademica(int idAluno) {
+        try {
+            Aluno aluno = carregarAluno(idAluno);
 
-        system("cls || clear");
-        cout << "------ SITUACAO ACADEMICA ------\n";
+            system("cls || clear");
+            cout << "------ SITUACAO ACADEMICA ------\n";
 
-        if (aluno.media >= 7)
-            cout << "Aprovado\n";
-        else if (aluno.media >= 5)
-            cout << "Recuperacao\n";
-        else
-            cout << "Reprovado\n";
+            if (aluno.media >= 7)
+                cout << "Status: APROVADO\n";
+            else if (aluno.media >= 5)
+                cout << "Status: RECUPERACAO\n";
+            else
+                cout << "Status: REPROVADO\n";
 
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
+            cout << "Media: " << aluno.media << " | Faltas: " << aluno.faltas << endl;
+            cout << "\nPressione ENTER para voltar...";
+            cin.get();
+        } catch (const exception &e) {
+            cout << "Erro: " << e.what() << endl;
+            cout << "Pressione ENTER para voltar...";
+            cin.get();
+        }
     }
 
-    //  EVENTOS
 
-    void visualizarEventosDisponiveis()
-    {
+    // ===== EVENTOS =====
+    void visualizarEventosDisponiveis() {
         system("cls || clear");
         cout << "------ EVENTOS DISPONIVEIS ------\n";
 
         ifstream arq("eventos.dat", ios::binary);
 
-        if (!arq)
-        {
+        if (!arq) {
             cout << "Arquivo eventos.dat nao encontrado.\n";
             cout << "\nPressione ENTER para voltar...";
             cin.get();
@@ -131,11 +136,11 @@ namespace Modulo_aluno
         Evento e;
         bool encontrou = false;
 
-        while (arq.read((char*)&e, sizeof(Evento)))
-        {
-            if (e.autorizado == 1)
-            {
-                cout << "ID: " << e.id << " - " << e.nome << endl;
+        while (arq.read((char*)&e, sizeof(Evento))) {
+            if (e.ativo == 1 && e.autorizado == 1) {
+                cout << "\nID: " << e.id << " - " << e.nome << endl;
+                cout << "Descricao: " << e.descricao << endl;
+                cout << "Local: " << e.local << endl;
                 encontrou = true;
             }
         }
@@ -147,115 +152,86 @@ namespace Modulo_aluno
         cin.get();
     }
 
-    void inscreverEmEvento(int idAluno)
-    {
-        Aluno aluno = carregarAluno(idAluno);
+    void inscreverEmEvento(int idAluno) {
+        try {
+            Aluno aluno = carregarAluno(idAluno);
 
-        system("cls || clear");
-        cout << "------ INSCREVER EM EVENTO ------\n";
+            system("cls || clear");
+            cout << "------ INSCREVER EM EVENTO ------\n";
 
-        if (aluno.qtdEventos >= 20)
-        {
-            cout << "Limite de eventos atingido.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
+            int id;
+            cout << "Digite o ID do evento: ";
+            cin >> id;
+            limparBuffer();
 
-        int id;
-        cout << "Digite o ID do evento: ";
-        cin >> id;
-        limparBuffer();
+            fstream arq("eventos.dat", ios::binary | ios::in | ios::out);
 
-        ifstream arq("eventos.dat", ios::binary);
-
-        if (!arq)
-        {
-            cout << "Arquivo eventos.dat nao encontrado.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
-
-        Evento e;
-
-        while (arq.read((char*)&e, sizeof(Evento)))
-        {
-            if (e.id == id && e.autorizado == 1)
-            {
-                aluno.eventos[aluno.qtdEventos++] = id;
-                salvarAluno(aluno);
-
-                cout << "Inscricao realizada com sucesso!\n";
+            if (!arq) {
+                cout << "Arquivo eventos.dat nao encontrado.\n";
                 cout << "\nPressione ENTER para voltar...";
                 cin.get();
                 return;
             }
-        }
 
-        cout << "Evento nao encontrado ou nao autorizado.\n";
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
-    }
+            Evento e;
+            bool encontrou = false;
 
-    void consultarMinhasInscricoes(int idAluno)
-    {
-        Aluno aluno = carregarAluno(idAluno);
-
-        system("cls || clear");
-        cout << "------ MINHAS INSCRICOES ------\n";
-
-        if (aluno.qtdEventos == 0)
-        {
-            cout << "Voce nao esta inscrito em nenhum evento.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
-
-        ifstream arq("eventos.dat", ios::binary);
-
-        if (!arq)
-        {
-            cout << "Arquivo eventos.dat nao encontrado.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
-
-        Evento e;
-        bool encontrou = false;
-
-        while (arq.read((char*)&e, sizeof(Evento)))
-        {
-            for (int i = 0; i < aluno.qtdEventos; i++)
-            {
-                if (e.id == aluno.eventos[i])
-                {
-                    cout << "Evento: " << e.nome << endl;
+            while (arq.read((char*)&e, sizeof(Evento))) {
+                if (e.id == id && e.ativo == 1 && e.autorizado == 1) {
+                    cout << "Inscricao no evento realizada com sucesso!\n";
                     encontrou = true;
+                    break;
                 }
             }
+
+            if (!encontrou)
+                cout << "Evento nao encontrado ou nao autorizado.\n";
+
+            cout << "\nPressione ENTER para voltar...";
+            cin.get();
+        } catch (const exception &e) {
+            cout << "Erro: " << e.what() << endl;
+            cout << "Pressione ENTER para voltar...";
+            cin.get();
         }
-
-        if (!encontrou)
-            cout << "Nenhum dos eventos cadastrados foi encontrado no arquivo.\n";
-
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
     }
 
-    //  INSTRUMENTOS
+    void consultarMinhasInscricoes(int idAluno) {
+        try {
+            Aluno aluno = carregarAluno(idAluno);
 
-    void visualizarInstrumentosDisponiveis()
-    {
+            system("cls || clear");
+            cout << "------ MINHAS INSCRICOES ------\n";
+
+            ifstream arq("eventos.dat", ios::binary);
+
+            if (!arq) {
+                cout << "Arquivo eventos.dat nao encontrado.\n";
+                cout << "\nPressione ENTER para voltar...";
+                cin.get();
+                return;
+            }
+
+            cout << "Inscrições do aluno: " << aluno.base.nome << endl;
+
+            cout << "\nPressione ENTER para voltar...";
+            cin.get();
+        } catch (const exception &e) {
+            cout << "Erro: " << e.what() << endl;
+            cout << "Pressione ENTER para voltar...";
+            cin.get();
+        }
+    }
+
+
+    // ===== INSTRUMENTOS =====
+    void visualizarInstrumentosDisponiveis() {
         system("cls || clear");
         cout << "------ INSTRUMENTOS DISPONIVEIS ------\n";
 
         ifstream arq("instrumentos.dat", ios::binary);
 
-        if (!arq)
-        {
+        if (!arq) {
             cout << "Arquivo instrumentos.dat nao encontrado.\n";
             cout << "\nPressione ENTER para voltar...";
             cin.get();
@@ -265,11 +241,10 @@ namespace Modulo_aluno
         Instrumento i;
         bool encontrou = false;
 
-        while (arq.read((char*)&i, sizeof(Instrumento)))
-        {
-            if (i.disponivel)
-            {
-                cout << "ID: " << i.id << " - " << i.nome << endl;
+        while (arq.read((char*)&i, sizeof(Instrumento))) {
+            if (i.ativo == 1 && i.disponivel && i.estoque > 0) {
+                cout << "ID: " << i.id << " - " << i.nome 
+                     << " (Disponivel: " << i.estoque << ")\n";
                 encontrou = true;
             }
         }
@@ -281,193 +256,188 @@ namespace Modulo_aluno
         cin.get();
     }
 
-    void solicitarEmprestimo(int idAluno)
-    {
-        Aluno aluno = carregarAluno(idAluno);
+    void solicitarEmprestimo(int idAluno) {
+        try {
+            Aluno aluno = carregarAluno(idAluno);
 
-        system("cls || clear");
-        cout << "------ SOLICITAR EMPRESTIMO ------\n";
+            system("cls || clear");
+            cout << "------ SOLICITAR EMPRESTIMO ------\n";
 
-        if (aluno.qtdInstrumentos >= 10)
-        {
-            cout << "Limite de instrumentos atingido.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
+            int id;
+            cout << "Digite o ID do instrumento: ";
+            cin >> id;
+            limparBuffer();
 
-        int id;
-        cout << "Digite o ID do instrumento: ";
-        cin >> id;
-        limparBuffer();
+            fstream arq("instrumentos.dat", ios::binary | ios::in | ios::out);
 
-        fstream arq("instrumentos.dat", ios::binary | ios::in | ios::out);
-
-        if (!arq)
-        {
-            cout << "Arquivo instrumentos.dat nao encontrado.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
-        Instrumento i;
-
-        while (arq.read((char*)&i, sizeof(Instrumento)))
-        {
-            if (i.id == id && i.disponivel)
-            {
-                i.disponivel = false;
-                i.responsavel = idAluno;
-
-                arq.seekp(-sizeof(Instrumento), ios::cur);
-                arq.write((char*)&i, sizeof(Instrumento));
-
-                aluno.instrumentos[aluno.qtdInstrumentos++] = id;
-                salvarAluno(aluno);
-
-                cout << "Emprestimo realizado com sucesso!\n";
+            if (!arq) {
+                cout << "Arquivo instrumentos.dat nao encontrado.\n";
                 cout << "\nPressione ENTER para voltar...";
                 cin.get();
                 return;
             }
-        }
 
-        cout << "Instrumento nao encontrado ou indisponivel.\n";
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
-    }
+            Instrumento inst;
+            bool encontrou = false;
 
-    void realizarDevolucao(int idAluno)
-    {
-        Aluno aluno = carregarAluno(idAluno);
+            while (arq.read((char*)&inst, sizeof(Instrumento))) {
+                if (inst.id == id && inst.ativo == 1 && inst.disponivel && inst.estoque > 0) {
+                    // Reduz estoque
+                    inst.estoque--;
+                    if (inst.estoque == 0)
+                        inst.disponivel = false;
 
-        system("cls || clear");
-        cout << "------ DEVOLVER INSTRUMENTO ------\n";
+                    arq.seekp(-sizeof(Instrumento), ios::cur);
+                    arq.write((char*)&inst, sizeof(Instrumento));
 
-        if (aluno.qtdInstrumentos == 0)
-        {
-            cout << "Voce nao possui instrumentos emprestados.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
+                    // Registra empréstimo
+                    ofstream emp("emprestimos.dat", ios::binary | ios::app);
+                    Emprestimo e;
+                    e.idAluno = idAluno;
+                    e.idInstrumento = id;
+                    strcpy(e.nome_Alu, aluno.base.nome);
+                    strcpy(e.nome_In, inst.nome);
+                    // Aqui você deveria preencher as datas, deixo como exemplo
+                    strcpy(e.dataEmprestimo, "00/00/0000");
+                    strcpy(e.dataPrevista, "00/00/0000");
+                    emp.write((char*)&e, sizeof(Emprestimo));
+                    emp.close();
 
-        cout << "Instrumentos emprestados:\n";
-        for (int i = 0; i < aluno.qtdInstrumentos; i++)
-            cout << "- ID: " << aluno.instrumentos[i] << endl;
-
-        int id;
-        cout << "Digite o ID do instrumento para devolver: ";
-        cin >> id;
-        limparBuffer();
-
-        fstream arq("instrumentos.dat", ios::binary | ios::in | ios::out);
-
-        if (!arq)
-        {
-            cout << "Arquivo instrumentos.dat nao encontrado.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
-
-        Instrumento inst;
-
-        while (arq.read((char*)&inst, sizeof(Instrumento)))
-        {
-            if (inst.id == id && inst.responsavel == idAluno)
-            {
-                inst.disponivel = true;
-                inst.responsavel = -1;
-
-                arq.seekp(-sizeof(Instrumento), ios::cur);
-                arq.write((char*)&inst, sizeof(Instrumento));
-
-                for (int i = 0; i < aluno.qtdInstrumentos; i++)
-                {
-                    if (aluno.instrumentos[i] == id)
-                    {
-                        for (int j = i; j < aluno.qtdInstrumentos - 1; j++)
-                            aluno.instrumentos[j] = aluno.instrumentos[j + 1];
-
-                        aluno.qtdInstrumentos--;
-                        break;
-                    }
+                    cout << "Emprestimo realizado com sucesso!\n";
+                    encontrou = true;
+                    break;
                 }
+            }
 
-                salvarAluno(aluno);
+            if (!encontrou)
+                cout << "Instrumento nao encontrado ou indisponivel.\n";
 
-                cout << "Devolucao realizada com sucesso!\n";
+            cout << "\nPressione ENTER para voltar...";
+            cin.get();
+        } catch (const exception &e) {
+            cout << "Erro: " << e.what() << endl;
+            cout << "Pressione ENTER para voltar...";
+            cin.get();
+        }
+    }
+
+    void realizarDevolucao(int idAluno) {
+        try {
+            system("cls || clear");
+            cout << "------ DEVOLVER INSTRUMENTO ------\n";
+
+            int id;
+            cout << "Digite o ID do instrumento para devolver: ";
+            cin >> id;
+            limparBuffer();
+
+            // Procura empréstimo ativo
+            fstream emp("emprestimos.dat", ios::binary | ios::in | ios::out);
+
+            if (!emp) {
+                cout << "Arquivo emprestimos.dat nao encontrado.\n";
                 cout << "\nPressione ENTER para voltar...";
                 cin.get();
                 return;
             }
-        }
 
-        cout << "Instrumento nao encontrado ou nao pertence a voce.\n";
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
+            Emprestimo e;
+            bool encontrou = false;
+
+            while (emp.read((char*)&e, sizeof(Emprestimo))) {
+                if (e.idInstrumento == id && e.idAluno == idAluno) {
+                    // Atualiza instrumento
+                    fstream arq("instrumentos.dat", ios::binary | ios::in | ios::out);
+
+                    if (arq) {
+                        Instrumento inst;
+
+                        while (arq.read((char*)&inst, sizeof(Instrumento))) {
+                            if (inst.id == id) {
+                                inst.estoque++;
+                                inst.disponivel = true;
+
+                                arq.seekp(-sizeof(Instrumento), ios::cur);
+                                arq.write((char*)&inst, sizeof(Instrumento));
+                                break;
+                            }
+                        }
+
+                        arq.close();
+                    }
+
+                    // Remove registro de empréstimo (marca como inativo ou deleta)
+                    emp.seekp(-sizeof(Emprestimo), ios::cur);
+                    e.idAluno = -1; // Marca como inativo
+                    emp.write((char*)&e, sizeof(Emprestimo));
+
+                    cout << "Devolucao realizada com sucesso!\n";
+                    encontrou = true;
+                    break;
+                }
+            }
+
+            emp.close();
+
+            if (!encontrou)
+                cout << "Nenhum emprestimo encontrado para este instrumento.\n";
+
+            cout << "\nPressione ENTER para voltar...";
+            cin.get();
+        } catch (const exception &e) {
+            cout << "Erro: " << e.what() << endl;
+            cout << "Pressione ENTER para voltar...";
+            cin.get();
+        }
     }
 
-    void consultarMeusEmprestimos(int idAluno)
-    {
-        Aluno aluno = carregarAluno(idAluno);
+    void consultarMeusEmprestimos(int idAluno) {
+        try {
+            system("cls || clear");
+            cout << "------ MEUS EMPRESTIMOS ------\n";
 
-        system("cls || clear");
-        cout << "------ MEUS EMPRESTIMOS ------\n";
+            ifstream emp("emprestimos.dat", ios::binary);
 
-        if (aluno.qtdInstrumentos == 0)
-        {
-            cout << "Voce nao possui instrumentos emprestados.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
+            if (!emp) {
+                cout << "Arquivo emprestimos.dat nao encontrado.\n";
+                cout << "\nPressione ENTER para voltar...";
+                cin.get();
+                return;
+            }
 
-        ifstream arq("instrumentos.dat", ios::binary);
+            Emprestimo e;
+            bool encontrou = false;
 
-        if (!arq)
-        {
-            cout << "Arquivo instrumentos.dat nao encontrado.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
-
-        Instrumento i;
-        bool encontrou = false;
-
-        while (arq.read((char*)&i, sizeof(Instrumento)))
-        {
-            for (int j = 0; j < aluno.qtdInstrumentos; j++)
-            {
-                if (i.id == aluno.instrumentos[j])
-                {
-                    cout << "Instrumento: " << i.nome << endl;
+            while (emp.read((char*)&e, sizeof(Emprestimo))) {
+                if (e.idAluno == idAluno && e.idAluno != -1) {
+                    cout << "\nInstrumento: " << e.nome_In << endl;
+                    cout << "Data Emprestimo: " << e.dataEmprestimo << endl;
+                    cout << "Data Prevista para Devolucao: " << e.dataPrevista << endl;
                     encontrou = true;
                 }
             }
+
+            if (!encontrou)
+                cout << "Voce nao possui instrumentos emprestados.\n";
+
+            cout << "\nPressione ENTER para voltar...";
+            cin.get();
+        } catch (const exception &e) {
+            cout << "Erro: " << e.what() << endl;
+            cout << "Pressione ENTER para voltar...";
+            cin.get();
         }
-
-        if (!encontrou)
-            cout << "Nenhum dos instrumentos emprestados foi encontrado no arquivo.\n";
-
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
     }
 
-    //  LANCHONETE
-
-    void visualizarProdutos()
-    {
+    // ===== LANCHONETE =====
+    void visualizarProdutos() {
         system("cls || clear");
         cout << "------ PRODUTOS DISPONIVEIS ------\n";
 
-        ifstream arq("produtos.dat", ios::binary);
+        ifstream arq("lanchonete.dat", ios::binary);
 
-        if (!arq)
-        {
-            cout << "Arquivo produtos.dat nao encontrado.\n";
+        if (!arq) {
+            cout << "Arquivo lanchonete.dat nao encontrado.\n";
             cout << "\nPressione ENTER para voltar...";
             cin.get();
             return;
@@ -476,113 +446,134 @@ namespace Modulo_aluno
         Produto p;
         bool encontrou = false;
 
-        while (arq.read((char*)&p, sizeof(Produto)))
-        {
-            cout << "ID: " << p.id << " - " << p.nome
-                 << " - R$ " << p.preco << endl;
-            encontrou = true;
+        while (arq.read((char*)&p, sizeof(Produto))) {
+            if (p.ativo) {
+                cout << "ID: " << p.id << " - " << p.nome 
+                     << " - R$ " << p.preco 
+                     << " (Estoque: " << p.estoque << ")\n";
+                encontrou = true;
+            }
         }
 
         if (!encontrou)
-            cout << "Nenhum produto cadastrado.\n";
+            cout << "Nenhum produto disponivel.\n";
 
         cout << "\nPressione ENTER para voltar...";
         cin.get();
     }
 
-    void comprarProduto(int idAluno)
-    {
-        Aluno aluno = carregarAluno(idAluno);
+    void comprarProduto(int idAluno) {
+        try {
+            Aluno aluno = carregarAluno(idAluno);
 
-        system("cls || clear");
-        cout << "------ REALIZAR COMPRA ------\n";
+            system("cls || clear");
+            cout << "------ REALIZAR COMPRA ------\n";
 
-        int id;
-        cout << "Digite o ID do produto: ";
-        cin >> id;
-        limparBuffer();
+            int id;
+            cout << "Digite o ID do produto: ";
+            cin >> id;
+            limparBuffer();
 
-        ifstream arq("produtos.dat", ios::binary);
+            fstream arq("lanchonete.dat", ios::binary | ios::in | ios::out);
 
-        if (!arq)
-        {
-            cout << "Arquivo produtos.dat nao encontrado.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
-
-        Produto p;
-
-        while (arq.read((char*)&p, sizeof(Produto)))
-        {
-            if (p.id == id)
-            {
-                if (aluno.saldo >= p.preco)
-                {
-                    aluno.saldo -= p.preco;
-                    salvarAluno(aluno);
-
-                    cout << "Compra realizada com sucesso!\n";
-                }
-
-                else
-                {
-                    cout << "Saldo insuficiente.\n";
-                }
-
+            if (!arq) {
+                cout << "Arquivo lanchonete.dat nao encontrado.\n";
                 cout << "\nPressione ENTER para voltar...";
                 cin.get();
                 return;
             }
-        }
 
-        cout << "Produto nao encontrado.\n";
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
-    }
+            Produto p;
 
-    // SALDO
+            while (arq.read((char*)&p, sizeof(Produto))) {
+                if (p.id == id && p.ativo) {
+                    if (p.estoque <= 0) {
+                        cout << "Produto sem estoque.\n";
+                        cout << "\nPressione ENTER para voltar...";
+                        cin.get();
+                        return;
+                    }
 
-    void consultarSaldo(int idAluno)
-    {
-        Aluno aluno = carregarAluno(idAluno);
+                    if (aluno.saldo >= p.preco) {
+                        aluno.saldo -= p.preco;
+                        p.estoque--;
 
-        system("cls || clear");
-        cout << "----------- MEU SALDO -----------\n";
-        cout << "Saldo atual: R$ " << aluno.saldo << "\n";
+                        // Atualiza aluno
+                        salvarAluno(aluno);
 
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
-    }
+                        // Atualiza produto
+                        arq.seekp(-sizeof(Produto), ios::cur);
+                        arq.write((char*)&p, sizeof(Produto));
 
-    void solicitarCreditos(int idAluno)
-    {
-        Aluno aluno = carregarAluno(idAluno);
+                        cout << "Compra realizada com sucesso!\n";
+                        cout << "Novo saldo: R$ " << aluno.saldo << endl;
+                    } else {
+                        cout << "Saldo insuficiente! Seu saldo: R$ " << aluno.saldo << endl;
+                    }
 
-        system("cls || clear");
-        cout << "------ SOLICITAR CREDITOS ------\n";
+                    cout << "\nPressione ENTER para voltar...";
+                    cin.get();
+                    return;
+                }
+            }
 
-        double valor;
-        cout << "Digite o valor que deseja adicionar: R$ ";
-        cin >> valor;
-        limparBuffer();
-
-        if (valor <= 0)
-        {
-            cout << "Valor invalido.\n";
+            cout << "Produto nao encontrado.\n";
+            cout << "\nPressione ENTER para voltar...";
             cin.get();
-            return;
+        } catch (const exception &e) {
+            cout << "Erro: " << e.what() << endl;
+            cout << "Pressione ENTER para voltar...";
+            cin.get();
         }
+    }
 
-        aluno.saldo += valor;
-        salvarAluno(aluno);
+    void consultarSaldo(int idAluno) {
+        try {
+            Aluno aluno = carregarAluno(idAluno);
 
-        cout << "Credito adicionado com sucesso!\n";
-        cout << "Novo saldo: R$ " << aluno.saldo << endl;
+            system("cls || clear");
+            cout << "----------- MEU SALDO -----------\n";
+            cout << "Saldo atual: R$ " << aluno.saldo << endl;
+            cout << "\nPressione ENTER para voltar...";
+            cin.get();
+        } catch (const exception &e) {
+            cout << "Erro: " << e.what() << endl;
+            cout << "Pressione ENTER para voltar...";
+            cin.get();
+        }
+    }
 
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
+    void solicitarCreditos(int idAluno) {
+        try {
+            Aluno aluno = carregarAluno(idAluno);
+
+            system("cls || clear");
+            cout << "------ SOLICITAR CREDITOS ------\n";
+
+            double valor;
+            cout << "Digite o valor que deseja adicionar: R$ ";
+            cin >> valor;
+            limparBuffer();
+
+            if (valor <= 0) {
+                cout << "Valor invalido.\n";
+                cout << "\nPressione ENTER para voltar...";
+                cin.get();
+                return;
+            }
+
+            aluno.saldo += valor;
+            salvarAluno(aluno);
+
+            cout << "Credito adicionado com sucesso!\n";
+            cout << "Novo saldo: R$ " << aluno.saldo << endl;
+            cout << "\nPressione ENTER para voltar...";
+            cin.get();
+        } catch (const exception &e) {
+            cout << "Erro: " << e.what() << endl;
+            cout << "Pressione ENTER para voltar...";
+            cin.get();
+        }
     }
 
 }
