@@ -1,4 +1,5 @@
 #include "instrumentos.h"
+#include "interface_grafica.h"
 #include "admin.h"
 #include <fstream>
 #include <cstring>
@@ -7,11 +8,29 @@
 using namespace std;
 
 // --- Variáveis Globais do Módulo ---
-const int MAX_INSTRUMENTOS = 100; // Limite do array
+const int MAX_INSTRUMENTOS = 100;
 Instrumento listaInstrumentos[MAX_INSTRUMENTOS];
 int quantidadeInstrumentos = 0;
 
 const char* ARQUIVO_DADOS = "instrumentos.dat";
+
+// ═══════════════════════════════════════════════════════════════
+// TEMA ROSA — Cores globais do módulo de instrumentos
+// ═══════════════════════════════════════════════════════════════
+static CoresMenu coresRosa()
+{
+    CoresMenu c;
+    c.cor_opcao_selecionada = 10;
+    c.cor_opcao             = 11;
+    c.cor_descricao         = 12;
+    c.cor_instrucao         = 13;
+    c.cor_titulo            = 14;
+    c.cor_caminho           = 15;
+    c.cor_borda             = 16;
+    c.cor_paginacao         = 17;
+    c.cor_controles         = 18;
+    return c;
+}
 
 // --- Funções Auxiliares de Arquivo (Internas) ---
 
@@ -72,106 +91,206 @@ int buscarIndicePorId(int id) {
 
 void cadastrarInstrumento() {
     if (quantidadeInstrumentos >= MAX_INSTRUMENTOS) {
-        cout << "Limite de instrumentos atingido!" << endl;
+        mostrar_caixa_informacao("Erro", "Limite de instrumentos atingido!");
         return;
     }
 
     Instrumento novo;
-    
-    // Geração de ID sequencial simples
     novo.id = (quantidadeInstrumentos == 0) ? 1 : listaInstrumentos[quantidadeInstrumentos - 1].id + 1;
     novo.ativo = 1;
-    novo.autorizado = 1; 
-    
-    cout << "\n--- Cadastro de Instrumento ---" << endl;
-    cout << "Nome: ";
-    cin.ignore(); // Limpa buffer residual
-    cin.getline(novo.nome, TAM_NOME);
-    
-    cout << "Quantidade em Estoque: ";
-    cin >> novo.estoque;
-    
+    novo.autorizado = 1;
+
+    // --- Nome ---
+    ConfigEntradaTexto cfgNome;
+    cfgNome.titulo       = "Cadastrar Instrumento";
+    cfgNome.descricao    = "Preencha os dados do novo instrumento.";
+    cfgNome.label        = "Nome do instrumento: ";
+    cfgNome.caminho      = "Instrumentos > Cadastrar";
+    cfgNome.tipo_entrada = TIPO_TEXTO;
+    cfgNome.tamanho_maximo = TAM_NOME - 1;
+    cfgNome.cores        = coresRosa();
+
+    saida_entrada_texto resNome = interface_para_entrada_texto(cfgNome);
+    if (!resNome.confirmado || resNome.valor.empty()) {
+        mostrar_caixa_informacao("Cancelado", "Cadastro cancelado.");
+        return;
+    }
+    strncpy(novo.nome, resNome.valor.c_str(), TAM_NOME - 1);
+    novo.nome[TAM_NOME - 1] = '\0';
+
+    // --- Estoque ---
+    ConfigEntradaTexto cfgEstoque;
+    cfgEstoque.titulo       = "Cadastrar Instrumento";
+    cfgEstoque.descricao    = "Instrumento: " + resNome.valor;
+    cfgEstoque.label        = "Quantidade em estoque: ";
+    cfgEstoque.caminho      = "Instrumentos > Cadastrar";
+    cfgEstoque.tipo_entrada = TIPO_NUMERO;
+    cfgEstoque.tamanho_maximo = 5;
+    cfgEstoque.cores        = coresRosa();
+
+    saida_entrada_texto resEstoque = interface_para_entrada_texto(cfgEstoque);
+    if (!resEstoque.confirmado || resEstoque.valor.empty()) {
+        mostrar_caixa_informacao("Cancelado", "Cadastro cancelado.");
+        return;
+    }
+    novo.estoque = atoi(resEstoque.valor.c_str());
     novo.disponivel = (novo.estoque > 0);
-    novo.idAluno = 0; 
+    novo.idAluno = 0;
 
     listaInstrumentos[quantidadeInstrumentos] = novo;
     quantidadeInstrumentos++;
-    
-    salvarDadosInstrumentos(); // Salva imediatamente após cadastro
-    cout << "Instrumento cadastrado com sucesso! ID: " << novo.id << endl;
+    salvarDadosInstrumentos();
+
+    mostrar_caixa_informacao("Sucesso", "Instrumento cadastrado com sucesso! ID: " + to_string(novo.id));
 }
 
 void listarInstrumentos() {
-    cout << "\n--- Lista de Instrumentos ---" << endl;
     if (quantidadeInstrumentos == 0) {
-        cout << "Nenhum instrumento cadastrado." << endl;
+        mostrar_caixa_informacao("Listar Instrumentos", "Nenhum instrumento cadastrado.");
         return;
     }
 
+    // Contar ativos
+    int totalAtivos = 0;
+    for (int i = 0; i < quantidadeInstrumentos; i++) {
+        if (listaInstrumentos[i].ativo == 1) totalAtivos++;
+    }
+    if (totalAtivos == 0) {
+        mostrar_caixa_informacao("Listar Instrumentos", "Nenhum instrumento ativo.");
+        return;
+    }
+
+    // Montar dados para tabela
+    string dados[100][4];
+    int contador = 0;
     for (int i = 0; i < quantidadeInstrumentos; i++) {
         Instrumento& it = listaInstrumentos[i];
         if (it.ativo == 1) {
-            cout << "ID: " << it.id 
-                 << " | Nome: " << it.nome 
-                 << " | Estoque: " << it.estoque 
-                 << " | Disponivel: " << (it.disponivel ? "Sim" : "Nao") << endl;
+            dados[contador][0] = to_string(it.id);
+            dados[contador][1] = it.nome;
+            dados[contador][2] = to_string(it.estoque);
+            dados[contador][3] = it.disponivel ? "Sim" : "Nao";
+            contador++;
         }
     }
+
+    const string* dados_ptr[100];
+    for (int i = 0; i < contador; i++)
+        dados_ptr[i] = dados[i];
+
+    string titulos[4] = {"ID", "Nome", "Estoque", "Disponivel"};
+
+    int larguras[4] = {6, 25, 10, 12};
+
+    ConfigTabela cfgTab;
+    cfgTab.titulo         = "Lista de Instrumentos";
+    cfgTab.descricao      = "Todos os instrumentos cadastrados no sistema.";
+    cfgTab.caminho        = "Instrumentos > Listar";
+    cfgTab.largura_janela = 70;
+    cfgTab.linhas_por_janela = 8;
+    cfgTab.larguras_colunas  = larguras;
+    cfgTab.num_colunas       = 4;
+    cfgTab.cores             = coresRosa();
+
+    // Tabela sem retorno útil — apenas visualização
+    interface_para_tabela(contador, 4, (const string**)dados_ptr, titulos, 0, cfgTab);
 }
 
 void excluirInstrumento() {
-    int id;
-    cout << "Digite o ID do instrumento a excluir: ";
-    cin >> id;
+    // --- Pedir ID ---
+    ConfigEntradaTexto cfgId;
+    cfgId.titulo       = "Excluir Instrumento";
+    cfgId.descricao    = "Digite o ID do instrumento que deseja excluir.";
+    cfgId.label        = "ID do instrumento: ";
+    cfgId.caminho      = "Instrumentos > Excluir";
+    cfgId.tipo_entrada = TIPO_NUMERO;
+    cfgId.tamanho_maximo = 10;
+    cfgId.cores        = coresRosa();
 
+    saida_entrada_texto resId = interface_para_entrada_texto(cfgId);
+    if (!resId.confirmado || resId.valor.empty()) {
+        mostrar_caixa_informacao("Cancelado", "Exclusao cancelada.");
+        return;
+    }
+
+    int id = atoi(resId.valor.c_str());
     int idx = buscarIndicePorId(id);
     if (idx != -1) {
-        listaInstrumentos[idx].ativo = 0; // Exclusão lógica
+        listaInstrumentos[idx].ativo = 0;
         salvarDadosInstrumentos();
-        cout << "Instrumento excluido com sucesso." << endl;
+        mostrar_caixa_informacao("Sucesso", "Instrumento excluido com sucesso.");
     } else {
-        cout << "Instrumento nao encontrado." << endl;
+        mostrar_caixa_informacao("Erro", "Instrumento nao encontrado.");
     }
 }
 
 // --- Editar Instrumento ---
 
 void editarInstrumento() {
-    int id;
-    cout << "\n--- Editar Instrumento ---" << endl;
-    cout << "Digite o ID do instrumento: ";
-    cin >> id;
+    // --- Pedir ID ---
+    ConfigEntradaTexto cfgId;
+    cfgId.titulo       = "Editar Instrumento";
+    cfgId.descricao    = "Digite o ID do instrumento que deseja editar.";
+    cfgId.label        = "ID do instrumento: ";
+    cfgId.caminho      = "Instrumentos > Editar";
+    cfgId.tipo_entrada = TIPO_NUMERO;
+    cfgId.tamanho_maximo = 10;
+    cfgId.cores        = coresRosa();
 
+    saida_entrada_texto resId = interface_para_entrada_texto(cfgId);
+    if (!resId.confirmado || resId.valor.empty()) {
+        mostrar_caixa_informacao("Cancelado", "Edicao cancelada.");
+        return;
+    }
+
+    int id = atoi(resId.valor.c_str());
     int idx = buscarIndicePorId(id);
     if (idx == -1) {
-        cout << "Instrumento nao encontrado." << endl;
+        mostrar_caixa_informacao("Erro", "Instrumento nao encontrado.");
         return;
     }
 
     Instrumento& inst = listaInstrumentos[idx];
 
-    cout << "Dados atuais:" << endl;
-    cout << "  Nome: " << inst.nome << endl;
-    cout << "  Estoque: " << inst.estoque << endl;
+    // --- Novo Nome ---
+    ConfigEntradaTexto cfgNome;
+    cfgNome.titulo       = "Editar Instrumento";
+    cfgNome.descricao    = "Atual: " + string(inst.nome) + " | Estoque: " + to_string(inst.estoque);
+    cfgNome.label        = "Novo nome (ou ESC para manter): ";
+    cfgNome.caminho      = "Instrumentos > Editar > Nome";
+    cfgNome.tipo_entrada = TIPO_TEXTO;
+    cfgNome.tamanho_maximo = TAM_NOME - 1;
+    cfgNome.valor_inicial  = inst.nome;
+    cfgNome.cores        = coresRosa();
 
-    cout << "\nNovo Nome (ou ENTER para manter): ";
-    cin.ignore();
-    char novoNome[TAM_NOME];
-    cin.getline(novoNome, TAM_NOME);
-    if (strlen(novoNome) > 0) {
-        strcpy(inst.nome, novoNome);
+    saida_entrada_texto resNome = interface_para_entrada_texto(cfgNome);
+    if (resNome.confirmado && !resNome.valor.empty()) {
+        strncpy(inst.nome, resNome.valor.c_str(), TAM_NOME - 1);
+        inst.nome[TAM_NOME - 1] = '\0';
     }
 
-    cout << "Novo Estoque (-1 para manter): ";
-    int novoEstoque;
-    cin >> novoEstoque;
-    if (novoEstoque >= 0) {
-        inst.estoque = novoEstoque;
-        inst.disponivel = (inst.estoque > 0);
+    // --- Novo Estoque ---
+    ConfigEntradaTexto cfgEstoque;
+    cfgEstoque.titulo       = "Editar Instrumento";
+    cfgEstoque.descricao    = "Instrumento: " + string(inst.nome) + " | Estoque atual: " + to_string(inst.estoque);
+    cfgEstoque.label        = "Novo estoque (ou ESC para manter): ";
+    cfgEstoque.caminho      = "Instrumentos > Editar > Estoque";
+    cfgEstoque.tipo_entrada = TIPO_NUMERO;
+    cfgEstoque.tamanho_maximo = 5;
+    cfgEstoque.valor_inicial  = to_string(inst.estoque);
+    cfgEstoque.cores        = coresRosa();
+
+    saida_entrada_texto resEstoque = interface_para_entrada_texto(cfgEstoque);
+    if (resEstoque.confirmado && !resEstoque.valor.empty()) {
+        int novoEstoque = atoi(resEstoque.valor.c_str());
+        if (novoEstoque >= 0) {
+            inst.estoque = novoEstoque;
+            inst.disponivel = (inst.estoque > 0);
+        }
     }
 
     salvarDadosInstrumentos();
-    cout << "Instrumento atualizado com sucesso!" << endl;
+    mostrar_caixa_informacao("Sucesso", "Instrumento atualizado com sucesso!");
 }
 
 // --- Salvar Empréstimo ---
@@ -189,36 +308,65 @@ void salvarEmprestimo(Emprestimo emp) {
 // --- Lógica de Empréstimo ---
 
 void realizarEmprestimo() {
-    int idInstrumento, idAluno;
-    cout << "\n--- Emprestimo ---" << endl;
-    cout << "ID do Instrumento: "; cin >> idInstrumento;
-    cout << "ID do Aluno: "; cin >> idAluno;
+    // --- ID do Instrumento ---
+    ConfigEntradaTexto cfgInst;
+    cfgInst.titulo       = "Emprestimo de Instrumento";
+    cfgInst.descricao    = "Informe o instrumento a ser emprestado.";
+    cfgInst.label        = "ID do instrumento: ";
+    cfgInst.caminho      = "Instrumentos > Emprestimo";
+    cfgInst.tipo_entrada = TIPO_NUMERO;
+    cfgInst.tamanho_maximo = 10;
+    cfgInst.cores        = coresRosa();
+
+    saida_entrada_texto resInst = interface_para_entrada_texto(cfgInst);
+    if (!resInst.confirmado || resInst.valor.empty()) {
+        mostrar_caixa_informacao("Cancelado", "Emprestimo cancelado.");
+        return;
+    }
+
+    int idInstrumento = atoi(resInst.valor.c_str());
 
     // 1. Validar Instrumento
     int idx = buscarIndicePorId(idInstrumento);
     if (idx == -1) {
-        cout << "Erro: Instrumento nao encontrado." << endl;
+        mostrar_caixa_informacao("Erro", "Instrumento nao encontrado.");
         return;
     }
-    
-    Instrumento& inst = listaInstrumentos[idx];
 
+    Instrumento& inst = listaInstrumentos[idx];
     if (inst.estoque <= 0) {
-        cout << "Erro: Estoque esgotado." << endl;
+        mostrar_caixa_informacao("Erro", "Estoque esgotado para: " + string(inst.nome));
         return;
     }
+
+    // --- ID do Aluno ---
+    ConfigEntradaTexto cfgAluno;
+    cfgAluno.titulo       = "Emprestimo de Instrumento";
+    cfgAluno.descricao    = "Instrumento: " + string(inst.nome) + " (Estoque: " + to_string(inst.estoque) + ")";
+    cfgAluno.label        = "ID do aluno: ";
+    cfgAluno.caminho      = "Instrumentos > Emprestimo > Aluno";
+    cfgAluno.tipo_entrada = TIPO_NUMERO;
+    cfgAluno.tamanho_maximo = 10;
+    cfgAluno.cores        = coresRosa();
+
+    saida_entrada_texto resAluno = interface_para_entrada_texto(cfgAluno);
+    if (!resAluno.confirmado || resAluno.valor.empty()) {
+        mostrar_caixa_informacao("Cancelado", "Emprestimo cancelado.");
+        return;
+    }
+
+    int idAluno = atoi(resAluno.valor.c_str());
 
     // 2. Validar Aluno
     Aluno aluno = Login_mat::lerAluno(idAluno);
-
     if (aluno.base.id == 0) {
-        cout << "Erro: Aluno nao encontrado no sistema." << endl;
+        mostrar_caixa_informacao("Erro", "Aluno nao encontrado no sistema.");
         return;
     }
 
     // 3. Regra: Aluno já tem instrumento?
     if (aluno.idInstrumento != 0) {
-        cout << "Erro: Este aluno ja possui um instrumento emprestado." << endl;
+        mostrar_caixa_informacao("Erro", "Este aluno ja possui um instrumento emprestado.");
         return;
     }
 
@@ -232,133 +380,134 @@ void realizarEmprestimo() {
 
     salvarDadosInstrumentos();
 
-
     Emprestimo emp;
-
-    // Gerar ID simples baseado em timestamp
-    emp.idEmprestimo = time(NULL);
-
+    std::fstream fileEmprestimo("emprestimos.dat", std::ios::in | std::ios::out | std::ios::binary);
+    emp.idEmprestimo = gerarNovoId(fileEmprestimo, sizeof(Emprestimo));
+    fileEmprestimo.close();
     emp.idAluno = aluno.base.id;
     strcpy(emp.nome_Alu, aluno.base.nome);
-
     emp.idInstrumento = inst.id;
     strcpy(emp.nome_In, inst.nome);
 
-    // Data atual
     time_t t = time(NULL);
     tm *tmPtr = localtime(&t);
-
     sprintf(emp.dataEmprestimo, "%02d/%02d/%04d",
-            tmPtr->tm_mday,
-            tmPtr->tm_mon + 1,
-            tmPtr->tm_year + 1900);
-
-    // Data prevista (7 dias depois - simples)
+            tmPtr->tm_mday, tmPtr->tm_mon + 1, tmPtr->tm_year + 1900);
     sprintf(emp.dataPrevista, "%02d/%02d/%04d",
-            tmPtr->tm_mday + 7,
-            tmPtr->tm_mon + 1,
-            tmPtr->tm_year + 1900);
+            tmPtr->tm_mday + 7, tmPtr->tm_mon + 1, tmPtr->tm_year + 1900);
 
     salvarEmprestimo(emp);
 
-    cout << "Emprestimo realizado e registrado com sucesso!" << endl;
+    mostrar_caixa_informacao("Sucesso", "Emprestimo realizado! " + string(inst.nome) + " para " + string(aluno.base.nome));
 }
 
 void realizarDevolucao() {
-    int idAluno;
-    cout << "\n--- Devolucao ---" << endl;
-    cout << "ID do Aluno: "; cin >> idAluno;
+    // --- ID do Aluno ---
+    ConfigEntradaTexto cfgAluno;
+    cfgAluno.titulo       = "Devolucao de Instrumento";
+    cfgAluno.descricao    = "Informe o aluno que esta devolvendo o instrumento.";
+    cfgAluno.label        = "ID do aluno: ";
+    cfgAluno.caminho      = "Instrumentos > Devolucao";
+    cfgAluno.tipo_entrada = TIPO_NUMERO;
+    cfgAluno.tamanho_maximo = 10;
+    cfgAluno.cores        = coresRosa();
 
-    // 1️⃣ Verificar Aluno
+    saida_entrada_texto resAluno = interface_para_entrada_texto(cfgAluno);
+    if (!resAluno.confirmado || resAluno.valor.empty()) {
+        mostrar_caixa_informacao("Cancelado", "Devolucao cancelada.");
+        return;
+    }
+
+    int idAluno = atoi(resAluno.valor.c_str());
+
+    // 1. Verificar Aluno
     Aluno aluno = Login_mat::lerAluno(idAluno);
     if (aluno.base.id == 0) {
-        cout << "Erro: Aluno nao encontrado." << endl;
+        mostrar_caixa_informacao("Erro", "Aluno nao encontrado.");
         return;
     }
 
     if (aluno.idInstrumento == 0) {
-        cout << "Erro: Este aluno nao possui instrumento para devolver." << endl;
+        mostrar_caixa_informacao("Erro", "Este aluno nao possui instrumento para devolver.");
         return;
     }
 
-    // 2️⃣ Encontrar Instrumento
+    // 2. Encontrar Instrumento
     int idx = buscarIndicePorId(aluno.idInstrumento);
     if (idx == -1) {
-        cout << "Erro critico: Instrumento nao encontrado." << endl;
+        mostrar_caixa_informacao("Erro", "Erro critico: Instrumento nao encontrado.");
         return;
     }
 
     Instrumento& inst = listaInstrumentos[idx];
 
-    // 3️⃣ Atualizar Instrumento
+    // 3. Atualizar Instrumento
     inst.estoque++;
     inst.disponivel = true;
     inst.idAluno = 0;
 
-    // 4️⃣ Atualizar Aluno
+    // 4. Atualizar Aluno
     aluno.idInstrumento = 0;
     Login_mat::atualizar(idAluno, aluno);
 
     salvarDadosInstrumentos();
 
-    // =====================================
-    // 📌 ZERAR REGISTRO NO ARQUIVO
-    // =====================================
-
+    // Zerar registro no arquivo de empréstimos
     std::fstream file("emprestimos.dat",
                       std::ios::binary | std::ios::in | std::ios::out);
 
     if (file.is_open()) {
-
         Emprestimo emp;
-
         while (file.read((char*)&emp, sizeof(Emprestimo))) {
-
             if (emp.idAluno == idAluno) {
-
-                // Volta o ponteiro para sobrescrever
                 file.seekp(-sizeof(Emprestimo), std::ios::cur);
-
-                Emprestimo vazio = {0};  // struct totalmente zerada
-
+                Emprestimo vazio = {0};
                 file.write((char*)&vazio, sizeof(Emprestimo));
-
                 break;
             }
         }
-
         file.close();
     }
 
-    cout << "Devolucao realizada e registro zerado com sucesso!" << endl;
+    mostrar_caixa_informacao("Sucesso", "Devolucao realizada! " + string(inst.nome) + " devolvido por " + string(aluno.base.nome));
 }
 
 // --- Menu Principal de Instrumentos ---
 
 void menuInstrumentos() {
-    int opcao;
+    bool continuar = true;
 
-    do {
-        cout << "\n===== INSTRUMENTOS =====" << endl;
-        cout << "[1] Cadastrar Instrumento" << endl;
-        cout << "[2] Editar Instrumento" << endl;
-        cout << "[3] Realizar Emprestimo" << endl;
-        cout << "[4] Listar Instrumentos" << endl;
-        cout << "[5] Excluir Instrumento" << endl;
-        cout << "[6] Realizar Devolucao" << endl;
-        cout << "[0] Voltar" << endl;
-        cout << "Opcao: ";
-        cin >> opcao;
+    while (continuar) {
+        constexpr int TOTAL_OPCOES = 7;
+        string opcoes[TOTAL_OPCOES] = {
+            "Cadastrar Instrumento",
+            "Editar Instrumento",
+            "Realizar Emprestimo",
+            "Listar Instrumentos",
+            "Excluir Instrumento",
+            "Realizar Devolucao",
+            "Voltar"
+        };
 
-        switch (opcao) {
-            case 1: cadastrarInstrumento();  break;
-            case 2: editarInstrumento();     break;
-            case 3: realizarEmprestimo();    break;
-            case 4: listarInstrumentos();    break;
-            case 5: excluirInstrumento();    break;
-            case 6: realizarDevolucao();     break;
-            case 0: cout << "Voltando..." << endl; break;
-            default: cout << "Opcao invalida!" << endl; break;
+        ConfigMenu config;
+        config.titulo   = "Instrumentos";
+        config.descricao = "Gerencie os instrumentos da escola.";
+        config.caminho   = "Instrumentos";
+        config.cores     = coresRosa();
+
+        saida_menu resultado = interface_para_menu(TOTAL_OPCOES, opcoes, config);
+
+        switch (resultado.indice_da_opcao) {
+            case 0: cadastrarInstrumento();  break;
+            case 1: editarInstrumento();     break;
+            case 2: realizarEmprestimo();    break;
+            case 3: listarInstrumentos();    break;
+            case 4: excluirInstrumento();    break;
+            case 5: realizarDevolucao();     break;
+            case 6:
+            default:
+                continuar = false;
+                break;
         }
-    } while (opcao != 0);
+    }
 }
