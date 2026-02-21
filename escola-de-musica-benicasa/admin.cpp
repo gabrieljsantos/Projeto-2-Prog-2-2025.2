@@ -2276,235 +2276,171 @@ void menuCadastroCursos(){
 
     // ----- FUNÇÕES DE RELATÓRIOS E BACKUP -----
 
-void gerarRelatorioFinanceiro() {
-    std::fstream fileProdutos;
-    std::fstream fileAlunos;
-    std::fstream fileProfessores;
+    void gerarRelatorioFinanceiro() {
+        std::fstream fileProdutos;
+        std::fstream fileCreditos;
 
-    openFile(fileProdutos, "lanchonete.dat");
-    openFile(fileAlunos, "alunos.dat");
-    openFile(fileProfessores, "professores.dat");
+        openFile(fileProdutos, BANCO_PRODUTOS);
+        openFile(fileCreditos, BANCO_CREDITOS);
 
-    if (!fileProdutos.is_open() || !fileAlunos.is_open() || !fileProfessores.is_open()) {
-        mostrar_caixa_informacao("ERRO", "Nao foi possivel abrir os arquivos necessarios.");
-        if (fileProdutos.is_open()) fileProdutos.close();
-        if (fileAlunos.is_open()) fileAlunos.close();
-        if (fileProfessores.is_open()) fileProfessores.close();
-        return;
-    }
-
-    Produto produto;
-    Aluno aluno;
-    Professor professor;
-
-    int totalProdutos = 0;
-    int totalEstoque = 0;
-    double valorTotalEstoque = 0.0;
-
-    int totalAlunos = 0;
-    double somaSaldoAlunos = 0.0;
-
-    int totalProfessores = 0;
-    double somaSaldoProfessores = 0.0;
-
-    // ===== PRIMEIRA PASSAGEM: CONTAR TOTAIS PRODUTOS =====
-    fileProdutos.seekg(0, ios::beg);
-    memset(&produto, 0, sizeof(Produto));
-
-    while (fileProdutos.read((char*)&produto, sizeof(Produto))) {
-        if (produto.ativo) {
-            totalProdutos++;
-            totalEstoque += produto.estoque;
-            valorTotalEstoque += produto.preco * produto.estoque;
+        if (!fileProdutos.is_open() || !fileCreditos.is_open()) {
+            mostrar_caixa_informacao("ERRO", "Nao foi possivel abrir os arquivos necessarios.");
+            if (fileProdutos.is_open()) fileProdutos.close();
+            if (fileCreditos.is_open()) fileCreditos.close();
+            return;
         }
-        memset(&produto, 0, sizeof(Produto));
-    }
-    fileProdutos.clear();
 
-    // ===== PRIMEIRA PASSAGEM: CONTAR TOTAIS ALUNOS =====
-    fileAlunos.seekg(0, ios::beg);
-    memset(&aluno, 0, sizeof(Aluno));
+        Produto produto;
+        Credito credito;
 
-    while (fileAlunos.read((char*)&aluno, sizeof(Aluno))) {
-        if (aluno.base.ativo) {
-            totalAlunos++;
-            somaSaldoAlunos += aluno.saldo;
+        int totalProdutos = 0;
+        int totalEstoque = 0;
+        double valorTotalEstoque = 0.0;
+
+        int totalOperacoesRealizadas = 0;
+        int totalOperacoesPendentes = 0;
+
+        int idsUsers[MAX_CREDITOS];
+        double saldoUsers[MAX_CREDITOS];
+        int totalUsers = 0;
+
+        for (int i = 0; i < MAX_CREDITOS; i++) {
+            idsUsers[i] = 0;
+            saldoUsers[i] = 0.0;
         }
-        memset(&aluno, 0, sizeof(Aluno));
-    }
-    fileAlunos.clear();
-
-    // ===== PRIMEIRA PASSAGEM: CONTAR TOTAIS PROFESSORES =====
-    fileProfessores.seekg(0, ios::beg);
-    memset(&professor, 0, sizeof(Professor));
-
-    while (fileProfessores.read((char*)&professor, sizeof(Professor))) {
-        if (professor.base.ativo) {
-            totalProfessores++;
-            somaSaldoProfessores += professor.saldo;
-        }
-        memset(&professor, 0, sizeof(Professor));
-    }
-    fileProfessores.clear();
-
-    double saldoGeralSistema = somaSaldoAlunos + somaSaldoProfessores;
-
-    if (totalProdutos == 0 && totalAlunos == 0 && totalProfessores == 0) {
-        mostrar_caixa_informacao("INFO", "Nenhum dado financeiro encontrado no sistema.");
-        fileProdutos.close();
-        fileAlunos.close();
-        fileProfessores.close();
-        return;
-    }
-
-    // ===== MONTAR TEXTO CORRIDO =====
-    string texto = "";
-
-    // ── RESUMO FINANCEIRO GERAL ─────────────────
-    texto += "========== RESUMO FINANCEIRO GERAL ==========\n";
-    texto += "\n";
-    texto += "Total de Produtos Cadastrados: " + to_string(totalProdutos) + "\n";
-    texto += "Estoque Total (unidades): " + to_string(totalEstoque) + "\n";
-
-    {
-        char buf[32];
-        sprintf(buf, "%.2f", valorTotalEstoque);
-        texto += "Valor Total em Estoque: R$ " + string(buf) + "\n";
-    }
-
-    texto += "\n";
-    texto += "Total de Alunos Ativos: " + to_string(totalAlunos) + "\n";
-
-    {
-        char buf[32];
-        sprintf(buf, "%.2f", somaSaldoAlunos);
-        texto += "Soma dos Saldos dos Alunos: R$ " + string(buf) + "\n";
-    }
-
-    texto += "\n";
-    texto += "Total de Professores Ativos: " + to_string(totalProfessores) + "\n";
-
-    {
-        char buf[32];
-        sprintf(buf, "%.2f", somaSaldoProfessores);
-        texto += "Soma dos Saldos dos Professores: R$ " + string(buf) + "\n";
-    }
-
-    texto += "\n";
-
-    {
-        char buf[32];
-        sprintf(buf, "%.2f", saldoGeralSistema);
-        texto += ">> SALDO GERAL NO SISTEMA: R$ " + string(buf) + " <<\n";
-    }
-
-    texto += "\n";
-
-    // ── LISTA DE PRODUTOS A VENDA ───────────────
-    if (totalProdutos > 0) {
-        texto += "========== PRODUTOS DISPONIVEIS PARA VENDA ==========\n";
-        texto += "\n";
 
         fileProdutos.seekg(0, ios::beg);
         memset(&produto, 0, sizeof(Produto));
-        int cont = 0;
 
         while (fileProdutos.read((char*)&produto, sizeof(Produto))) {
             if (produto.ativo) {
-                cont++;
-                produto.nome[sizeof(produto.nome) - 1] = '\0';
-
-                char bufPreco[32];
-                char bufTotal[32];
-                sprintf(bufPreco, "%.2f", produto.preco);
-                sprintf(bufTotal, "%.2f", produto.preco * produto.estoque);
-
-                texto += "[" + to_string(cont) + "] " + string(produto.nome) + "\n";
-                texto += "  ID: " + to_string(produto.id);
-                texto += " | Preco: R$ " + string(bufPreco);
-                texto += " | Estoque: " + to_string(produto.estoque) + " un.\n";
-                texto += "  Valor em Estoque: R$ " + string(bufTotal) + "\n";
-                texto += "\n";
+                totalProdutos++;
+                totalEstoque += produto.estoque;
+                valorTotalEstoque += produto.preco * produto.estoque;
             }
             memset(&produto, 0, sizeof(Produto));
         }
         fileProdutos.clear();
-    }
 
-    // ── SALDOS DOS ALUNOS ───────────────────────
-    if (totalAlunos > 0) {
-        texto += "========== SALDOS DOS ALUNOS ==========\n";
+        fileCreditos.seekg(0, ios::beg);
+        memset(&credito, 0, sizeof(Credito));
+
+        while (fileCreditos.read((char*)&credito, sizeof(Credito))) {
+            if (credito.id_user != 0) {
+                if (credito.realizado) totalOperacoesRealizadas++;
+                else totalOperacoesPendentes++;
+
+                if (credito.realizado) {
+                    int achou = 0;
+                    for (int i = 0; i < totalUsers; i++) {
+                        if (idsUsers[i] == credito.id_user) {
+                            saldoUsers[i] += credito.saldo;
+                            achou = 1;
+                            break;
+                        }
+                    }
+                    if (!achou && totalUsers < MAX_CREDITOS) {
+                        idsUsers[totalUsers] = credito.id_user;
+                        saldoUsers[totalUsers] = credito.saldo;
+                        totalUsers++;
+                    }
+                }
+            }
+            memset(&credito, 0, sizeof(Credito));
+        }
+        fileCreditos.clear();
+
+        double saldoGeralSistema = 0.0;
+        for (int i = 0; i < totalUsers; i++)
+            saldoGeralSistema += saldoUsers[i];
+
+        if (totalProdutos == 0 && totalUsers == 0 && totalOperacoesPendentes == 0) {
+            mostrar_caixa_informacao("INFO", "Nenhum dado financeiro encontrado no sistema.");
+            fileProdutos.close();
+            fileCreditos.close();
+            return;
+        }
+
+        string texto = "";
+
+        texto += "========== RESUMO FINANCEIRO GERAL ==========\n";
+        texto += "\n";
+        texto += "Total de Produtos Cadastrados: " + to_string(totalProdutos) + "\n";
+        texto += "Estoque Total (unidades): " + to_string(totalEstoque) + "\n";
+
+        {
+            char buf[32];
+            sprintf(buf, "%.2f", valorTotalEstoque);
+            texto += "Valor Total em Estoque: R$ " + string(buf) + "\n";
+        }
+
+        texto += "\n";
+        texto += "Usuarios com saldo registrado: " + to_string(totalUsers) + "\n";
+        texto += "Operacoes realizadas: " + to_string(totalOperacoesRealizadas) + "\n";
+        texto += "Operacoes pendentes: " + to_string(totalOperacoesPendentes) + "\n";
         texto += "\n";
 
-        fileAlunos.seekg(0, ios::beg);
-        memset(&aluno, 0, sizeof(Aluno));
-        int cont = 0;
+        {
+            char buf[32];
+            sprintf(buf, "%.2f", saldoGeralSistema);
+            texto += ">> SALDO GERAL NA LANCHONETE: R$ " + string(buf) + " <<\n";
+        }
 
-        while (fileAlunos.read((char*)&aluno, sizeof(Aluno))) {
-            if (aluno.base.ativo) {
-                cont++;
-                aluno.base.nome[sizeof(aluno.base.nome) - 1] = '\0';
+        texto += "\n";
 
+        if (totalProdutos > 0) {
+            texto += "========== PRODUTOS DISPONIVEIS PARA VENDA ==========\n";
+            texto += "\n";
+
+            fileProdutos.seekg(0, ios::beg);
+            memset(&produto, 0, sizeof(Produto));
+            int cont = 0;
+
+            while (fileProdutos.read((char*)&produto, sizeof(Produto))) {
+                if (produto.ativo) {
+                    cont++;
+                    produto.nome[sizeof(produto.nome) - 1] = '\0';
+
+                    char bufPreco[32];
+                    char bufTotal[32];
+                    sprintf(bufPreco, "%.2f", produto.preco);
+                    sprintf(bufTotal, "%.2f", produto.preco * produto.estoque);
+
+                    texto += "[" + to_string(cont) + "] " + string(produto.nome) + "\n";
+                    texto += "  ID: " + to_string(produto.id);
+                    texto += " | Preco: R$ " + string(bufPreco);
+                    texto += " | Estoque: " + to_string(produto.estoque) + " un.\n";
+                    texto += "  Valor em Estoque: R$ " + string(bufTotal) + "\n";
+                    texto += "\n";
+                }
+                memset(&produto, 0, sizeof(Produto));
+            }
+            fileProdutos.clear();
+        }
+
+        if (totalUsers > 0) {
+            texto += "========== SALDOS (LANCHONETE) ==========\n";
+            texto += "\n";
+
+            for (int i = 0; i < totalUsers; i++) {
                 char bufSaldo[32];
-                sprintf(bufSaldo, "%.2f", aluno.saldo);
+                sprintf(bufSaldo, "%.2f", saldoUsers[i]);
 
-                texto += "[" + to_string(cont) + "] " + string(aluno.base.nome) + "\n";
-                texto += "  ID: " + to_string(aluno.base.id);
-                texto += " | Saldo: R$ " + string(bufSaldo) + "\n";
+                texto += "[" + to_string(i + 1) + "] ID: " + to_string(idsUsers[i]) + "\n";
+                texto += "  Saldo: R$ " + string(bufSaldo) + "\n";
                 texto += "\n";
             }
-            memset(&aluno, 0, sizeof(Aluno));
         }
-        fileAlunos.clear();
 
-        char bufTotalAlunos[32];
-        sprintf(bufTotalAlunos, "%.2f", somaSaldoAlunos);
-        texto += ">> TOTAL SALDOS ALUNOS: R$ " + string(bufTotalAlunos) + " <<\n";
-        texto += "\n";
+        fileProdutos.close();
+        fileCreditos.close();
+
+        ConfigTexto configTexto;
+        configTexto.titulo = "RELATORIO FINANCEIRO";
+
+        mostrar_texto(texto, configTexto);
     }
 
-    // ── SALDOS DOS PROFESSORES ──────────────────
-    if (totalProfessores > 0) {
-        texto += "========== SALDOS DOS PROFESSORES ==========\n";
-        texto += "\n";
-
-        fileProfessores.seekg(0, ios::beg);
-        memset(&professor, 0, sizeof(Professor));
-        int cont = 0;
-
-        while (fileProfessores.read((char*)&professor, sizeof(Professor))) {
-            if (professor.base.ativo) {
-                cont++;
-                professor.base.nome[sizeof(professor.base.nome) - 1] = '\0';
-
-                char bufSaldo[32];
-                sprintf(bufSaldo, "%.2f", professor.saldo);
-
-                texto += "[" + to_string(cont) + "] " + string(professor.base.nome) + "\n";
-                texto += "  ID: " + to_string(professor.base.id);
-                texto += " | Saldo: R$ " + string(bufSaldo) + "\n";
-                texto += "\n";
-            }
-            memset(&professor, 0, sizeof(Professor));
-        }
-        fileProfessores.clear();
-
-        char bufTotalProfs[32];
-        sprintf(bufTotalProfs, "%.2f", somaSaldoProfessores);
-        texto += ">> TOTAL SALDOS PROFESSORES: R$ " + string(bufTotalProfs) + " <<\n";
-        texto += "\n";
-    }
-
-    fileProdutos.close();
-    fileAlunos.close();
-    fileProfessores.close();
-
-    // ===== EXIBIR COM TEXTO CORRIDO =====
-    ConfigTexto configTexto;
-    configTexto.titulo = "RELATORIO FINANCEIRO";
-
-    mostrar_texto(texto, configTexto);
-}
     void gerarRelatorioPatrimonial() {
     std::fstream fileInstrumentos;
     std::fstream fileEmprestimos;
