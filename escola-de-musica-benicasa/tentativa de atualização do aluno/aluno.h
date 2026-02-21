@@ -1,13 +1,13 @@
 #ifndef ALUNO_H
 #define ALUNO_H
 
-#include "headers.h"   // Necessário para struct Aluno, Evento, Instrumento, Produto
+#include "headers.h"
 
-namespace Modulo_aluno
-{
+namespace Modulo_aluno {
     // ===== FUNÇÕES INTERNAS =====
     Aluno carregarAluno(int idAluno);
     void salvarAluno(const Aluno &aluno);
+    void limparBuffer();
 
     // ===== CONSULTAS ACADÊMICAS =====
     void consultarNotas(int idAluno);
@@ -32,7 +32,6 @@ namespace Modulo_aluno
 
     // ===== CRÉDITOS =====
     void solicitarCreditos(int idAluno);
-
 }
 
 #endif

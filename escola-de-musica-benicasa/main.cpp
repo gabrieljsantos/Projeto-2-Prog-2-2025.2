@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <cstdlib>
+#include <ctime>
+#include <curses.h>
 #include "headers.h"
 #include "login_matricula.h"
 #include "admin.h"
@@ -14,12 +17,12 @@
 using namespace std;
 
 void pausar();
+void exibirCabecalhoEscola();
 // void exibirCabecalhoSistema();
 saida_menu exibirMenuLogin();
-void exibirMenuAluno();
 
 int main() {
-    cout << "Bem-vindo ao Sistema de Gestão da Escola de Música!" << endl;
+    exibirCabecalhoEscola();
     
     Usuario usuario;
     saida_menu saidaLogin;
@@ -72,29 +75,7 @@ int main() {
                     break;
                 }
                 case ALUNO: {
-                    int opcao;
-                    exibirMenuAluno();
-                    cin >> opcao;
-                    cin.ignore();
-
-                    switch (opcao) {
-                        case 1: Modulo_aluno::consultarNotas(usuario.id); break;
-                        case 2: Modulo_aluno::consultarMedias(usuario.id); break;
-                        case 3: Modulo_aluno::consultarSituacaoAcademica(usuario.id); break;
-                        case 4: Modulo_aluno::visualizarEventosDisponiveis(); break;
-                        case 5: Modulo_aluno::inscreverEmEvento(usuario.id); break;
-                        case 6: Modulo_aluno::consultarMinhasInscricoes(usuario.id); break;
-                        case 7: Modulo_aluno::visualizarInstrumentosDisponiveis(); break;
-                        case 8: Modulo_aluno::solicitarEmprestimo(usuario.id); break;
-                        case 9: Modulo_aluno::realizarDevolucao(usuario.id); break;
-                        case 10: Modulo_aluno::consultarMeusEmprestimos(usuario.id); break;
-                        case 11: Lanchonete::consultarSaldo(usuario.id); break;
-                        case 12: Lanchonete::visualizarProdutos(); break;
-                        case 13: Lanchonete::realizarCompra(usuario.id); break;
-                        case 14: Lanchonete::solicitarCreditosUsuario(usuario.id, usuario.categoria); break;
-                        case 0: usuario.logado = false; break;
-                        default: cout << "\nOpcao invalida!" << endl;
-                    }
+                    abrir_menu_aluno(&usuario);
                     if (usuario.logado) pausar();
                     break;
                 }
@@ -113,21 +94,116 @@ void pausar() {
     cout << "\nPressione ENTER para continuar..." << endl;
     cin.get();
 }
-/*
-void exibirCabecalhoSistema() {
-    cout << "============================================" << endl;
-    cout << "   SISTEMA DE GESTAO - ESCOLA DE MUSICA    " << endl;
-    cout << "============================================" << endl;
+
+void exibirCabecalhoEscola() {
+    setlocale(LC_ALL, "pt_BR.UTF-8");
+    initscr();
+    noecho();
+    cbreak();
+    curs_set(0);
+
+    if (has_colors()) {
+        start_color();
+        init_pair(1, COLOR_CYAN, COLOR_BLACK);
+        init_pair(2, COLOR_GREEN, COLOR_BLACK);
+        init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+        init_pair(4, COLOR_WHITE, COLOR_BLACK);
+    }
+
+    int max_y, max_x;
+    getmaxyx(stdscr, max_y, max_x);
+
+    clear();
+
+    // Gera padrão aleatório (0-3)
+    srand(time(0));
+    int padrao_escolhido = rand() % 4;
+    
+    // Padrão gráfico de fundo - aleatório
+    attron(COLOR_PAIR(4) | A_DIM);
+    
+    for (int y = 0; y < max_y; y++) {
+        string linha;
+        
+        switch (padrao_escolhido) {
+            case 0: { // Xadrez
+                for (int x = 0; x < max_x; x++) {
+                    if ((x + y) % 2 == 0) {
+                        linha += ".";
+                    } else {
+                        linha += " ";
+                    }
+                }
+                break;
+            }
+            case 1: { // Pontos Horizontal Alternado
+                string base = (y % 2 == 0) ? ". . . . " : "  .  .  ";
+                while ((int)linha.length() < max_x) {
+                    linha += base;
+                }
+                linha = linha.substr(0, max_x);
+                break;
+            }
+            case 2: { // Diagonal
+                for (int x = 0; x < max_x; x++) {
+                    int diagonal = (x + y) % 4;
+                    if (diagonal == 0 || diagonal == 1) {
+                        linha += ".";
+                    } else {
+                        linha += " ";
+                    }
+                }
+                break;
+            }
+            case 3: { // Linhas Verticais
+                for (int x = 0; x < max_x; x++) {
+                    if (x % 3 == 0) {
+                        linha += ".";
+                    } else {
+                        linha += " ";
+                    }
+                }
+                break;
+            }
+        }
+        
+        mvprintw(y, 0, "%s", linha.c_str());
+    }
+    attroff(COLOR_PAIR(4) | A_DIM);
+
+    // Título
+    string titulo = "ESCOLA DE MUSICA BENICASA";
+    int pos_titulo = (max_x - titulo.length()) / 2;
+
+    attron(COLOR_PAIR(1) | A_BOLD);
+    mvprintw(max_y / 2 - 2, pos_titulo, "%s", titulo.c_str());
+    attroff(COLOR_PAIR(1) | A_BOLD);
+
+    // Subtítulo
+    string subtitulo = "Sistema de Gestao";
+    int pos_subtitulo = (max_x - subtitulo.length()) / 2;
+
+    attron(COLOR_PAIR(2));
+    mvprintw(max_y / 2, pos_subtitulo, "%s", subtitulo.c_str());
+    attroff(COLOR_PAIR(2));
+
+    // Instrução
+    string aviso = "Pressione ENTER para continuar...";
+    int pos_aviso = (max_x - aviso.length()) / 2;
+
+    attron(COLOR_PAIR(3));
+    mvprintw(max_y - 3, pos_aviso, "%s", aviso.c_str());
+    attroff(COLOR_PAIR(3));
+
+    refresh();
+
+    // Aguardar ENTER
+    int ch;
+    while ((ch = getch()) != '\n' && ch != KEY_ENTER) {}
+
+    endwin();
 }
-void exibirMenuLogin() {
-    cout << "\nMENU DE ACESSO" << endl;
-    cout << "============================================" << endl;
-    cout << "1. Fazer Login" << endl;
-    cout << "2. Realizar Cadastro" << endl;
-    cout << "0. Sair do Sistema" << endl;
-    cout << "Opcao: ";
-}
-*/
+
 saida_menu exibirMenuLogin() {
     constexpr int qtdOpcoes = 3;
     string opcoes[qtdOpcoes] = {"Fazer Login", "Realizar Cadastro", "Sair do Sistema"};
@@ -135,27 +211,4 @@ saida_menu exibirMenuLogin() {
     config.titulo = "SISTEMA DE GESTAO - ESCOLA DE MUSICA";
     config.descricao = "MENU DE ACESSO";
     return interface_para_menu(qtdOpcoes, opcoes, config);
-}
-
-
-void exibirMenuAluno() {
-    system("cls || clear");
-    cout << "AREA DO ALUNO" << endl;
-    cout << "============================================" << endl;
-    cout << "1. Consultar Notas" << endl;
-    cout << "2. Consultar Medias" << endl;
-    cout << "3. Consultar Situacao Academica" << endl;
-    cout << "4. Ver Eventos Disponiveis" << endl;
-    cout << "5. Inscrever-se em Evento" << endl;
-    cout << "6. Minhas Inscricoes" << endl;
-    cout << "7. Ver Instrumentos Disponiveis" << endl;
-    cout << "8. Solicitar Emprestimo" << endl;
-    cout << "9. Realizar Devolucao" << endl;
-    cout << "10. Meus Emprestimos" << endl;
-    cout << "11. Consultar Saldo" << endl;
-    cout << "12. Ver Produtos" << endl;
-    cout << "13. Realizar Compra" << endl;
-    cout << "14. Solicitar Creditos" << endl;
-    cout << "0. Logout" << endl;
-    cout << "Opcao: ";
 }
