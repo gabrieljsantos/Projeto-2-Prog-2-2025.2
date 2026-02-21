@@ -61,12 +61,14 @@ struct Turma {
     Avaliacao avaliacoes[MAX_AVALIACOES];
     int qtdAvaliacoes;
 };
+
 struct Disciplina {
     int id;
     int ativo;
     char nome[50];
     int cargaHoraria;
 };
+
 struct Produto {
     char nome[50];
     int id;
@@ -97,20 +99,46 @@ struct Emprestimo {
     char dataPrevista[11];   // Data prevista para devolução
 
 };
-struct Evento {
-    int id = 0;            // Identificador único
-    int ativo = 0 ;               // 1 = ativo no sistema, 0 = removido
 
-    char nome[50] ="";           // Nome do evento
-    char descricao[100]="";     // Descrição
-    char data[11]="";           // Data (dd/mm/aaaa)
-    char local[50]="";          // Local do evento
-
-    int totalVagas=0;          // Número total de vagas
-    int vagasOcupadas=0;       // Quantidade já inscrita
-
-    int autorizado=0;          // 0 = não autorizado | 1 = autorizado
+// --- ESTRUTURAS DO NOVO MÓDULO DE EVENTOS ---
+struct Horario {
+    int hora;
+    int minuto;
 };
+
+struct Data {
+    int dia;
+    int mes;
+    int ano;
+};
+
+struct Evento {
+    // Identificadores e status (Mantidos do sistema base)
+    int id = 0;            
+    int ativo = 0 ;               
+    int autorizado = 0;          
+
+    // Informações gerais (Tamanhos expandidos para comportar o novo módulo)
+    char nome[100] = "";           
+    char descricao[200] = "";     
+    char local[100] = "";          
+    char professorResponsavel[100] = "";
+    
+    // Data e Hora (Substituído o char data[11] pela nova struct Data)
+    Data data;           
+    Horario horario;
+
+    // Vagas e Inscrições (Unificando as lógicas antigas e novas)
+    int totalVagas = 0;          // Antigo: Número total de vagas criadas
+    int vagasOcupadas = 0;       // Antigo: Quantidade já inscrita
+    int vagasDisponiveis = 0;    // Novo: Vagas restantes
+    int totalinscritos = 0;      // Novo: Controle exato de alunos inscritos
+    
+    // Controle de andamento e lista de alunos
+    bool finalizado = false;
+    char alunos[100][100];       // Matriz com os nomes dos inscritos
+};
+// --------------------------------------------
 
 struct Credito {
     int id_opera = 0;
