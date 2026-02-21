@@ -6,6 +6,7 @@
 #include "aluno.h"
 #include "headers.h"
 #include "interface_grafica.h"
+#include "instrumentos.h"
 
 using namespace std;
 
@@ -61,22 +62,101 @@ namespace Modulo_aluno {
         arq.write((char*)&aluno, sizeof(Aluno));
     }
 
+    // ===== FUNÇÕES AUXILIARES PARA TURMA =====
+    static bool lerTurmaById(int turmaId, Turma &turma) {
+        ifstream file("turmas.dat", ios::binary);
+        if (!file)
+            return false;
+
+        while (file.read((char *)&turma, sizeof(Turma))) {
+            if (turma.id == turmaId) {
+                file.close();
+                return true;
+            }
+        }
+        file.close();
+        return false;
+    }
+
+    static Aluno* procurarAlunoNaTurma(Turma &turma, int idAluno) {
+        for (int i = 0; i < MAX_ALUNOS; i++) {
+            if (turma.alunos[i].base.id == idAluno)
+                return &turma.alunos[i];
+        }
+        return nullptr;
+    }
+
 
     // ===== CONSULTAS ACADÊMICAS =====
     void consultarNotas(int idAluno) {
         try {
+            cout << "[DEBUG] consultarNotas: Iniciando consulta de notas - ID=" << idAluno << endl;
             Aluno aluno = carregarAluno(idAluno);
+            cout << "[DEBUG] consultarNotas: Aluno carregado - " << aluno.base.nome << endl;
 
-            system("cls || clear");
-            cout << "----------- MINHAS NOTAS -----------\n";
-            cout << "Nota 1: " << aluno.notas[0] << endl;
-            cout << "Nota 2: " << aluno.notas[1] << endl;
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
+            // Procurar iterativamente por todas as turmas
+            cout << "[DEBUG] consultarNotas: Abrindo arquivo turmas.dat" << endl;
+            ifstream file("turmas.dat", ios::binary);
+            if (!file) {
+                cout << "[DEBUG] consultarNotas: ERRO ao abrir turmas.dat" << endl;
+                mostrar_caixa_informacao("ERRO", "Arquivo turmas.dat nao encontrado!");
+                return;
+            }
+
+            Turma turma;
+            bool encontrado = false;
+            int turmaCount = 0;
+
+            while (file.read((char*)&turma, sizeof(Turma))) {
+                turmaCount++;
+                cout << "[DEBUG] consultarNotas: Lendo turma " << turmaCount << " - ID=" << turma.id << " Nome=" << turma.nome << endl;
+                // Procurar o aluno nesta turma
+                Aluno *alunoNaTurma = procurarAlunoNaTurma(turma, idAluno);
+                if (alunoNaTurma != nullptr) {
+                    encontrado = true;
+                    cout << "[DEBUG] consultarNotas: ENCONTRADO! Aluno na turma " << turma.nome << endl;
+                    cout << "[DEBUG] consultarNotas: Notas - N1=" << alunoNaTurma->notas[0] << " N2=" << alunoNaTurma->notas[1] << endl;
+                    file.close();
+
+                    // Montar topicos para mostrar notas
+                    TopicDetalhes topicos[3];
+                    int numTopicos = 0;
+
+                    topicos[numTopicos].titulo = "Turma";
+                    topicos[numTopicos].descricao = turma.nome;
+                    numTopicos++;
+
+                    topicos[numTopicos].titulo = "Avaliacao 1";
+                    topicos[numTopicos].descricao = to_string(alunoNaTurma->notas[0]);
+                    numTopicos++;
+
+                    topicos[numTopicos].titulo = "Avaliacao 2";
+                    topicos[numTopicos].descricao = to_string(alunoNaTurma->notas[1]);
+                    numTopicos++;
+
+                    ConfigDetalhes configDet;
+                    configDet.titulo = "MINHAS NOTAS";
+                    configDet.descricao = "Aluno: " + string(alunoNaTurma->base.nome);
+                    configDet.cores.cor_borda = 6;
+
+                    cout << "[DEBUG] consultarNotas: Exibindo interface grafica" << endl;
+                    mostrar_detalhes(topicos, numTopicos, configDet);
+                    cout << "[DEBUG] consultarNotas: Interface exibida, aguardando pausa" << endl;
+                    system("pause");
+                    return;
+                }
+            }
+
+            file.close();
+            cout << "[DEBUG] consultarNotas: Total de turmas lidas = " << turmaCount << endl;
+            if (!encontrado) {
+                cout << "[DEBUG] consultarNotas: Aluno NAO encontrado em nenhuma turma!" << endl;
+                mostrar_caixa_informacao("ERRO", "Aluno nao encontrado em nenhuma turma!");
+            }
+
         } catch (const exception &e) {
-            cout << "Erro: " << e.what() << endl;
-            cout << "Pressione ENTER para voltar...";
-            cin.get();
+            cout << "[DEBUG] consultarNotas: EXCECAO CAPTURADA - " << e.what() << endl;
+            mostrar_caixa_informacao("ERRO", e.what());
         }
     }
 
@@ -84,15 +164,53 @@ namespace Modulo_aluno {
         try {
             Aluno aluno = carregarAluno(idAluno);
 
-            system("cls || clear");
-            cout << "----------- MINHA MEDIA -----------\n";
-            cout << "Media: " << aluno.media << endl;
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
+            // Procurar iterativamente por todas as turmas
+            ifstream file("turmas.dat", ios::binary);
+            if (!file) {
+                mostrar_caixa_informacao("ERRO", "Arquivo turmas.dat nao encontrado!");
+                return;
+            }
+
+            Turma turma;
+            bool encontrado = false;
+
+            while (file.read((char*)&turma, sizeof(Turma))) {
+                // Procurar o aluno nesta turma
+                Aluno *alunoNaTurma = procurarAlunoNaTurma(turma, idAluno);
+                if (alunoNaTurma != nullptr) {
+                    encontrado = true;
+                    file.close();
+
+                    // Montar topicos para mostrar media
+                    TopicDetalhes topicos[2];
+                    int numTopicos = 0;
+
+                    topicos[numTopicos].titulo = "Turma";
+                    topicos[numTopicos].descricao = turma.nome;
+                    numTopicos++;
+
+                    topicos[numTopicos].titulo = "Media Geral";
+                    topicos[numTopicos].descricao = to_string(alunoNaTurma->media);
+                    numTopicos++;
+
+                    ConfigDetalhes configDet;
+                    configDet.titulo = "MINHAS MEDIAS";
+                    configDet.descricao = "Aluno: " + string(alunoNaTurma->base.nome);
+                    configDet.cores.cor_borda = 6;
+
+                    mostrar_detalhes(topicos, numTopicos, configDet);
+                    system("pause");
+                    return;
+                }
+            }
+
+            file.close();
+            if (!encontrado) {
+                mostrar_caixa_informacao("ERRO", "Aluno nao encontrado em nenhuma turma!");
+            }
+
         } catch (const exception &e) {
-            cout << "Erro: " << e.what() << endl;
-            cout << "Pressione ENTER para voltar...";
-            cin.get();
+            mostrar_caixa_informacao("ERRO", e.what());
         }
     }
 
@@ -100,23 +218,83 @@ namespace Modulo_aluno {
         try {
             Aluno aluno = carregarAluno(idAluno);
 
-            system("cls || clear");
-            cout << "------ SITUACAO ACADEMICA ------\n";
+            // Procurar iterativamente por todas as turmas
+            ifstream file("turmas.dat", ios::binary);
+            if (!file) {
+                mostrar_caixa_informacao("ERRO", "Arquivo turmas.dat nao encontrado!");
+                return;
+            }
 
-            if (aluno.media >= 7)
-                cout << "Status: APROVADO\n";
-            else if (aluno.media >= 5)
-                cout << "Status: RECUPERACAO\n";
-            else
-                cout << "Status: REPROVADO\n";
+            Turma turma;
+            bool encontrado = false;
 
-            cout << "Media: " << aluno.media << " | Faltas: " << aluno.faltas << endl;
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
+            while (file.read((char*)&turma, sizeof(Turma))) {
+                // Procurar o aluno nesta turma
+                Aluno *alunoNaTurma = procurarAlunoNaTurma(turma, idAluno);
+                if (alunoNaTurma != nullptr) {
+                    encontrado = true;
+                    file.close();
+
+                    // Determinar status academico
+                    string status;
+                    if (alunoNaTurma->faltas > 10)
+                        status = "REPROVADO POR FALTA";
+                    else if (alunoNaTurma->media >= 7.0)
+                        status = "APROVADO";
+                    else if (alunoNaTurma->media >= 5.0)
+                        status = "RECUPERACAO";
+                    else
+                        status = "REPROVADO";
+
+                    // Montar topicos para mostrar situação acadêmica
+                    TopicDetalhes topicos[5];
+                    int numTopicos = 0;
+
+                    topicos[numTopicos].titulo = "Turma";
+                    topicos[numTopicos].descricao = turma.nome;
+                    numTopicos++;
+
+                    topicos[numTopicos].titulo = "Status Academico";
+                    topicos[numTopicos].descricao = status;
+                    numTopicos++;
+
+                    topicos[numTopicos].titulo = "Media Geral";
+                    topicos[numTopicos].descricao = to_string(alunoNaTurma->media);
+                    numTopicos++;
+
+                    topicos[numTopicos].titulo = "Faltas";
+                    topicos[numTopicos].descricao = to_string(alunoNaTurma->faltas) + " / 10 maximas";
+                    numTopicos++;
+
+                    topicos[numTopicos].titulo = "Observacoes";
+                    if (alunoNaTurma->faltas > 10)
+                        topicos[numTopicos].descricao = "Aluno reprovado por excesso de faltas";
+                    else if (alunoNaTurma->media < 5.0)
+                        topicos[numTopicos].descricao = "Desempenho critico - media insuficiente";
+                    else if (alunoNaTurma->media < 7.0)
+                        topicos[numTopicos].descricao = "Aluno em recuperacao - pode melhorar";
+                    else
+                        topicos[numTopicos].descricao = "Aluno em bom desempenho academico";
+                    numTopicos++;
+
+                    ConfigDetalhes configDet;
+                    configDet.titulo = "SITUACAO ACADEMICA";
+                    configDet.descricao = "Aluno: " + string(alunoNaTurma->base.nome);
+                    configDet.cores.cor_borda = 6;
+
+                    mostrar_detalhes(topicos, numTopicos, configDet);
+                    system("pause");
+                    return;
+                }
+            }
+
+            file.close();
+            if (!encontrado) {
+                mostrar_caixa_informacao("ERRO", "Aluno nao encontrado em nenhuma turma!");
+            }
+
         } catch (const exception &e) {
-            cout << "Erro: " << e.what() << endl;
-            cout << "Pressione ENTER para voltar...";
-            cin.get();
+            mostrar_caixa_informacao("ERRO", e.what());
         }
     }
 
@@ -222,211 +400,21 @@ namespace Modulo_aluno {
             cin.get();
         }
     }
-
-
     // ===== INSTRUMENTOS =====
     void visualizarInstrumentosDisponiveis() {
-        system("cls || clear");
-        cout << "------ INSTRUMENTOS DISPONIVEIS ------\n";
-
-        ifstream arq("instrumentos.dat", ios::binary);
-
-        if (!arq) {
-            cout << "Arquivo instrumentos.dat nao encontrado.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
-
-        Instrumento i;
-        bool encontrou = false;
-
-        while (arq.read((char*)&i, sizeof(Instrumento))) {
-            if (i.ativo == 1 && i.disponivel && i.estoque > 0) {
-                cout << "ID: " << i.id << " - " << i.nome 
-                     << " (Disponivel: " << i.estoque << ")\n";
-                encontrou = true;
-            }
-        }
-
-        if (!encontrou)
-            cout << "Nenhum instrumento disponivel no momento.\n";
-
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
+        listarInstrumentosDisponiveis();
     }
 
     void solicitarEmprestimo(int idAluno) {
-        try {
-            Aluno aluno = carregarAluno(idAluno);
-
-            system("cls || clear");
-            cout << "------ SOLICITAR EMPRESTIMO ------\n";
-
-            int id;
-            cout << "Digite o ID do instrumento: ";
-            cin >> id;
-            limparBuffer();
-
-            fstream arq("instrumentos.dat", ios::binary | ios::in | ios::out);
-
-            if (!arq) {
-                cout << "Arquivo instrumentos.dat nao encontrado.\n";
-                cout << "\nPressione ENTER para voltar...";
-                cin.get();
-                return;
-            }
-
-            Instrumento inst;
-            bool encontrou = false;
-
-            while (arq.read((char*)&inst, sizeof(Instrumento))) {
-                if (inst.id == id && inst.ativo == 1 && inst.disponivel && inst.estoque > 0) {
-                    // Reduz estoque
-                    inst.estoque--;
-                    if (inst.estoque == 0)
-                        inst.disponivel = false;
-
-                    arq.seekp(-sizeof(Instrumento), ios::cur);
-                    arq.write((char*)&inst, sizeof(Instrumento));
-
-                    // Registra empréstimo
-                    ofstream emp("emprestimos.dat", ios::binary | ios::app);
-                    Emprestimo e;
-                    e.idAluno = idAluno;
-                    e.idInstrumento = id;
-                    strcpy(e.nome_Alu, aluno.base.nome);
-                    strcpy(e.nome_In, inst.nome);
-                    // Aqui você deveria preencher as datas, deixo como exemplo
-                    strcpy(e.dataEmprestimo, "00/00/0000");
-                    strcpy(e.dataPrevista, "00/00/0000");
-                    emp.write((char*)&e, sizeof(Emprestimo));
-                    emp.close();
-
-                    cout << "Emprestimo realizado com sucesso!\n";
-                    encontrou = true;
-                    break;
-                }
-            }
-
-            if (!encontrou)
-                cout << "Instrumento nao encontrado ou indisponivel.\n";
-
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-        } catch (const exception &e) {
-            cout << "Erro: " << e.what() << endl;
-            cout << "Pressione ENTER para voltar...";
-            cin.get();
-        }
+        realizarEmprestimo(idAluno);
     }
 
     void realizarDevolucao(int idAluno) {
-        try {
-            system("cls || clear");
-            cout << "------ DEVOLVER INSTRUMENTO ------\n";
-
-            int id;
-            cout << "Digite o ID do instrumento para devolver: ";
-            cin >> id;
-            limparBuffer();
-
-            // Procura empréstimo ativo
-            fstream emp("emprestimos.dat", ios::binary | ios::in | ios::out);
-
-            if (!emp) {
-                cout << "Arquivo emprestimos.dat nao encontrado.\n";
-                cout << "\nPressione ENTER para voltar...";
-                cin.get();
-                return;
-            }
-
-            Emprestimo e;
-            bool encontrou = false;
-
-            while (emp.read((char*)&e, sizeof(Emprestimo))) {
-                if (e.idInstrumento == id && e.idAluno == idAluno) {
-                    // Atualiza instrumento
-                    fstream arq("instrumentos.dat", ios::binary | ios::in | ios::out);
-
-                    if (arq) {
-                        Instrumento inst;
-
-                        while (arq.read((char*)&inst, sizeof(Instrumento))) {
-                            if (inst.id == id) {
-                                inst.estoque++;
-                                inst.disponivel = true;
-
-                                arq.seekp(-sizeof(Instrumento), ios::cur);
-                                arq.write((char*)&inst, sizeof(Instrumento));
-                                break;
-                            }
-                        }
-
-                        arq.close();
-                    }
-
-                    // Remove registro de empréstimo (marca como inativo ou deleta)
-                    emp.seekp(-sizeof(Emprestimo), ios::cur);
-                    e.idAluno = -1; // Marca como inativo
-                    emp.write((char*)&e, sizeof(Emprestimo));
-
-                    cout << "Devolucao realizada com sucesso!\n";
-                    encontrou = true;
-                    break;
-                }
-            }
-
-            emp.close();
-
-            if (!encontrou)
-                cout << "Nenhum emprestimo encontrado para este instrumento.\n";
-
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-        } catch (const exception &e) {
-            cout << "Erro: " << e.what() << endl;
-            cout << "Pressione ENTER para voltar...";
-            cin.get();
-        }
+        ::realizarDevolucao(idAluno);
     }
 
     void consultarMeusEmprestimos(int idAluno) {
-        try {
-            system("cls || clear");
-            cout << "------ MEUS EMPRESTIMOS ------\n";
-
-            ifstream emp("emprestimos.dat", ios::binary);
-
-            if (!emp) {
-                cout << "Arquivo emprestimos.dat nao encontrado.\n";
-                cout << "\nPressione ENTER para voltar...";
-                cin.get();
-                return;
-            }
-
-            Emprestimo e;
-            bool encontrou = false;
-
-            while (emp.read((char*)&e, sizeof(Emprestimo))) {
-                if (e.idAluno == idAluno && e.idAluno != -1) {
-                    cout << "\nInstrumento: " << e.nome_In << endl;
-                    cout << "Data Emprestimo: " << e.dataEmprestimo << endl;
-                    cout << "Data Prevista para Devolucao: " << e.dataPrevista << endl;
-                    encontrou = true;
-                }
-            }
-
-            if (!encontrou)
-                cout << "Voce nao possui instrumentos emprestados.\n";
-
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-        } catch (const exception &e) {
-            cout << "Erro: " << e.what() << endl;
-            cout << "Pressione ENTER para voltar...";
-            cin.get();
-        }
+        listarMeusEmprestimos(idAluno);
     }
 
     // ===== LANCHONETE =====

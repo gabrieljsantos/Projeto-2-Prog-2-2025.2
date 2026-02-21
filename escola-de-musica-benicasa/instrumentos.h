@@ -21,7 +21,11 @@ void excluirInstrumento();
 // --- Funções de Empréstimo ---
 void salvarEmprestimo(Emprestimo emp);
 void realizarEmprestimo();
+void realizarEmprestimo(int idAluno);
 void realizarDevolucao();
+void realizarDevolucao(int idAluno);
+void listarInstrumentosDisponiveis();
+void listarMeusEmprestimos(int idAluno);
 
 // --- Edição ---
 void editarInstrumento();

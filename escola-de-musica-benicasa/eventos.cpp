@@ -7,7 +7,7 @@
 
 using namespace std;
 
-const char* ARQUIVO_EVENTOS = "eventos.txt";
+const char* ARQUIVO_EVENTOS = "eventos.dat";
 
 vector<Evento> eventos;
 int proximoID = 1;
