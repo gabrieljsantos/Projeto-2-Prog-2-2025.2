@@ -6,10 +6,6 @@
 
 namespace Login_mat {
 
-//======================================================================
-// Arquivos
-//======================================================================
-    // Feito por Luiz Felipe
     void inicializarArquivoUsuario() {
         if (verificarArquivoExistente(ARQUIVO_USUARIOS))
             return;
@@ -28,7 +24,6 @@ namespace Login_mat {
         outUsuarios.close();
     }
 
-    // Feito por Luiz Felipe
     void inicializarArquivoAluno() {
         if (verificarArquivoExistente(ARQUIVO_ALUNOS))
             return;
@@ -47,7 +42,6 @@ namespace Login_mat {
         outAlunos.close();
     }
 
-    // Feito por Clara
     void inicializarArquivoProfessor() {
         if (verificarArquivoExistente(ARQUIVO_PROFESSORES))
             return;
@@ -66,7 +60,6 @@ namespace Login_mat {
         outProfessores.close();
     }
 
-    // Feito por Luiz Felipe
     void inicializarArquivoAdmin() {
         if (verificarArquivoExistente(ARQUIVO_ADMINISTRADORES))
             return;
@@ -104,10 +97,6 @@ namespace Login_mat {
         return false;
     }
 
-//======================================================================
-// Cadastro
-//======================================================================
-
     int realizarCadastro() {
         saida_menu saidaCategoria;
         int idNovoUsuario = 0;
@@ -128,7 +117,6 @@ namespace Login_mat {
         return idNovoUsuario;
     }
 
-    //Feito por Jeanderson, auxiliado por Luiz Felipe
     int realizarCadastroAluno() {
         Aluno* alunoPtr = new Aluno;
         *alunoPtr = inicializarAlunoVazio();
@@ -161,7 +149,6 @@ namespace Login_mat {
         return novoId;
     }
 
-    // Feito por Clara
     int realizarCadastroProfessor(){
         Professor novoProfessor = inicializarProfessorVazio();
         int novoId = gerarNovoId();
@@ -205,10 +192,6 @@ namespace Login_mat {
         adminPtr = nullptr;
     }
 
-
-//======================================================================
-// Login
-//======================================================================
     bool realizarLogin(Usuario &usuario) {
         bool sucesso = false;
         Usuario** usuarios = new Usuario*[2];
@@ -248,11 +231,6 @@ namespace Login_mat {
 
         return sucesso;
     }
-
-
-//======================================================================
-// Salvar
-//======================================================================
 
     void salvarUsuario(Usuario usuario) {
         int posicao = adquirirPosicaoDoId(usuario.id);
@@ -321,11 +299,6 @@ namespace Login_mat {
         arquivo.close();
     }
 
-
-//======================================================================
-// CRIPTORGRAFIA
-//======================================================================
-
     string encriptografarSenha(string senha, int index) {
         char c;
         if(index == senha.length()) {
@@ -346,11 +319,6 @@ namespace Login_mat {
         return c + desencriptografarSenha(senhaEncriptografada, index + 1);
     }
 
-
-//======================================================================
-// Gerar novo ID
-//======================================================================
-
     int gerarNovoId() {
         return verificarUltimoIdUsuario() + 1;
     }
@@ -359,7 +327,6 @@ namespace Login_mat {
         return id - 20260000;
     }
 
-    //Feito por Luiz Felipe
     int verificarUltimoIdUsuario() {
         int ultimoId = 20260000;
         Usuario usuario;
@@ -379,11 +346,6 @@ namespace Login_mat {
         return ultimoId;
     }
 
-
-//======================================================================
-// Ler X (usuarios, alunos, professores ou admin)
-//======================================================================
-    // Feito por Luiz Felipe
     Usuario lerUsuario(int id) {
         Usuario usuario = inicializarUsuarioVazio();
         int posicao = adquirirPosicaoDoId(id);
@@ -405,7 +367,6 @@ namespace Login_mat {
         return usuario;
     }
 
-    // Feito por Luiz Felipe
     Aluno lerAluno(int id) {
         Aluno aluno = inicializarAlunoVazio();
         int posicao = adquirirPosicaoDoId(id);
@@ -425,7 +386,6 @@ namespace Login_mat {
         return aluno;
     }
 
-    // Feito por Clara
     Professor lerProfessor(int id) {
         Professor professor = inicializarProfessorVazio();
         int posicao = adquirirPosicaoDoId(id);
@@ -445,9 +405,6 @@ namespace Login_mat {
         return professor;
     }
 
-//======================================================================
-// Atualizar
-//======================================================================
     void atualizar(int id, Professor professor) {
         if (!verificarUsuarioExistente(id)) {
             return;
@@ -470,17 +427,11 @@ namespace Login_mat {
         salvarAluno(aluno);
     }
 
-
-//======================================================================
-// Verificar quantos X (usuarios, alunos, professores ou admin)
-//======================================================================
-    // Feito por Luiz Felipe
     int verificarQuantosUsuarios() {
         int idUltimoUsuario = verificarUltimoIdUsuario();
         return adquirirPosicaoDoId(idUltimoUsuario);
     }
 
-    // Feito por Luiz Felipe
     int verificarQuantosAlunos() {
         int contador = 0;
         Aluno aluno;
@@ -500,7 +451,6 @@ namespace Login_mat {
         return contador;
     }
 
-    // Feito por Clara
     int verificarQuantosProfessores() {
         int contador = 0;
         Professor professor;
@@ -520,11 +470,6 @@ namespace Login_mat {
         return contador;
     }
 
-
-//======================================================================
-// Verificar se usuario existe
-//======================================================================
-    //Feito por Jeanderson
     bool verificarUsuarioExistente(int id) {
         int posicao = adquirirPosicaoDoId(id);
 
@@ -551,7 +496,6 @@ namespace Login_mat {
         return false;
     }
 
-    //Feito por Jhones
     bool verificarUsuarioExistente(const char nome[100]) {
         ifstream inUsuarios;
         inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary);
@@ -562,7 +506,7 @@ namespace Login_mat {
 
         Usuario u;
         while (inUsuarios.read((char*)(&u), sizeof(Usuario))) {
-            // ignora registros vazios
+
             if (u.id != 20260000) {
                 if (strncmp(u.nome, nome, 100) == 0) {
                     inUsuarios.close();
@@ -575,18 +519,11 @@ namespace Login_mat {
         return false;
     }
 
-
-
-//======================================================================
-// Inicializadores de variaveis
-//======================================================================
-    //Feito por Luiz Felipe
      Usuario inicializarUsuarioVazio() {
         Usuario usuarioVazio = {20260000, false, "", "", "", NENHUMA, false};
         return usuarioVazio;
     }
 
-    // Feito por Luiz Felipe
     Aluno inicializarAlunoVazio() {
         Aluno alunoVazio;
         alunoVazio.base = inicializarUsuarioVazio();
@@ -600,7 +537,6 @@ namespace Login_mat {
         return alunoVazio;
     }
 
-    // Feito por Clara
     Professor inicializarProfessorVazio(){
         Professor professorVazio;
         professorVazio.base = inicializarUsuarioVazio();
@@ -611,16 +547,12 @@ namespace Login_mat {
         return professorVazio;
     }
 
-    //Feito por Luiz Felipe
     Admin inicializarAdminVazio() {
         Admin adminVazio;
         adminVazio.base = inicializarUsuarioVazio();
         return adminVazio;
     }
 
-//======================================================================
-// Interface Grafica
-//======================================================================
     saida_menu exibirSelecionarCategoria() {
         const int qtdOpcoes = 2;
         string opcoes[qtdOpcoes] = {"Aluno", "Professor"};

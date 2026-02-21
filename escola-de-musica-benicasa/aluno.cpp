@@ -13,19 +13,17 @@
 
 using namespace std;
 
-// Declarações extern do módulo eventos
 extern vector<Evento> eventos;
 extern void CarregarEventos();
 extern bool SalvarEventosNoArquivo(const vector<Evento>& eventos);
 
 namespace Modulo_aluno {
-    // ===== FUNÇÃO AUXILIAR =====
+
     void limparBuffer() {
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 
-    // ===== CARREGAR ALUNO POR ID =====
     Aluno carregarAluno(int idAluno) {
         ifstream arq("alunos.dat", ios::binary);
 
@@ -42,7 +40,6 @@ namespace Modulo_aluno {
         throw runtime_error("Aluno nao encontrado!");
     }
 
-    // ===== SALVAR ALUNO POR ID =====
     void salvarAluno(const Aluno &aluno) {
         fstream arq("alunos.dat", ios::binary | ios::in | ios::out);
 
@@ -70,7 +67,6 @@ namespace Modulo_aluno {
         arq.write((char*)&aluno, sizeof(Aluno));
     }
 
-    // ===== FUNÇÕES AUXILIARES PARA TURMA =====
     static bool lerTurmaById(int turmaId, Turma &turma) {
         ifstream file("turmas.dat", ios::binary);
         if (!file)
@@ -94,11 +90,9 @@ namespace Modulo_aluno {
         return nullptr;
     }
 
-
-    // ===== CONSULTAS ACADÊMICAS =====
     void consultarNotas(int idAluno) {
         try {
-            // Procurar iterativamente por todas as turmas
+
             ifstream file("turmas.dat", ios::binary);
             if (!file) {
                 mostrar_caixa_informacao("ERRO", "Arquivo turmas.dat nao encontrado!");
@@ -111,13 +105,12 @@ namespace Modulo_aluno {
 
             while (file.read((char*)&turma, sizeof(Turma))) {
                 turmaCount++;
-                // Procurar o aluno nesta turma
+
                 Aluno *alunoNaTurma = procurarAlunoNaTurma(turma, idAluno);
                 if (alunoNaTurma != nullptr) {
                     encontrado = true;
                     file.close();
 
-                    // Montar topicos para mostrar notas
                     TopicDetalhes topicos[3];
                     int numTopicos = 0;
 
@@ -155,7 +148,7 @@ namespace Modulo_aluno {
 
     void consultarMedias(int idAluno) {
         try {
-            // Procurar iterativamente por todas as turmas
+
             ifstream file("turmas.dat", ios::binary);
             if (!file) {
                 mostrar_caixa_informacao("ERRO", "Arquivo turmas.dat nao encontrado!");
@@ -166,13 +159,12 @@ namespace Modulo_aluno {
             bool encontrado = false;
 
             while (file.read((char*)&turma, sizeof(Turma))) {
-                // Procurar o aluno nesta turma
+
                 Aluno *alunoNaTurma = procurarAlunoNaTurma(turma, idAluno);
                 if (alunoNaTurma != nullptr) {
                     encontrado = true;
                     file.close();
 
-                    // Montar topicos para mostrar media
                     TopicDetalhes topicos[2];
                     int numTopicos = 0;
 
@@ -206,7 +198,7 @@ namespace Modulo_aluno {
 
     void consultarSituacaoAcademica(int idAluno) {
         try {
-            // Procurar iterativamente por todas as turmas
+
             ifstream file("turmas.dat", ios::binary);
             if (!file) {
                 mostrar_caixa_informacao("ERRO", "Arquivo turmas.dat nao encontrado!");
@@ -217,13 +209,12 @@ namespace Modulo_aluno {
             bool encontrado = false;
 
             while (file.read((char*)&turma, sizeof(Turma))) {
-                // Procurar o aluno nesta turma
+
                 Aluno *alunoNaTurma = procurarAlunoNaTurma(turma, idAluno);
                 if (alunoNaTurma != nullptr) {
                     encontrado = true;
                     file.close();
 
-                    // Determinar status academico
                     string status;
                     if (alunoNaTurma->faltas > 10)
                         status = "REPROVADO POR FALTA";
@@ -234,7 +225,6 @@ namespace Modulo_aluno {
                     else
                         status = "REPROVADO";
 
-                    // Montar topicos para mostrar situação acadêmica
                     TopicDetalhes topicos[5];
                     int numTopicos = 0;
 
@@ -285,10 +275,8 @@ namespace Modulo_aluno {
         }
     }
 
-
-    // ===== EVENTOS =====
     void visualizarEventosDisponiveis() {
-        // Carregar eventos
+
         CarregarEventos();
 
         if (eventos.empty()) {
@@ -335,7 +323,6 @@ namespace Modulo_aluno {
         try {
             Aluno aluno = carregarAluno(idAluno);
 
-            // Carregar eventos
             CarregarEventos();
 
             if (eventos.empty()) {
@@ -366,13 +353,11 @@ namespace Modulo_aluno {
                 return;
             }
 
-            // Verificar vagas
             if (eventoEncontrado->vagasDisponiveis <= 0) {
                 mostrar_caixa_informacao("ERRO", "Nao ha vagas disponiveis para este evento!");
                 return;
             }
 
-            // Verificar se ja esta inscrito
             for (int i = 0; i < eventoEncontrado->totalinscritos; i++) {
                 if (strcmp(eventoEncontrado->alunos[i], aluno.base.nome) == 0) {
                     mostrar_caixa_informacao("ERRO", "Voce ja esta inscrito neste evento!");
@@ -380,7 +365,6 @@ namespace Modulo_aluno {
                 }
             }
 
-            // Adicionar inscricao
             strncpy(eventoEncontrado->alunos[eventoEncontrado->totalinscritos], 
                     aluno.base.nome, 99);
             eventoEncontrado->alunos[eventoEncontrado->totalinscritos][99] = '\0';
@@ -388,7 +372,6 @@ namespace Modulo_aluno {
             eventoEncontrado->totalinscritos++;
             eventoEncontrado->vagasDisponiveis--;
 
-            // Salvar eventos
             if (SalvarEventosNoArquivo(eventos)) {
                 mostrar_caixa_informacao("SUCESSO", "Inscricao no evento realizada com sucesso!");
             } else {
@@ -403,7 +386,6 @@ namespace Modulo_aluno {
         try {
             Aluno aluno = carregarAluno(idAluno);
 
-            // Carregar eventos
             CarregarEventos();
 
             if (eventos.empty()) {
@@ -415,7 +397,7 @@ namespace Modulo_aluno {
 
             vector<TopicDetalhes> topicos_inscricoes;
             for (const Evento &e : eventos) {
-                // Procurar se o aluno esta inscrito neste evento
+
                 for (int i = 0; i < e.totalinscritos; i++) {
                     if (strcmp(e.alunos[i], aluno.base.nome) == 0) {
                         encontrouInscricao = true;
@@ -452,7 +434,7 @@ namespace Modulo_aluno {
             mostrar_caixa_informacao("ERRO", e.what());
         }
     }
-    // ===== INSTRUMENTOS =====
+
     void visualizarInstrumentosDisponiveis() {
         listarInstrumentosDisponiveis();
     }
@@ -470,7 +452,6 @@ namespace Modulo_aluno {
     }
 }
 
-// ===== PONTO DE ENTRADA DO MENU ALUNO =====
 void abrir_menu_aluno(Usuario* usuario) {
     constexpr int qtdOpcoes = 15;
     string opcoes[qtdOpcoes] = {

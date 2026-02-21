@@ -20,11 +20,6 @@
 
 using namespace std;
 
-// =====================================================================
-// SEÇÃO: FUNÇÕES AUXILIARES GERAIS
-// =====================================================================
-
-
 void openFile(std::fstream &f, const std::string Nome){
     f.open(Nome, std::ios::in | std::ios::out | std::ios::binary);
 
@@ -35,10 +30,6 @@ void openFile(std::fstream &f, const std::string Nome){
         f.open(Nome, std::ios::in | std::ios::out | std::ios::binary);
     }
 }
-
-// =====================================================================
-// SEÇÃO: FUNÇÕES DE BUSCA
-// =====================================================================
 
 Professor buscaProf(std::fstream &file,int buscaId){
     Professor prof{};
@@ -104,10 +95,6 @@ Aluno buscaAluno(std::fstream &file, int buscaId){
     }
 }
 
-
-
-
-
 int gerarNovoId(std::fstream &file, size_t tamanhoStruct){
     file.clear();
     file.seekg(0, std::ios::end);
@@ -115,10 +102,6 @@ int gerarNovoId(std::fstream &file, size_t tamanhoStruct){
     int totalRegistros = bytes / tamanhoStruct;
     return totalRegistros + 1;
 }
-
-// =====================================================================
-// SEÇÃO: FUNÇÕES DE CONSULTA E RELATÓRIOS
-// =====================================================================
 
 void consultarPendenciasInstrumentos() {
     constexpr int Quantidades_opcoes = 3;
@@ -141,7 +124,7 @@ void consultarPendenciasInstrumentos() {
         std::fstream fileAlunos;
         
         switch (resultado.indice_da_opcao) {
-            case 0: { // Listar todas as pendências
+            case 0: {
                 openFile(fileEmprestimo, "emprestimos.dat");
                 openFile(fileAlunos, "alunos.dat");
                 
@@ -204,7 +187,7 @@ void consultarPendenciasInstrumentos() {
                 break;
             }
             
-            case 1: { // Filtrar por aluno
+            case 1: {
                 ConfigEntradaTexto configEntrada;
                 configEntrada.titulo = "Filtrar por Aluno";
                 configEntrada.label = "Digite o ID do Aluno: ";
@@ -283,7 +266,7 @@ void consultarPendenciasInstrumentos() {
                 break;
             }
             
-            case 2: { // Voltar
+            case 2: {
                 continuar = false;
                 break;
             }
@@ -291,22 +274,17 @@ void consultarPendenciasInstrumentos() {
     }
 }
 
-// =====================================================================
-// FUNÇÃO: AUTORIZAR EVENTOS
-// =====================================================================
-
 void autorizarEventos() {
     bool continuar = true;
 
     while (continuar) {
-        // Carregar eventos
+
         extern void CarregarEventos();
         extern vector<Evento> eventos;
         extern bool SalvarEventosNoArquivo(const vector<Evento>& eventos);
         
         CarregarEventos();
 
-        // Montar tabela com todos os eventos não autorizados
         string dados[100][6];
         int contador = 0;
 
@@ -346,7 +324,6 @@ void autorizarEventos() {
             break;
         }
 
-        // Encontrar o evento correspondente no vetor
         int linhaAtual = 0;
         int idxEvento = -1;
         
@@ -365,7 +342,6 @@ void autorizarEventos() {
             continue;
         }
 
-        // Exibir detalhes e opcoes
         string detalhes = "ID: " + to_string(eventos[idxEvento].id) + 
                          "\nEvento: " + eventos[idxEvento].nome + 
                          "\nDescricao: " + eventos[idxEvento].descricao + 
@@ -380,7 +356,7 @@ void autorizarEventos() {
                          "\nVagas: " + to_string(eventos[idxEvento].vagasDisponiveis) +
                          "\nInscritos: " + to_string(eventos[idxEvento].totalinscritos);
         
-        // Menu para autorizar ou recusar
+
         constexpr int qtdOpcoes = 3;
         string opcoes[qtdOpcoes] = {"Autorizar", "Recusar", "Voltar"};
         
@@ -391,7 +367,7 @@ void autorizarEventos() {
         saida_menu resultado = interface_para_menu(qtdOpcoes, opcoes, configMenu);
 
         switch (resultado.indice_da_opcao) {
-            case 0: { // Autorizar
+            case 0: {
                 eventos[idxEvento].autorizado = 1;
                 if (SalvarEventosNoArquivo(eventos)) {
                     mostrar_caixa_informacao("SUCESSO", "Evento '" + string(eventos[idxEvento].nome) + "' autorizado com sucesso!");
@@ -400,7 +376,7 @@ void autorizarEventos() {
                 }
                 break;
             }
-            case 1: { // Recusar
+            case 1: {
                 eventos.erase(eventos.begin() + idxEvento);
                 if (SalvarEventosNoArquivo(eventos)) {
                     mostrar_caixa_informacao("SUCESSO", "Evento recusado e removido!");
@@ -409,7 +385,7 @@ void autorizarEventos() {
                 }
                 break;
             }
-            case 2: { // Voltar
+            case 2: {
                 continuar = false;
                 break;
             }
@@ -417,15 +393,7 @@ void autorizarEventos() {
     }
 }
 
-
-// =====================================================================
-// NAMESPACE: MÓDULO DE ADMINISTRAÇÃO (mod_ADM)
-// Contém todos os menus e funções do painel administrativo
-// =====================================================================
-
 namespace mod_ADM {
-
-    // ----- FUNÇÕES AUXILIARES DE LISTAGEM -----
 
     void atualizar_estado_de_usuario(int id_usuario, Funcao tipo_usuario, string estado) {
         bool novo_estado = (estado == "Ativo") ? true : false;
@@ -473,14 +441,14 @@ namespace mod_ADM {
     }
 
     void gerenciar_usuario_menu(int idUsuario) {
-        // Buscar usuario nos alunos e professores
+
         bool encontrado = false;
         string nome_usuario = "";
         string email_usuario = "";
         string status_usuario = "";
         Funcao tipo_encontrado = ALUNO;
         
-        // Buscar nos alunos e professores
+
         Aluno aluno = Login_mat::lerAluno(idUsuario);
         if (aluno.base.id == idUsuario) {
             encontrado = true;
@@ -504,7 +472,7 @@ namespace mod_ADM {
             return;
         }
         
-        // Exibir menu de gerenciamento
+
         ConfigBotoes configBotoes;
         configBotoes.titulo = "Gerenciar Usuario";
         configBotoes.descricao = "ID: " + to_string(idUsuario) + " | Nome: " + nome_usuario + " | Email: " + email_usuario + " | Status: " + status_usuario;
@@ -525,17 +493,16 @@ namespace mod_ADM {
         
         if (acao_sob_usuario.confirmado) {
             if (acao_sob_usuario.valor_retorno == 1) {
-                // Ativar usuario
+
                 atualizar_estado_de_usuario(idUsuario, tipo_encontrado, "Ativo");
                 mostrar_caixa_informacao("SUCESSO", "Usuario ativado com sucesso!");
             }
             if (acao_sob_usuario.valor_retorno == 0) {
-                // Desativar usuario
+
                 atualizar_estado_de_usuario(idUsuario, tipo_encontrado, "Inativo");
                 mostrar_caixa_informacao("SUCESSO", "Usuario desativado com sucesso!");
             }
-            // valor_retorno == 2: Modifica (sem implementação)
-            // valor_retorno == 3: Sobre (sem implementação)
+
         }
     }
 
@@ -609,8 +576,7 @@ namespace mod_ADM {
     }
 
     int listar_disciplinas_avancado(int ativo, int comProfessor, string dados[100][6]){
-        // ativo: 0=inativo, 1=ativo, 2=ambos
-        // comProfessor: 0=sem professor, 1=com professor, 2=ambos
+
         int contador = 0;
         std::fstream file;
         std::fstream fileProf;
@@ -623,7 +589,7 @@ namespace mod_ADM {
             if(disciplina.id == 0) continue;
             if(ativo != 2 && disciplina.ativo != (ativo == 1)) continue;
             
-            // Verificar se disciplina tem professor vinculado
+
             bool temProfessor = false;
             Professor prof;
             fileProf.seekg(0);
@@ -635,9 +601,9 @@ namespace mod_ADM {
             }
             fileProf.clear();
             
-            // Aplicar filtro de professor
-            if(comProfessor == 0 && temProfessor) continue;  // Quer sem professor, mas tem
-            if(comProfessor == 1 && !temProfessor) continue; // Quer com professor, mas não tem
+
+            if(comProfessor == 0 && temProfessor) continue;
+            if(comProfessor == 1 && !temProfessor) continue;
             
             dados[contador][0] = to_string(disciplina.id);
             dados[contador][1] = disciplina.nome;
@@ -655,7 +621,7 @@ namespace mod_ADM {
         bool continuar_gerenciando = true;
         
         while(continuar_gerenciando) {
-            // Recarregar disciplina a cada iteração
+
             std::fstream file;
             openFile(file, "disciplinas.dat");
             Disciplina disciplina = buscaDisciplina(file, idDisciplina);
@@ -666,7 +632,7 @@ namespace mod_ADM {
                 return;
             }
             
-            // Buscar professor vinculado a esta disciplina
+
             string nomeProfVinculado = "Nenhum";
             {
                 std::fstream fileProfs;
@@ -682,7 +648,6 @@ namespace mod_ADM {
                 fileProfs.close();
             }
 
-            // Mostrar menu de gerenciamento
             ConfigBotoes configBotoes;
             configBotoes.titulo = "Gerenciar Disciplina";
             configBotoes.descricao = "ID: " + to_string(idDisciplina) + " | Nome: " + string(disciplina.nome) + 
@@ -714,18 +679,18 @@ namespace mod_ADM {
             if (!acao.confirmado) return;
             
             if (acao.valor_retorno == 5) {
-                // Vincular professor a disciplina
+
                 vincular_professor_disciplina(idDisciplina, string(disciplina.nome));
             }
             else if (acao.valor_retorno == 6) {
-                // Remover vinculo professor da disciplina
+
                 remover_vinculo_professor_disciplina(string(disciplina.nome));
             }
             else {
                 openFile(file, "disciplinas.dat");
                 
                 if (acao.valor_retorno == 1) {
-                    // Ativar disciplina
+
                     disciplina.ativo = 1;
                     file.seekp((idDisciplina - 1) * sizeof(Disciplina));
                     file.write((char*)&disciplina, sizeof(Disciplina));
@@ -733,7 +698,7 @@ namespace mod_ADM {
                     mostrar_caixa_informacao("SUCESSO", "Disciplina ativada com sucesso!");
                 }
                 else if (acao.valor_retorno == 0) {
-                    // Desativar disciplina
+
                     disciplina.ativo = 0;
                     file.seekp((idDisciplina - 1) * sizeof(Disciplina));
                     file.write((char*)&disciplina, sizeof(Disciplina));
@@ -741,7 +706,7 @@ namespace mod_ADM {
                     mostrar_caixa_informacao("SUCESSO", "Disciplina desativada com sucesso!");
                 }
                 else if (acao.valor_retorno == 3) {
-                    // Excluir disciplina
+
                     disciplina.id = 0;
                     file.seekp((idDisciplina - 1) * sizeof(Disciplina));
                     file.write((char*)&disciplina, sizeof(Disciplina));
@@ -750,7 +715,7 @@ namespace mod_ADM {
                     continuar_gerenciando = false;
                 }
                 else if (acao.valor_retorno == 4) {
-                    // Cancelar/Sair
+
                     file.close();
                     continuar_gerenciando = false;
                 }
@@ -772,17 +737,17 @@ namespace mod_ADM {
         saida_menu resultadoVincular = interface_para_menu(Opcoes_vincular, opcoes_vincular, configVincular);
         
         if (resultadoVincular.indice_da_opcao == 0) {
-            // Opção 1: Selecionar professor de uma tabela
+
             vincular_professor_por_tabela(idDisciplina, nomeDisciplina);
         }
         else if (resultadoVincular.indice_da_opcao == 1) {
-            // Opção 2: Digitar ID do professor
+
             vincular_professor_por_id(idDisciplina, nomeDisciplina);
         }
     }
 
     void vincular_professor_por_tabela(int idDisciplina, const string &nomeDisciplina) {
-        // Carregar todos os professores ativos em uma tabela
+
         string dados[100][4];
         int total = 0;
         std::fstream fileProfs;
@@ -869,7 +834,7 @@ namespace mod_ADM {
     }
 
     void remover_vinculo_professor_disciplina(const string &nomeDisciplina) {
-        // Encontrar o professor vinculado a esta disciplina e remover o vínculo
+
         std::fstream fileProfs;
         openFile(fileProfs, "professores.dat");
         
@@ -880,8 +845,8 @@ namespace mod_ADM {
         fileProfs.seekg(0);
         while(fileProfs.read((char*)&prof, sizeof(Professor))) {
             if(prof.base.id > 0 && strcmp(prof.disciplina, nomeDisciplina.c_str()) == 0) {
-                // Encontrou o professor vinculado
-                prof.disciplina[0] = '\0';  // Limpar o vínculo
+
+                prof.disciplina[0] = '\0';
                 
                 fileProfs.seekp(index * sizeof(Professor));
                 fileProfs.write((char*)&prof, sizeof(Professor));
@@ -899,10 +864,6 @@ namespace mod_ADM {
             mostrar_caixa_informacao("INFO", "Nenhum professor vinculado a esta disciplina.");
         }
     }
-
-
-
-
 
     int listar_instrumentos_especificos(int autorizado, string dados[100][6]){
         int contador = 0;
@@ -985,8 +946,6 @@ namespace mod_ADM {
         file.close();
     }
 
-    // ----- MENUS PRINCIPAIS -----
-
     void menuCadastroUsuarios() {
         constexpr int Quantidades_opcoes = 3;
         bool continuar = true;
@@ -1004,7 +963,7 @@ namespace mod_ADM {
             saida_menu resultado = interface_para_menu(Quantidades_opcoes, opcoes, config);
             
             switch (resultado.indice_da_opcao) {
-                case 0: { // Cadastrar Aluno
+                case 0: {
                     int novoId = Login_mat::realizarCadastroAluno();
                     if (novoId > 0) {
                         mostrar_caixa_informacao("SUCESSO", "Aluno cadastrado com sucesso!\nID: " + to_string(novoId));
@@ -1012,7 +971,7 @@ namespace mod_ADM {
                     break;
                 }
                 
-                case 1: { // Cadastrar Professor
+                case 1: {
                     int novoId = Login_mat::realizarCadastroProfessor();
                     if (novoId > 0) {
                         mostrar_caixa_informacao("SUCESSO", "Professor cadastrado com sucesso!\nID: " + to_string(novoId));
@@ -1020,7 +979,7 @@ namespace mod_ADM {
                     break;
                 }
                 
-                case 2: { // Voltar
+                case 2: {
                     continuar = false;
                     break;
                 }
@@ -1032,9 +991,9 @@ namespace mod_ADM {
 
         constexpr int Quantidades_opcoes = 5;
         string texto_do_tipo_de_usuario;
-        string tipo_usuario_str = "Ambos"; // Controla se é Aluno, Professor ou Ambos
+        string tipo_usuario_str = "Ambos";
         Funcao tipo_usuario = ALUNO;
-        int estado_selecionado = 2; // 1=Ativo, 0=Inativo, 2=Ambos (padrão)
+        int estado_selecionado = 2;
         bool continuar = true;
 
         while (continuar) {
@@ -1064,7 +1023,7 @@ namespace mod_ADM {
             
             switch (resultado.indice_da_opcao)
             {
-                case 0: { // Cadastrar Usuario
+                case 0: {
                     constexpr int Quantidades_opcoes_cad = 3;
                     string opcoes_cad[Quantidades_opcoes_cad] = {
                         "Cadastrar Aluno",
@@ -1078,21 +1037,21 @@ namespace mod_ADM {
                     saida_menu resultado_cad = interface_para_menu(Quantidades_opcoes_cad, opcoes_cad, config_cad);
                     
                     switch (resultado_cad.indice_da_opcao) {
-                        case 0: { // Cadastrar Aluno
+                        case 0: {
                             int novoId = Login_mat::realizarCadastroAluno();
                             if (novoId > 0) {
                                 mostrar_caixa_informacao("SUCESSO", "Aluno cadastrado com sucesso!\nID: " + to_string(novoId));
                             }
                             break;
                         }
-                        case 1: { // Cadastrar Professor
+                        case 1: {
                             int novoId = Login_mat::realizarCadastroProfessor();
                             if (novoId > 0) {
                                 mostrar_caixa_informacao("SUCESSO", "Professor cadastrado com sucesso!\nID: " + to_string(novoId));
                             }
                             break;
                         }
-                        case 2: { // Voltar
+                        case 2: {
                             break;
                         }
                     }
@@ -1119,13 +1078,13 @@ namespace mod_ADM {
                     
                     if (resultadofiltro.confirmado && resultadofiltro.numero_variaveis >= 2) {
                         string tipo_str = resultadofiltro.valores_selecionados[0];
-                        tipo_usuario_str = tipo_str; // Armazenar o tipo selecionado
+                        tipo_usuario_str = tipo_str;
                         
                         if (tipo_str == "Aluno") tipo_usuario = ALUNO;
                         else if (tipo_str == "Professor") tipo_usuario = PROFESSOR;
-                        else if (tipo_str == "Ambos") tipo_usuario = ALUNO; // Padrão "Ambos" inicializa com ALUNO
+                        else if (tipo_str == "Ambos") tipo_usuario = ALUNO;
                         
-                        // Converter estado do usuario
+
                         string estado_str = resultadofiltro.valores_selecionados[1];
                         if (estado_str == "Inativo") {
                             estado_selecionado = 0;
@@ -1143,14 +1102,14 @@ namespace mod_ADM {
                     string dados[100][6];
                     int total = 0;
                     
-                    // Se tipo_usuario_str é "Ambos", listar tanto alunos quanto professores
+
                     if (tipo_usuario_str == "Ambos") {
                         string dados_alunos[100][6];
                         string dados_profs[100][6];
                         int total_alunos = listar_usuarios_especificos(ALUNO, estado_selecionado, dados_alunos);
                         int total_profs = listar_usuarios_especificos(PROFESSOR, estado_selecionado, dados_profs);
                         
-                        // Concatenar dados
+
                         for(int i = 0; i < total_alunos && total < 100; i++) {
                             for(int j = 0; j < 6; j++) {
                                 dados[total][j] = dados_alunos[i][j];
@@ -1185,7 +1144,7 @@ namespace mod_ADM {
                     break;
                 }
                 case 3: {
-                    // Capturar ID usando interface gráfica
+
                     ConfigEntradaTexto configBusca;
                     configBusca.titulo = "Buscar Usuario";
                     configBusca.label = "Digite o ID do usuario: ";
@@ -1203,7 +1162,7 @@ namespace mod_ADM {
                         break;
                     }
                     
-                    // Usar função auxiliar para gerenciar usuário
+
                     gerenciar_usuario_menu(idBusca);
                     break;
                 }
@@ -1214,15 +1173,10 @@ namespace mod_ADM {
         }
     }
 
-// =====================================================================
-// SEÇÃO: FUNÇÕES DE MENU (FORA DO NAMESPACE MOD_ADM)
-// Menus principais de gerenciamento
-// =====================================================================
-
 void menuCadastroCursos(){
     constexpr int Quantidades_opcoes = 5;
     bool continuar = true;
-    int estado_selecionado = 2; // 0=inativo, 1=ativo, 2=ambos
+    int estado_selecionado = 2;
 
     while (continuar) {
         string opcoes[Quantidades_opcoes] = {
@@ -1245,7 +1199,7 @@ void menuCadastroCursos(){
         Disciplina disciplina_;
         
         switch (resultado.indice_da_opcao) {
-            case 0: { // Cadastrar Disciplina
+            case 0: {
                 ConfigEntradaTexto configNome;
                 configNome.titulo = "Cadastrar Disciplina";
                 configNome.label = "Nome da Disciplina: ";
@@ -1267,7 +1221,7 @@ void menuCadastroCursos(){
                 strncpy(disciplina_.nome, nome, 29);
                 disciplina_.nome[29] = '\0';
                 disciplina_.cargaHoraria = cargaHoraria;
-                disciplina_.ativo = 1; // Ativa por padrão
+                disciplina_.ativo = 1;
                 
                 file.seekp(0, std::ios::end);
                 disciplina_.id = 1 + file.tellp() / sizeof(Disciplina);
@@ -1278,7 +1232,7 @@ void menuCadastroCursos(){
                 break;
             }
             
-            case 1: { // Filtros de pesquisa
+            case 1: {
                 constexpr int qtdEstados = 3;
                 string estados[qtdEstados] = {"Inativa", "Ativa", "Ambas"};
                 
@@ -1293,7 +1247,7 @@ void menuCadastroCursos(){
                 break;
             }
             
-            case 2: { // Listar Disciplinas
+            case 2: {
                 string dados[100][6];
                 int total = listar_disciplinas_especificas(estado_selecionado, dados);
                 
@@ -1317,7 +1271,7 @@ void menuCadastroCursos(){
                 break;
             }
             
-            case 3: { // Buscar por ID
+            case 3: {
                 ConfigEntradaTexto configBusca;
                 configBusca.titulo = "Buscar Disciplina";
                 configBusca.label = "Digite o ID da disciplina: ";
@@ -1339,7 +1293,7 @@ void menuCadastroCursos(){
                 break;
             }
             
-            case 4: { // Voltar
+            case 4: {
                 continuar = false;
                 break;
             }
@@ -1374,7 +1328,6 @@ void menuCadastroCursos(){
         int totalAlunos = 0;
         float somaMedias = 0.0;
 
-        // ===== CONTABILIZAR TOTAIS =====
         fileTurmas.seekg(0, ios::beg);
         memset(&turma, 0, sizeof(Turma));
 
@@ -1402,10 +1355,8 @@ void menuCadastroCursos(){
 
         float mediaGeral = (totalAlunos > 0) ? (somaMedias / totalAlunos) : 0.0;
 
-        // ===== MONTAR TEXTO CORRIDO =====
         string texto = "";
 
-        // ── RESUMO ACADEMICO GERAL ─────────────────
         texto += "========== RESUMO ACADEMICO GERAL ==========\n";
         texto += "\n";
         texto += "Total de Turmas Ativas: " + to_string(totalTurmas) + "\n";
@@ -1418,7 +1369,6 @@ void menuCadastroCursos(){
         }
         texto += "\n\n";
 
-        // ── DETALHES DE CADA TURMA ────────────────
         fileTurmas.seekg(0, ios::beg);
         memset(&turma, 0, sizeof(Turma));
         int numTurma = 0;
@@ -1427,7 +1377,7 @@ void menuCadastroCursos(){
             if (turma.ativo && turma.id != 0) {
                 numTurma++;
                 
-                // Buscar informações da disciplina
+
                 string nomeDisciplina = "Nao atribuida";
                 if(turma.idDisciplina > 0) {
                     fileDisc.clear();
@@ -1438,7 +1388,6 @@ void menuCadastroCursos(){
                     }
                 }
 
-                // Buscar informações do professor
                 string nomeProfessor = "Nao atribuido";
                 if(turma.idProfessor > 0) {
                     fileProf.clear();
@@ -1449,7 +1398,6 @@ void menuCadastroCursos(){
                     }
                 }
 
-                // Calcular média da turma
                 float somaMediasTurma = 0.0;
                 int alunosComNota = 0;
                 for(int i = 0; i < turma.qtdAlunos; i++) {
@@ -1460,7 +1408,6 @@ void menuCadastroCursos(){
                 }
                 float mediaTurma = (alunosComNota > 0) ? (somaMediasTurma / alunosComNota) : 0.0;
 
-                // Cabeçalho da turma
                 texto += "======================================\n";
                 texto += "TURMA #" + to_string(numTurma) + " | ID: " + to_string(turma.id) + " | " + string(turma.nome) + "\n";
                 texto += "======================================\n";
@@ -1468,7 +1415,6 @@ void menuCadastroCursos(){
                 texto += "Professor: " + nomeProfessor + "\n";
                 texto += "\n";
 
-                // Estatísticas da turma
                 texto += "--- ESTATISTICAS DA TURMA ---\n";
                 texto += "Total de Alunos: " + to_string(turma.qtdAlunos) + "\n";
                 
@@ -1490,7 +1436,6 @@ void menuCadastroCursos(){
                 texto += to_string(totalFaltas) + "\n";
                 texto += "\n";
 
-                // Lista de alunos com notas
                 if(turma.qtdAlunos > 0) {
                     texto += "--- ALUNOS MATRICULADOS ---\n";
                     int cont = 0;
@@ -1514,7 +1459,6 @@ void menuCadastroCursos(){
                     texto += "\n";
                 }
 
-                // Lista de avaliações
                 if(turma.qtdAvaliacoes > 0) {
                     texto += "--- AVALIACOES REALIZADAS ---\n";
                     for(int i = 0; i < turma.qtdAvaliacoes; i++) {
@@ -1534,16 +1478,11 @@ void menuCadastroCursos(){
         fileDisc.close();
         fileProf.close();
 
-        // ===== EXIBIR COM TEXTO CORRIDO =====
         ConfigTexto configTexto;
         configTexto.titulo = "RELATORIO ACADEMICO";
 
         mostrar_texto(texto, configTexto);
     }
-
-
-
-    // ----- FUNÇÕES AUXILIARES DE TURMAS E MATRÍCULA -----
 
     int listar_disciplinas_para_turma(string dados[100][4]) {
         int contador = 0;
@@ -1641,8 +1580,6 @@ void menuCadastroCursos(){
         return contador;
     }
 
-    // ----- FUNÇÕES DE TURMAS E MATRÍCULA -----
-
     bool verificaTurmasProf(Professor &prof, int &Index_turma){
         for(int i = 0; i < 5; i++){
             if(prof.turmas[i] == 0){
@@ -1653,7 +1590,6 @@ void menuCadastroCursos(){
         return false;
     }
 
-    // Lista todas as turmas para exibição na tabela principal
     int listar_todas_turmas(string dados[100][5]) {
         int contador = 0;
         std::fstream file;
@@ -1670,7 +1606,7 @@ void menuCadastroCursos(){
                 dados[contador][0] = to_string(turma.id);
                 dados[contador][1] = turma.nome;
                 
-                // Buscar nome da disciplina
+
                 if(turma.idDisciplina > 0) {
                     Disciplina disc;
                     memset(&disc, 0, sizeof(Disciplina));
@@ -1685,11 +1621,11 @@ void menuCadastroCursos(){
                     dados[contador][2] = "Nao atribuida";
                 }
                 
-                // Buscar nome do professor
+
                 if(turma.idProfessor > 0) {
                     Professor prof;
                     memset(&prof, 0, sizeof(Professor));
-                    fileProf.clear(); // Limpar flags de erro antes de buscar
+                    fileProf.clear();
                     fileProf.seekg((turma.idProfessor - 20260001) * sizeof(Professor));
                     if(fileProf.read((char*)&prof, sizeof(Professor)) && prof.base.id == turma.idProfessor) {
                         dados[contador][3] = prof.base.nome;
@@ -1710,12 +1646,11 @@ void menuCadastroCursos(){
         return contador;
     }
 
-    // Cria turma apenas com nome (definições básicas)
     void criarTurmaBasica() {
         std::fstream file;
         openFile(file, "turmas.dat");
         
-        // ===== ENTRADA DO NOME DA TURMA =====
+
         ConfigEntradaTexto configNome;
         configNome.titulo = "Criar Nova Turma";
         configNome.descricao = "Informe o nome da turma.";
@@ -1730,33 +1665,33 @@ void menuCadastroCursos(){
             return;
         }
         
-        // ===== CRIAR TURMA =====
+
         Turma turma;
         turma.id = gerarNovoId(file, sizeof(Turma));
         turma.ativo = 1;
-        turma.idDisciplina = 0;  // Não atribuído
-        turma.idProfessor = 0;   // Não atribuído
+        turma.idDisciplina = 0;
+        turma.idProfessor = 0;
         turma.id_prof = 0;
         turma.qtdAlunos = 0;
         turma.qtdAvaliacoes = 0;
         
-        // Copiar nome
+
         strncpy(turma.nome, resultadoNome.valor.c_str(), 99);
         turma.nome[99] = '\0';
         
-        // Inicializar alunos vazios
+
         for(int i = 0; i < MAX_ALUNOS; i++) {
             turma.alunos[i].base.id = 0;
             turma.alunos[i].base.ativo = 0;
         }
         
-        // Inicializar avaliações vazias
+
         for(int i = 0; i < MAX_AVALIACOES; i++) {
             turma.avaliacoes[i].data[0] = '\0';
             turma.avaliacoes[i].descricao[0] = '\0';
         }
         
-        // ===== SALVAR TURMA =====
+
         file.seekp((turma.id - 1) * sizeof(Turma));
         file.write((char*)&turma, sizeof(Turma));
         file.close();
@@ -1764,7 +1699,6 @@ void menuCadastroCursos(){
         mostrar_caixa_informacao("SUCESSO", "Turma criada com sucesso!\nID: " + to_string(turma.id) + "\nNome: " + turma.nome);
     }
 
-    // Atribui disciplina a uma turma
     void atribuirDisciplinaTurma(int idTurma) {
         string dados_disc[100][4];
         
@@ -1773,7 +1707,7 @@ void menuCadastroCursos(){
         openFile(file, "turmas.dat");
         openFile(fileDisc, "disciplinas.dat");
         
-        // Buscar turma
+
         Turma turma;
         file.seekg((idTurma - 1) * sizeof(Turma));
         file.read((char*)&turma, sizeof(Turma));
@@ -1785,7 +1719,7 @@ void menuCadastroCursos(){
             return;
         }
         
-        // Listar disciplinas
+
         int total_disc = listar_disciplinas_para_turma(dados_disc);
         
         if (total_disc == 0) {
@@ -1812,7 +1746,7 @@ void menuCadastroCursos(){
         
         int idDisciplina = stoi(dados_disc[disc_selecionada.indice_linha][0]);
         
-        // Atualizar turma
+
         turma.idDisciplina = idDisciplina;
         file.seekp((idTurma - 1) * sizeof(Turma));
         file.write((char*)&turma, sizeof(Turma));
@@ -1831,7 +1765,7 @@ void menuCadastroCursos(){
         openFile(file, "turmas.dat");
         openFile(fileProf, "professores.dat");
         
-        // Buscar turma
+
         Turma turma;
         file.seekg((idTurma - 1) * sizeof(Turma));
         file.read((char*)&turma, sizeof(Turma));
@@ -1843,7 +1777,7 @@ void menuCadastroCursos(){
             return;
         }
         
-        // Se já tem professor, remover turma do professor antigo
+
         if(turma.idProfessor > 0) {
             Professor profAntigo;
             fileProf.seekg((turma.idProfessor - 20260001) * sizeof(Professor));
@@ -1861,7 +1795,7 @@ void menuCadastroCursos(){
             }
         }
         
-        // Listar professores
+
         int total_prof = listar_professores_para_turma(dados_prof);
         
         if (total_prof == 0) {
@@ -1889,7 +1823,7 @@ void menuCadastroCursos(){
         
         int idProfessor = stoi(dados_prof[prof_selecionado.indice_linha][0]);
         
-        // Vincular turma ao novo professor
+
         Professor prof;
         fileProf.seekg((idProfessor - 20260001) * sizeof(Professor));
         fileProf.read((char*)&prof, sizeof(Professor));
@@ -1906,7 +1840,7 @@ void menuCadastroCursos(){
             return;
         }
         
-        // Atualizar turma
+
         turma.idProfessor = idProfessor;
         turma.id_prof = idProfessor;
         file.seekp((idTurma - 1) * sizeof(Turma));
@@ -1918,7 +1852,6 @@ void menuCadastroCursos(){
         mostrar_caixa_informacao("SUCESSO", "Professor atribuido com sucesso!");
     }
 
-    // Lista alunos de uma turma
     void listarAlunosDaTurma(int idTurma) {
         std::fstream file;
         openFile(file, "turmas.dat");
@@ -1938,7 +1871,7 @@ void menuCadastroCursos(){
             return;
         }
         
-        // Montar tabela de alunos
+
         string dados[MAX_ALUNOS][4];
         int contador = 0;
         
@@ -1963,7 +1896,6 @@ void menuCadastroCursos(){
         interface_para_tabela(contador, 4, dados_ptr, titulos, 0, configTab);
     }
 
-    // Matricula alunos em uma turma específica
     void matricularAlunosNaTurma(int idTurma) {
         string dados_alunos[100][5];
         
@@ -1972,7 +1904,7 @@ void menuCadastroCursos(){
         openFile(fileAluno, "alunos.dat");
         openFile(fileTurma, "turmas.dat");
         
-        // Buscar turma
+
         Turma turma;
         fileTurma.seekg((idTurma - 1) * sizeof(Turma));
         fileTurma.read((char*)&turma, sizeof(Turma));
@@ -1991,7 +1923,7 @@ void menuCadastroCursos(){
             return;
         }
         
-        // Listar alunos disponíveis
+
         int total_alunos = listar_alunos_para_matricula(dados_alunos);
         
         if (total_alunos == 0) {
@@ -2019,7 +1951,7 @@ void menuCadastroCursos(){
         
         int idAluno = stoi(dados_alunos[aluno_selecionado.indice_linha][0]);
         
-        // Buscar aluno
+
         Aluno aluno = buscaAluno(fileAluno, idAluno);
         
         if (aluno.base.id != idAluno) {
@@ -2029,7 +1961,7 @@ void menuCadastroCursos(){
             return;
         }
         
-        // Verificar se já está matriculado
+
         for (int i = 0; i < MAX_ALUNOS; i++) {
             if (turma.alunos[i].base.id == aluno.base.id) {
                 mostrar_caixa_informacao("ERRO", "Aluno ja matriculado nesta turma.");
@@ -2039,7 +1971,7 @@ void menuCadastroCursos(){
             }
         }
         
-        // Encontrar vaga
+
         int index = -1;
         for (int i = 0; i < MAX_ALUNOS; i++) {
             if (turma.alunos[i].base.id == 0) {
@@ -2055,7 +1987,7 @@ void menuCadastroCursos(){
             return;
         }
         
-        // Matricular aluno
+
         turma.alunos[index] = aluno;
         turma.qtdAlunos++;
         
@@ -2067,12 +1999,11 @@ void menuCadastroCursos(){
         mostrar_caixa_informacao("SUCESSO", "Aluno matriculado com sucesso!");
     }
 
-    // Remove aluno de uma turma
     void removerAlunoDaTurma(int idTurma) {
         std::fstream fileTurma;
         openFile(fileTurma, "turmas.dat");
         
-        // Buscar turma
+
         Turma turma;
         fileTurma.seekg((idTurma - 1) * sizeof(Turma));
         fileTurma.read((char*)&turma, sizeof(Turma));
@@ -2089,9 +2020,9 @@ void menuCadastroCursos(){
             return;
         }
         
-        // Montar tabela de alunos da turma
+
         string dados[MAX_ALUNOS][4];
-        int indices[MAX_ALUNOS]; // Guardar índice real no array
+        int indices[MAX_ALUNOS];
         int contador = 0;
         
         for(int i = 0; i < MAX_ALUNOS && contador < turma.qtdAlunos; i++) {
@@ -2120,7 +2051,7 @@ void menuCadastroCursos(){
             return;
         }
         
-        // Remover aluno
+
         int indexRemover = indices[resultado.indice_linha];
         turma.alunos[indexRemover].base.id = 0;
         turma.alunos[indexRemover].base.ativo = 0;
@@ -2133,7 +2064,6 @@ void menuCadastroCursos(){
         mostrar_caixa_informacao("SUCESSO", "Aluno removido da turma com sucesso!");
     }
 
-    // Submenu de gerenciamento de alunos da turma
     void menuGerenciarAlunosTurma(int idTurma) {
         constexpr int Quantidades_opcoes = 4;
         bool continuar = true;
@@ -2168,12 +2098,10 @@ void menuCadastroCursos(){
         }
     }
 
-    // Submenu de atributos de uma turma selecionada
     void menuAtributosTurmaSelecionada(int idTurma) {
         constexpr int Quantidades_opcoes = 5;
         bool continuar = true;
 
-        // Buscar nome da turma para exibir
         std::fstream file;
         openFile(file, "turmas.dat");
         Turma turma;
@@ -2217,7 +2145,6 @@ void menuCadastroCursos(){
         }
     }
 
-    // Menu para definir atributos de turmas (seleciona turma e abre submenu)
     void menuDefinirAtributosTurma() {
         string dados[100][5];
         
@@ -2246,7 +2173,6 @@ void menuCadastroCursos(){
         menuAtributosTurmaSelecionada(idTurma);
     }
 
-    // Menu principal de gerenciamento de turmas
     void menuGerenciarTurmas() {
         constexpr int Quantidades_opcoes = 3;
         bool continuar = true;
@@ -2276,8 +2202,6 @@ void menuCadastroCursos(){
             }
         }
     }
-
-    // ----- FUNÇÕES DE RELATÓRIOS E BACKUP -----
 
     void gerarRelatorioFinanceiro() {
         std::fstream fileProdutos;
@@ -2466,7 +2390,6 @@ void menuCadastroCursos(){
     int emprestados = 0;
     int naoAutorizados = 0;
 
-    // ===== PRIMEIRA PASSAGEM: CONTAR TOTAIS =====
     fileInstrumentos.seekg(0, ios::beg);
     memset(&instrumento, 0, sizeof(Instrumento));
 
@@ -2491,10 +2414,8 @@ void menuCadastroCursos(){
         return;
     }
 
-    // ===== MONTAR TEXTO CORRIDO =====
     string texto = "";
 
-    // ── RESUMO PATRIMONIAL ──────────────────────
     texto += "========== RESUMO PATRIMONIAL ==========\n";
     texto += "\n";
     texto += "Total de Instrumentos: " + to_string(totalInstrumentos) + "\n";
@@ -2503,7 +2424,6 @@ void menuCadastroCursos(){
     texto += "Nao Autorizados: " + to_string(naoAutorizados) + "\n";
     texto += "\n";
 
-    // ── LISTA COMPLETA ──────────────────────────
     texto += "========== LISTA COMPLETA DE INSTRUMENTOS ==========\n";
     texto += "\n";
     {
@@ -2526,7 +2446,6 @@ void menuCadastroCursos(){
     }
     texto += "\n";
 
-    // ── INSTRUMENTOS DISPONÍVEIS ────────────────
     if (disponiveis > 0)
     {
         texto += "========== INSTRUMENTOS DISPONIVEIS ==========\n";
@@ -2552,7 +2471,6 @@ void menuCadastroCursos(){
         fileInstrumentos.clear();
     }
 
-    // ── INSTRUMENTOS EMPRESTADOS ────────────────
     if (emprestados > 0)
     {
         texto += "========== INSTRUMENTOS EMPRESTADOS ==========\n";
@@ -2572,7 +2490,6 @@ void menuCadastroCursos(){
                 texto += "  ID Instrumento: " + to_string(instrumento.id) + "\n";
                 texto += "  Estoque: " + to_string(instrumento.estoque) + " un.\n";
 
-                // Buscar empréstimo correspondente
                 fileEmprestimos.clear();
                 fileEmprestimos.seekg(0, ios::beg);
                 memset(&emprestimo, 0, sizeof(Emprestimo));
@@ -2607,7 +2524,6 @@ void menuCadastroCursos(){
         fileInstrumentos.clear();
     }
 
-    // ── INSTRUMENTOS NÃO AUTORIZADOS ────────────
     if (naoAutorizados > 0)
     {
         texto += "========== INSTRUMENTOS NAO AUTORIZADOS ==========\n";
@@ -2636,22 +2552,14 @@ void menuCadastroCursos(){
     fileInstrumentos.close();
     fileEmprestimos.close();
 
-    // ===== EXIBIR COM TEXTO CORRIDO =====
     ConfigTexto configTexto;
     configTexto.titulo = "RELATORIO PATRIMONIAL - INSTRUMENTOS";
 
     mostrar_texto(texto, configTexto);
 }
 
-
-    // ===== FUNÇÕES AUXILIARES DE BACKUP =====
     
-    /**
-     * Copia um arquivo de origem para destino
-     * @param origem Caminho do arquivo de origem
-     * @param destino Caminho do arquivo de destino
-     * @return true se copiado com sucesso, false caso contrário
-     */
+    
     bool copiarArquivo(const string &origem, const string &destino) {
         ifstream fileOrigem(origem, ios::binary);
         if (!fileOrigem) {
@@ -2664,7 +2572,6 @@ void menuCadastroCursos(){
             return false;
         }
 
-        // Copiar arquivo em blocos
         const size_t TAMANHO_BUFFER = 65536;
         vector<char> buffer(TAMANHO_BUFFER);
         
@@ -2677,10 +2584,7 @@ void menuCadastroCursos(){
         return true;
     }
 
-    /**
-     * Obtém a data e hora atual formatada
-     * @return String com data e hora no formato: dd/mm/yyyy HH:MM:SS
-     */
+    
     string obterDataHoraAtual() {
         time_t agora = time(nullptr);
         tm* timeinfo = localtime(&agora);
@@ -2697,24 +2601,21 @@ void menuCadastroCursos(){
         return oss.str();
     }
 
-    /**
-     * Cria a pasta de backup se não existir
-     * @return true se a pasta foi criada ou já existe, false caso contrário
-     */
+    
     bool criarPastaBackup() {
         string pastaBackup = "backup_restauracao";
         
-        // Limpa errno antes de fazer a chamada
+
         errno = 0;
         
-        // Tenta criar a pasta
+
         #ifdef _WIN32
             int resultado = _mkdir(pastaBackup.c_str());
         #else
             int resultado = mkdir(pastaBackup.c_str(), 0755);
         #endif
         
-        // Se conseguiu criar (resultado 0) ou pasta já existe (errno EEXIST), retorna true
+
         if (resultado == 0 || errno == EEXIST) {
             return true;
         }
@@ -2722,11 +2623,7 @@ void menuCadastroCursos(){
         return false;
     }
 
-    /**
-     * Salva informações sobre o backup (data e hora)
-     * @param dataHora String com a data e hora do backup
-     * @return true se salvo com sucesso
-     */
+    
     bool salvarInfoBackup(const string &dataHora) {
         ofstream infoFile("backup_restauracao/backup_info.txt");
         if (!infoFile) {
@@ -2752,10 +2649,7 @@ void menuCadastroCursos(){
         return true;
     }
 
-    /**
-     * Lê informações sobre o backup anterior
-     * @return String com as informações do backup, ou mensagem padrão se não existir
-     */
+    
     string lerInfoBackup() {
         ifstream infoFile("backup_restauracao/backup_info.txt");
         if (!infoFile) {
@@ -2771,10 +2665,9 @@ void menuCadastroCursos(){
         return resultado;
     }
 
-    // ===== FUNÇÃO PRINCIPAL DE BACKUP =====
     
     void realizarBackup() {
-        // Lista de arquivos a fazer backup
+
         vector<string> arquivos = {
             "usuarios.dat",
             "alunos.dat",
@@ -2788,20 +2681,16 @@ void menuCadastroCursos(){
             "lanchonete_creditos.dat"
         };
 
-        // Criar pasta de backup se não existir
         if (!criarPastaBackup()) {
             mostrar_caixa_informacao("ERRO", "Nao foi possivel criar/acessar a pasta de backup.");
             return;
         }
 
-        // Obter data e hora atual
         string dataHora = obterDataHoraAtual();
 
-        // Contar quantos arquivos foram copiados com sucesso
         int copiados = 0;
         int total = arquivos.size();
 
-        // Copiar cada arquivo
         for (const string &arquivo : arquivos) {
             string destino = "backup_restauracao/" + arquivo;
             if (copiarArquivo(arquivo, destino)) {
@@ -2809,9 +2698,8 @@ void menuCadastroCursos(){
             }
         }
 
-        // Salvar informações do backup
         if (salvarInfoBackup(dataHora)) {
-            // Montar mensagem de sucesso
+
             string mensagem = "Backup realizado com sucesso!\n\n";
             mensagem += "Data e Hora: " + dataHora + "\n";
             mensagem += "Arquivos copiados: " + to_string(copiados) + "/" + to_string(total);
@@ -2827,10 +2715,9 @@ void menuCadastroCursos(){
         }
     }
 
-    // ===== FUNÇÃO PRINCIPAL DE RESTAURAÇÃO =====
     
     void restaurarBackup() {
-        // Verificar se existe backup anterior
+
         ifstream testFile("backup_restauracao/backup_info.txt");
         if (!testFile) {
             testFile.close();
@@ -2839,16 +2726,14 @@ void menuCadastroCursos(){
         }
         testFile.close();
 
-        // Mostrar informações do backup anterior
         string infoBackup = lerInfoBackup();
         
-        // Pedir confirmação do usuário
+
         ConfigTexto config;
         config.titulo = "RESTAURAR BACKUP";
         
         mostrar_texto(infoBackup + "\n\nDeseja restaurar este backup?\nOs dados atuais serao sobrescritos.", config);
 
-        // Lista de arquivos a restaurar
         vector<string> arquivos = {
             "usuarios.dat",
             "alunos.dat",
@@ -2862,11 +2747,9 @@ void menuCadastroCursos(){
             "lanchonete_creditos.dat"
         };
 
-        // Contar quantos arquivos foram restaurados com sucesso
         int restaurados = 0;
         int total = arquivos.size();
 
-        // Restaurar cada arquivo
         for (const string &arquivo : arquivos) {
             string origem = "backup_restauracao/" + arquivo;
             if (copiarArquivo(origem, arquivo)) {
@@ -2874,7 +2757,6 @@ void menuCadastroCursos(){
             }
         }
 
-        // Mostrar resultado
         string mensagem = "Restauracao realizada!\n\n";
         mensagem += "Arquivos restaurados: " + to_string(restaurados) + "/" + to_string(total);
         
@@ -2889,12 +2771,6 @@ void menuCadastroCursos(){
 
 }
 
-// =====================================================================
-// SEÇÃO: MENU PRINCIPAL DO ADMINISTRADOR
-// Ponto de entrada para o módulo de administração
-// =====================================================================
-
-// ----- MENU DE GESTÃO ACADÊMICA -----
 namespace mod_ADM {
     void menuGestaoAcademica() {
         constexpr int Quantidades_opcoes = 5;
@@ -2964,7 +2840,6 @@ namespace mod_ADM {
         }
     }
 
-    // ----- MENU DE LANCHONETE -----
     void menuGestaoLanchonete() {
         constexpr int Quantidades_opcoes = 3;
         bool continuar = true;
@@ -2995,7 +2870,6 @@ namespace mod_ADM {
         }
     }
 
-    // ----- MENU DE RELATÓRIOS -----
     void menuRelatorios() {
         constexpr int Quantidades_opcoes = 4;
         bool continuar = true;
@@ -3030,7 +2904,6 @@ namespace mod_ADM {
         }
     }
 
-    // ----- MENU DE BACKUP -----
     void menuBackup() {
         constexpr int Quantidades_opcoes = 3;
         bool continuar = true;

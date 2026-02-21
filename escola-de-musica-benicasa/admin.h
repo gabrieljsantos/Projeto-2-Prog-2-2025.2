@@ -11,18 +11,15 @@
 
 constexpr size_t TAMANHO_BUFFER = 256;
 
-// ===== CONSTANTES DE ID BASE =====
-constexpr int USUARIO_VAZIO_ID = 20260000;           // ID para usuários desalocados/vazios
-constexpr int INDICE_ALUNO_BASE = 20260000;          // ID base para alunos (20260001+)
-constexpr int INDICE_PROFESSOR_BASE = 20260000;      // ID base para professores (20260001+)
-constexpr int INDICE_ADMINISTRADOR_BASE = 20260000;  // ID base para administradores (20260001+)
+constexpr int USUARIO_VAZIO_ID = 20260000;
+constexpr int INDICE_ALUNO_BASE = 20260000;
+constexpr int INDICE_PROFESSOR_BASE = 20260000;
+constexpr int INDICE_ADMINISTRADOR_BASE = 20260000;
 
-// ===== CONSTANTES DE FILTRO =====
 constexpr int FILTRO_INATIVO = 0;
 constexpr int FILTRO_ATIVO = 1;
 constexpr int FILTRO_AMBOS = 2;
 
-// ===== CONSTANTES DE AUTORIZAÇÃO =====
 constexpr int NAO_AUTORIZADO = 0;
 constexpr int AUTORIZADO = 1;
 
@@ -46,7 +43,7 @@ namespace mod_ADM {
     void consultarRelatoriosAcademicos();
     void menuEventos(std::fstream &file);
     
-    // Funções de gerenciamento de disciplinas
+
     void gerenciar_disciplina_menu(int idDisciplina);
     void vincular_professor_disciplina(int idDisciplina, const std::string &nomeDisciplina);
     void vincular_professor_por_tabela(int idDisciplina, const std::string &nomeDisciplina);
@@ -63,7 +60,7 @@ namespace mod_ADM {
     void cadastrarTurma();
     void matricularAlunoTurma();
     
-    // Menus reorganizados
+
     void menuGestaoAcademica();
     void menuConsultarPendencias();
     void menuGestaoLanchonete();
