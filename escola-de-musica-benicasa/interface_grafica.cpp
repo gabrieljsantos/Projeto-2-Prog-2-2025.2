@@ -1491,7 +1491,332 @@ saida_entrada_texto interface_para_entrada_texto(
     return resultado;
 }
 
+// ─── Função para entrada de texto grande (até 200 caracteres) ───
+
+saida_entrada_texto interface_para_entrada_texto_grande(
+    const ConfigEntradaTexto& config)
+{
+    saida_entrada_texto resultado;
+    resultado.confirmado = false;
+    resultado.valor = "";
+
+    // Versão para texto grande
+    ConfigEntradaTexto config_ajustada = config;
+    if (config_ajustada.tamanho_maximo > 200)
+        config_ajustada.tamanho_maximo = 200;
+    else if (config_ajustada.tamanho_maximo == 100)  // Se usar padrão, aumenta para 200
+        config_ajustada.tamanho_maximo = 200;
+
+    string entrada_atual = config.valor_inicial;
+    int posicao_cursor = entrada_atual.length();  // Posição do cursor no texto
+    int tecla;
+
+    // ── Inicializar ncurses ─────────────────────────────────
+    setlocale(LC_ALL, "pt_BR.UTF-8");
+    initscr();
+    noecho();
+    cbreak();
+    keypad(stdscr, TRUE);
+    curs_set(1);
+
+    // ── Cores ───────────────────────────────────────────────
+    if (has_colors())
+    {
+        start_color();
+
+        if (can_change_color())
+        {
+            init_color(16, 59, 59, 59);
+            init_color(17, 600, 600, 520);
+            init_color(18, 380, 380, 320);
+            init_color(19, 102, 98, 86);
+            init_color(20, 133, 129, 110);
+            init_color(21, 680, 680, 600);
+            init_color(22, 720, 720, 640);
+            init_color(23, 300, 300, 260);
+        }
+
+        init_pair(1,  22, 20);
+        init_pair(2,  17, 16);
+        init_pair(3,  17, 16);
+        init_pair(4,  23, 16);
+        init_pair(5,  21, 19);
+        init_pair(6,  18, 16);
+        init_pair(7,  18, 16);
+        init_pair(8,  18, 16);
+        init_pair(9,  23, 16);
+
+        bkgd(COLOR_PAIR(2));
+    }
+
+    // ── Dimensões ───────────────────────────────────────────
+    int max_y, max_x;
+    getmaxyx(stdscr, max_y, max_x);
+
+    int largura = config.largura_janela;
+
+    int linhas_cabecalho = 0;
+    linhas_cabecalho += contar_linhas_com_wrap(config.descricao, largura);
+    linhas_cabecalho += contar_linhas_com_wrap(config.caminho, largura);
+
+    // Aumenta altura para 3 linhas de entrada (para textos longos)
+    int altura = 2 + linhas_cabecalho + 7;
+
+    if (altura  > max_y - 4) altura  = max_y - 4;
+    if (largura > max_x - 4) largura = max_x - 4;
+
+    int espaco_titulo = config.titulo.empty() ? 0 : 3;
+    int start_y = (max_y - altura - espaco_titulo) / 2 + espaco_titulo;
+    int start_x = (max_x - largura) / 2;
+
+    WINDOW *win = newwin(altura, largura, start_y, start_x);
+
+    wbkgd(win, COLOR_PAIR(2));
+
+    clear();
+    refresh();
+
+    // Obter tipo de entrada como string
+    string tipo_label = "";
+    switch (config.tipo_entrada)
+    {
+        case TIPO_TEXTO:      tipo_label = "Texto"; break;
+        case TIPO_NUMERO:     tipo_label = "Numero"; break;
+        case TIPO_EMAIL:      tipo_label = "Email"; break;
+        case TIPO_TELEFONE:   tipo_label = "Telefone"; break;
+        case TIPO_SENHA:      tipo_label = "Senha"; break;
+    }
+
+    // Calcular largura disponível para exibição (deixa espaço para label e bordas)
+    int largura_campo = largura - 6;  // Espaço para bordas e espaçamento
+
+    // ════════════════════════════════════════════════════════
+    //  LOOP PRINCIPAL
+    // ════════════════════════════════════════════════════════
+    while (true)
+    {
+        werase(win);
+
+        // ── Bordas ──────────────────────────────────────────
+        wattron(win, COLOR_PAIR(config.cores.cor_borda));
+        box(win, 0, 0);
+        wattroff(win, COLOR_PAIR(config.cores.cor_borda));
+
+        // ── Título (acima da janela) ────────────────────────
+        if (!config.titulo.empty())
+        {
+            for (int i = start_y - 3; i < start_y; i++)
+            {
+                move(i, 0);
+                clrtoeol();
+            }
+
+            string titulo_decorado = config.titulo;
+            int titulo_len = (int)titulo_decorado.length();
+            int espaco_lateral = (largura - titulo_len - 4) / 2;
+            if (espaco_lateral < 1) espaco_lateral = 1;
+
+            string linha_titulo = "";
+            for (int i = 0; i < espaco_lateral; i++) linha_titulo += " ";
+            linha_titulo += "  " + titulo_decorado + "  ";
+            for (int i = 0; i < espaco_lateral; i++) linha_titulo += " ";
+
+            int titulo_start_x = centro_x(max_x, (int)linha_titulo.length());
+            int titulo_width   = (int)linha_titulo.length();
+
+            attron(COLOR_PAIR(config.cores.cor_titulo));
+            move(start_y - 3, titulo_start_x);
+            for (int i = 0; i < titulo_width; i++) addch(' ');
+            attroff(COLOR_PAIR(config.cores.cor_titulo));
+
+            attron(COLOR_PAIR(config.cores.cor_titulo) | A_BOLD);
+            mvprintw(start_y - 2, titulo_start_x, "%s", linha_titulo.c_str());
+            attroff(COLOR_PAIR(config.cores.cor_titulo) | A_BOLD);
+
+            attron(COLOR_PAIR(config.cores.cor_titulo));
+            move(start_y - 1, titulo_start_x);
+            for (int i = 0; i < titulo_width; i++) addch(' ');
+            attroff(COLOR_PAIR(config.cores.cor_titulo));
+        }
+
+        int linha = 1;
+
+        // ── Cabeçalho ───────────────────────────────────────
+        if (!config.descricao.empty())
+        {
+            linha += desenhar_texto_wrap(win, linha, config.x, config.descricao, largura, config.cores.cor_descricao);
+        }
+
+        if (!config.caminho.empty())
+        {
+            string caminho_formatado = "> " + config.caminho;
+            linha += desenhar_texto_wrap(win, linha, config.x, caminho_formatado, largura, config.cores.cor_caminho);
+        }
+
+        if (linhas_cabecalho > 0)
+        {
+            desenhar_linha_horizontal(win, linha, largura, config.cores.cor_borda);
+            linha++;
+            linha++;
+        }
+        else
+        {
+            linha++;
+        }
+
+        // ── Label de tipo de entrada ────────────────────────
+        wattron(win, COLOR_PAIR(config.cores.cor_instrucao));
+        mvwprintw(win, linha, config.x, "Tipo: %s | Caracteres: %zu/200", 
+                  tipo_label.c_str(), entrada_atual.length());
+        wattroff(win, COLOR_PAIR(config.cores.cor_instrucao));
+        linha++;
+
+        // ── Campo de entrada (com scroll) ───────────────────
+        linha++;
+        
+        // Preparar texto a ser exibido (com scroll automático)
+        string entrada_exibida = entrada_atual;
+        
+        // Mascarar se for senha
+        if (config.tipo_entrada == TIPO_SENHA)
+        {
+            entrada_exibida = string(entrada_atual.length(), '*');
+        }
+        
+        // Se o texto é maior que o espaço disponível, faz scroll
+        int posicao_scroll = 0;
+        if ((int)entrada_exibida.length() > largura_campo - (int)config.label.length())
+        {
+            // Mostra sempre os últimos caracteres (scroll à direita)
+            posicao_scroll = (int)entrada_exibida.length() - (largura_campo - (int)config.label.length());
+            if (posicao_scroll < 0) posicao_scroll = 0;
+        }
+        
+        // Extrai substring visível
+        string texto_visivel = entrada_exibida.substr(posicao_scroll);
+        if ((int)texto_visivel.length() > largura_campo - (int)config.label.length())
+        {
+            texto_visivel = texto_visivel.substr(0, largura_campo - (int)config.label.length());
+        }
+
+        // Desenha a caixa de entrada em 3 linhas se necessário
+        wattron(win, COLOR_PAIR(config.cores.cor_opcao_selecionada));
+        
+        // Primeira linha do campo
+        preencher_linha(win, linha, 1, largura - 1, config.cores.cor_opcao_selecionada);
+        mvwprintw(win, linha, config.x, "%s%s", config.label.c_str(), texto_visivel.c_str());
+        
+        // Indicadores visuais
+        string indicadores = "";
+        if (posicao_scroll > 0) 
+            indicadores += " [<< scroll]";
+        if ((int)entrada_exibida.length() > largura_campo - (int)config.label.length())
+            indicadores += " [...continua]";
+        
+        if (!indicadores.empty())
+        {
+            mvwprintw(win, linha, largura - (int)indicadores.length() - 2, "%s", indicadores.c_str());
+        }
+        
+        wattroff(win, COLOR_PAIR(config.cores.cor_opcao_selecionada));
+
+        // ── Instrução/Controles ─────────────────────────────
+        {
+            int linha_ctrl = start_y + altura + 1;
+            move(linha_ctrl, 0);
+            clrtoeol();
+
+            string controles = "[ENTER] Confirmar  [ESC] Cancelar  [Setas] Navegar (HOME/END suportadas)";
+            attron(COLOR_PAIR(config.cores.cor_controles) | A_DIM);
+            mvprintw(
+                linha_ctrl,
+                centro_x(max_x, (int)controles.length()),
+                "%s", controles.c_str()
+            );
+            attroff(COLOR_PAIR(config.cores.cor_controles) | A_DIM);
+        }
+
+        wrefresh(win);
+        refresh();
+
+        // ── Input ───────────────────────────────────────────
+        tecla = getch();
+
+        if (tecla >= 32 && tecla <= 126)  // Caracteres imprimíveis
+        {
+            if ((int)entrada_atual.length() < config_ajustada.tamanho_maximo)
+            {
+                // Validar conforme tipo
+                bool valido = true;
+
+                if (config.tipo_entrada == TIPO_NUMERO)
+                    valido = (tecla >= '0' && tecla <= '9') || tecla == '-' || tecla == '.';
+                else if (config.tipo_entrada == TIPO_TELEFONE)
+                    valido = (tecla >= '0' && tecla <= '9') || tecla == '-' || tecla == '(' || tecla == ')' || tecla == ' ';
+
+                if (valido)
+                {
+                    entrada_atual.insert(posicao_cursor, 1, (char)tecla);
+                    posicao_cursor++;
+                }
+            }
+        }
+        else if (tecla == KEY_BACKSPACE || tecla == 127 || tecla == 8 || tecla == 263)  // Backspace
+        {
+            if (posicao_cursor > 0)
+            {
+                entrada_atual.erase(posicao_cursor - 1, 1);
+                posicao_cursor--;
+            }
+        }
+        else if (tecla == KEY_DELETE || tecla == 330)  // Delete
+        {
+            if (posicao_cursor < (int)entrada_atual.length())
+            {
+                entrada_atual.erase(posicao_cursor, 1);
+            }
+        }
+        else if (tecla == KEY_LEFT || tecla == 260)  // Seta esquerda
+        {
+            if (posicao_cursor > 0)
+                posicao_cursor--;
+        }
+        else if (tecla == KEY_RIGHT || tecla == 261)  // Seta direita
+        {
+            if (posicao_cursor < (int)entrada_atual.length())
+                posicao_cursor++;
+        }
+        else if (tecla == KEY_HOME || tecla == 262)  // Home
+        {
+            posicao_cursor = 0;
+        }
+        else if (tecla == KEY_END || tecla == 360)  // End
+        {
+            posicao_cursor = (int)entrada_atual.length();
+        }
+        else if (tecla == 10)  // ENTER
+        {
+            resultado.confirmado = true;
+            resultado.valor = entrada_atual;
+            delwin(win);
+            endwin();
+            return resultado;
+        }
+        else if (tecla == 27)  // ESC
+        {
+            resultado.confirmado = false;
+            resultado.valor = "";
+            delwin(win);
+            endwin();
+            return resultado;
+        }
+    }
+
+    return resultado;
+}
+
 // ─── Função para botões com retorno ─────────────────────────────
+
 
 saida_botoes interface_para_botoes(
     const ConfigBotoes& config)

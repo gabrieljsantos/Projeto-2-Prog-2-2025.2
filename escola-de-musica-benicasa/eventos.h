@@ -17,5 +17,6 @@ void excluir_evento(int id_excluir);
 void listar_alunos_inscritos();
 void listar_eventos(const std::vector<Evento>& eventos);
 void inscrever_alunos();
+void menu_eventos(); // Menu principal de entrada em eventos
 
 #endif // EVENTOS_H

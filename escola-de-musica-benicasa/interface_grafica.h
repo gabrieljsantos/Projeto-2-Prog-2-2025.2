@@ -154,6 +154,11 @@ saida_entrada_texto interface_para_entrada_texto(
     const ConfigEntradaTexto& config = ConfigEntradaTexto()
 );
 
+// Versão para texto grande (até 200 caracteres) com scroll na caixa
+saida_entrada_texto interface_para_entrada_texto_grande(
+    const ConfigEntradaTexto& config = ConfigEntradaTexto()
+);
+
 // ═══════════════════════════════════════════════════════════════
 // BOTÕES COM RETORNO
 // ═══════════════════════════════════════════════════════════════

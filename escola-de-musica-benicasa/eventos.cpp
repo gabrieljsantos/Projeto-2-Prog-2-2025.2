@@ -375,3 +375,64 @@ void inscrever_alunos() {
 
     cout << "Aluno inscrito com sucesso!\n";
 }
+
+// =====================================================================
+// SEÇÃO: MENU DE ENTRADA PARA EVENTOS
+// =====================================================================
+
+void menu_eventos() {
+    int opcao;
+    bool continuar = true;
+
+    CarregarEventos();
+
+    while (continuar) {
+        cout << "\n\n============================================================" << endl;
+        cout << "          GERENCIAMENTO DE EVENTOS                          " << endl;
+        cout << "============================================================" << endl;
+        cout << "1 - Cadastrar Evento" << endl;
+        cout << "2 - Editar Evento" << endl;
+        cout << "3 - Excluir Evento" << endl;
+        cout << "4 - Listar Eventos" << endl;
+        cout << "5 - Listar Alunos Inscritos" << endl;
+        cout << "0 - Voltar" << endl;
+        cout << "============================================================" << endl;
+        cout << "Digite sua opcao: ";
+        cin >> opcao;
+        cin.ignore();
+
+        switch (opcao) {
+            case 1:
+                adicionar_evento();
+                break;
+            case 2:
+                editar_evento(eventos);
+                break;
+            case 3: {
+                int id;
+                cout << "\nDigite o ID do evento a ser excluido: ";
+                cin >> id;
+                cin.ignore();
+                excluir_evento(id);
+                break;
+            }
+            case 4:
+                listar_eventos(eventos);
+                break;
+            case 5:
+                listar_alunos_inscritos();
+                break;
+            case 0:
+                cout << "\nVoltando ao menu anterior...\n";
+                continuar = false;
+                break;
+            default:
+                cout << "\nOpcao invalida! Digite novamente.\n";
+        }
+
+        if (continuar && opcao != 0) {
+            cout << "\nPressione ENTER para continuar...";
+            cin.get();
+        }
+    }
+}
