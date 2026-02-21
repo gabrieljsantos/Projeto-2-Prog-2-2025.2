@@ -472,6 +472,229 @@ void realizarDevolucao() {
     mostrar_caixa_informacao("Sucesso", "Devolucao realizada! " + string(inst.nome) + " devolvido por " + string(aluno.base.nome));
 }
 
+// --- Funções com ID do Aluno (para menu do Aluno) ---
+
+void listarInstrumentosDisponiveis() {
+    if (quantidadeInstrumentos == 0) {
+        mostrar_caixa_informacao("Instrumentos Disponiveis", "Nenhum instrumento disponivel.");
+        return;
+    }
+
+    // Contar ativos e disponíveis
+    int totalDisponiveis = 0;
+    for (int i = 0; i < quantidadeInstrumentos; i++) {
+        if (listaInstrumentos[i].ativo == 1 && listaInstrumentos[i].disponivel && listaInstrumentos[i].estoque > 0) {
+            totalDisponiveis++;
+        }
+    }
+    if (totalDisponiveis == 0) {
+        mostrar_caixa_informacao("Instrumentos Disponiveis", "Nenhum instrumento disponivel no momento.");
+        return;
+    }
+
+    // Montar dados para tabela
+    string dados[100][3];
+    int contador = 0;
+    for (int i = 0; i < quantidadeInstrumentos; i++) {
+        Instrumento& it = listaInstrumentos[i];
+        if (it.ativo == 1 && it.disponivel && it.estoque > 0) {
+            dados[contador][0] = to_string(it.id);
+            dados[contador][1] = it.nome;
+            dados[contador][2] = to_string(it.estoque);
+            contador++;
+        }
+    }
+
+    const string* dados_ptr[100];
+    for (int i = 0; i < contador; i++)
+        dados_ptr[i] = dados[i];
+
+    string titulos[3] = {"ID", "Nome", "Disponivel"};
+    int larguras[3] = {6, 25, 12};
+
+    ConfigTabela cfgTab;
+    cfgTab.titulo         = "Instrumentos Disponiveis";
+    cfgTab.descricao      = "Instrumentos que voce pode solicitar emprestado.";
+    cfgTab.caminho        = "Minha Area > Instrumentos";
+    cfgTab.largura_janela = 70;
+    cfgTab.linhas_por_janela = 8;
+    cfgTab.larguras_colunas  = larguras;
+    cfgTab.num_colunas       = 3;
+    cfgTab.cores             = coresRosa();
+
+    interface_para_tabela(contador, 3, (const string**)dados_ptr, titulos, 0, cfgTab);
+}
+
+void realizarEmprestimo(int idAluno) {
+    // --- Validar Aluno ---
+    Aluno aluno = Login_mat::lerAluno(idAluno);
+    if (aluno.base.id == 0) {
+        mostrar_caixa_informacao("Erro", "Aluno nao encontrado.");
+        return;
+    }
+
+    // --- ID do Instrumento ---
+    ConfigEntradaTexto cfgInst;
+    cfgInst.titulo       = "Emprestimo de Instrumento";
+    cfgInst.descricao    = "Informe o ID do instrumento desejado.";
+    cfgInst.label        = "ID do instrumento: ";
+    cfgInst.caminho      = "Minha Area > Instrumentos > Emprestimo";
+    cfgInst.tipo_entrada = TIPO_NUMERO;
+    cfgInst.tamanho_maximo = 10;
+    cfgInst.cores        = coresRosa();
+
+    saida_entrada_texto resInst = interface_para_entrada_texto(cfgInst);
+    if (!resInst.confirmado || resInst.valor.empty()) {
+        mostrar_caixa_informacao("Cancelado", "Emprestimo cancelado.");
+        return;
+    }
+
+    int idInstrumento = atoi(resInst.valor.c_str());
+
+    // 1. Validar Instrumento
+    int idx = buscarIndicePorId(idInstrumento);
+    if (idx == -1) {
+        mostrar_caixa_informacao("Erro", "Instrumento nao encontrado.");
+        return;
+    }
+
+    Instrumento& inst = listaInstrumentos[idx];
+    if (inst.estoque <= 0) {
+        mostrar_caixa_informacao("Erro", "Estoque esgotado para: " + string(inst.nome));
+        return;
+    }
+
+    // 2. Registrar Empréstimo
+    inst.estoque--;
+    inst.disponivel = (inst.estoque > 0);
+    aluno.idInstrumento = idInstrumento;
+
+    // Salvar alterações
+    Login_mat::atualizar(idAluno, aluno);
+    salvarDadosInstrumentos();
+
+    // Registrar em arquivo de empréstimos
+    std::fstream file("emprestimos.dat", std::ios::binary | std::ios::app);
+    if (file.is_open()) {
+        Emprestimo emp;
+        emp.idAluno = idAluno;
+        emp.idInstrumento = idInstrumento;
+        strcpy(emp.nome_Alu, aluno.base.nome);
+        strcpy(emp.nome_In, inst.nome);
+        strcpy(emp.dataEmprestimo, "00/00/0000");
+        strcpy(emp.dataPrevista, "00/00/0000");
+        file.write((char*)&emp, sizeof(Emprestimo));
+        file.close();
+    }
+
+    mostrar_caixa_informacao("Sucesso", "Emprestimo realizado com sucesso! Instrumento: " + string(inst.nome));
+}
+
+void realizarDevolucao(int idAluno) {
+    // 1. Verificar Aluno
+    Aluno aluno = Login_mat::lerAluno(idAluno);
+    if (aluno.base.id == 0) {
+        mostrar_caixa_informacao("Erro", "Aluno nao encontrado.");
+        return;
+    }
+
+    if (aluno.idInstrumento == 0) {
+        mostrar_caixa_informacao("Erro", "Voce nao possui instrumento para devolver.");
+        return;
+    }
+
+    // 2. Encontrar Instrumento
+    int idInstGuardado = aluno.idInstrumento; // Guardar ID antes de modificar
+    int idx = buscarIndicePorId(aluno.idInstrumento);
+    if (idx == -1) {
+        mostrar_caixa_informacao("Erro", "Erro critico: Instrumento nao encontrado.");
+        return;
+    }
+
+    Instrumento& inst = listaInstrumentos[idx];
+
+    // 3. Atualizar Instrumento
+    inst.estoque++;
+    inst.disponivel = true;
+
+    // 4. Atualizar Aluno
+    aluno.idInstrumento = 0;
+    Login_mat::atualizar(idAluno, aluno);
+
+    salvarDadosInstrumentos();
+
+    // 5. Zerar registro no arquivo de empréstimos
+    std::fstream file("emprestimos.dat", std::ios::binary | std::ios::in | std::ios::out);
+    if (file.is_open()) {
+        Emprestimo emp;
+        while (file.read((char*)&emp, sizeof(Emprestimo))) {
+            if (emp.idAluno == idAluno && emp.idInstrumento == idInstGuardado) {
+                file.seekp(-sizeof(Emprestimo), std::ios::cur);
+                Emprestimo vazio = {0};
+                file.write((char*)&vazio, sizeof(Emprestimo));
+                break;
+            }
+        }
+        file.close();
+    }
+
+    mostrar_caixa_informacao("Sucesso", "Devolucao realizada! Instrumento: " + string(inst.nome));
+}
+
+void listarMeusEmprestimos(int idAluno) {
+    // 1. Verificar Aluno
+    Aluno aluno = Login_mat::lerAluno(idAluno);
+    if (aluno.base.id == 0) {
+        mostrar_caixa_informacao("Erro", "Aluno nao encontrado.");
+        return;
+    }
+
+    // 2. Listar empréstimos
+    std::ifstream file("emprestimos.dat", std::ios::binary);
+    if (!file.is_open()) {
+        mostrar_caixa_informacao("Meus Emprestimos", "Nenhum emprestimo registrado.");
+        return;
+    }
+
+    string dados[100][3];
+    int contador = 0;
+    Emprestimo emp;
+
+    while (file.read((char*)&emp, sizeof(Emprestimo))) {
+        if (emp.idAluno == idAluno && emp.idAluno != -1) {
+            dados[contador][0] = to_string(emp.idInstrumento);
+            dados[contador][1] = emp.nome_In;
+            dados[contador][2] = emp.dataEmprestimo;
+            contador++;
+        }
+    }
+    file.close();
+
+    if (contador == 0) {
+        mostrar_caixa_informacao("Meus Emprestimos", "Voce nao possui instrumentos emprestados.");
+        return;
+    }
+
+    const string* dados_ptr[100];
+    for (int i = 0; i < contador; i++)
+        dados_ptr[i] = dados[i];
+
+    string titulos[3] = {"ID", "Instrumento", "Data Emprestimo"};
+    int larguras[3] = {6, 25, 20};
+
+    ConfigTabela cfgTab;
+    cfgTab.titulo         = "Meus Emprestimos";
+    cfgTab.descricao      = "Instrumentos que voce possui emprestados.";
+    cfgTab.caminho        = "Minha Area > Instrumentos";
+    cfgTab.largura_janela = 70;
+    cfgTab.linhas_por_janela = 8;
+    cfgTab.larguras_colunas  = larguras;
+    cfgTab.num_colunas       = 3;
+    cfgTab.cores             = coresRosa();
+
+    interface_para_tabela(contador, 3, (const string**)dados_ptr, titulos, 0, cfgTab);
+}
+
 // --- Menu Principal de Instrumentos ---
 
 void menuInstrumentos() {

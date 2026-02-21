@@ -2619,7 +2619,7 @@ void realizarBackup() {
         }
         
         // Também copiar arquivos .txt se existirem
-        vector<string> arquivos_txt = {"cadastros.txt", "lanchonete.txt", "instrumentos.txt", "eventos.txt"};
+        vector<string> arquivos_txt = {"cadastros.txt", "lanchonete.txt", "instrumentos.txt", "eventos.dat"};
         for (const string &arquivo : arquivos_txt) {
             ifstream origem(arquivo);
             if (origem.is_open()) {
@@ -2705,7 +2705,7 @@ void realizarBackup() {
                         "alunos.dat", "professores.dat", "administradores.dat",
                         "disciplinas.dat", "eventos.dat", "instrumentos.dat",
                         "emprestimos.dat", "usuarios.dat", "notas.dat",
-                        "cadastros.txt", "lanchonete.txt", "instrumentos.txt", "eventos.txt"
+                        "cadastros.txt", "lanchonete.txt", "instrumentos.txt", "eventos.dat"
                     };
                     
                     int restaurados = 0;
