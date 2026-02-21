@@ -44,6 +44,10 @@ namespace ModuloProfessor
 
     void registrarFaltas(int id_prof);
     void registrarAvaliacao(int id_prof);
+
+    // Seletores graficos
+    int selecionarTurma(int id_prof);
+    int selecionarAluno(Turma &turma);
 }
 
 void abrir_menu_professor(Usuario* usuario);

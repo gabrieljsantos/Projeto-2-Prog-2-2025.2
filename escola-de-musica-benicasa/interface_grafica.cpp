@@ -1756,13 +1756,13 @@ saida_detalhes mostrar_detalhes(
     if (has_colors())
     {
         start_color();
-        init_pair(1, COLOR_YELLOW, COLOR_BLUE);
-        init_pair(2, COLOR_WHITE, COLOR_BLUE);
-        init_pair(3, COLOR_CYAN, COLOR_BLUE);
-        init_pair(4, COLOR_GREEN, COLOR_BLUE);
-        init_pair(5, COLOR_MAGENTA, COLOR_BLUE);
-        init_pair(6, COLOR_WHITE, COLOR_BLACK);
-        init_pair(7, COLOR_WHITE, COLOR_BLUE);
+        init_pair(1,  22, 20);   // seleção: texto claro, fundo sombreado
+        init_pair(2,  17, 16);   // opções normais
+        init_pair(3,  17, 16);   // descrição
+        init_pair(4,  23, 16);   // instrução (bem apagada)
+        init_pair(5,  21, 19);   // título: texto claro, fundo sombreado
+        init_pair(6,  18, 16);   // caminho
+        init_pair(7,  18, 16);   // bordas
         init_pair(8, COLOR_YELLOW, COLOR_BLACK);
     }
 
