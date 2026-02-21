@@ -139,7 +139,7 @@ namespace Login_mat {
         int novoId = gerarNovoId();
         (*alunoPtr).base.id = novoId;
         (*alunoPtr).base.ativo = true;
-
+        char senha[30] = "";
         string titulo = "CADASTRO ALUNO";
 
         saida_entrada_texto saidaInput = digiteNome(titulo);
@@ -152,7 +152,10 @@ namespace Login_mat {
 
         saidaInput = digiteSenha(titulo);
         if (!saidaInput.confirmado) return 0;
-        strcpy((*alunoPtr).base.senha, saidaInput.valor.c_str());
+        strcpy(senha, saidaInput.valor.c_str());
+
+        string senhaEncriptada = encriptografarSenha(senha, 0);
+        strcpy((*alunoPtr).base.senha, senhaEncriptada.c_str());
 
         salvarAluno(*alunoPtr);
 
@@ -167,19 +170,27 @@ namespace Login_mat {
         Professor novoProfessor = inicializarProfessorVazio();
         int novoId = gerarNovoId();
         novoProfessor.base.id = novoId;
+        char senha[30] = "";
+        string titulo = "CADASTRO PROFESSOR";
 
-        cout << "\n──────── CADASTRO PROFESSOR ────────\n";
-        cout << "\nNome: ";
-        cin.getline(novoProfessor.base.nome, 100);
+        saida_entrada_texto saidaInput = digiteNome(titulo);
+        if (!saidaInput.confirmado) return 0;
+        strcpy(novoProfessor.base.nome, saidaInput.valor.c_str());
 
-        cout << "Email: ";
-        cin.getline(novoProfessor.base.email, 100);
+        saidaInput = digiteEmail(titulo);
+        if (!saidaInput.confirmado) return 0;
+        strcpy(novoProfessor.base.email, saidaInput.valor.c_str());
 
-        cout << "Senha: ";
-        cin.getline(novoProfessor.base.senha, 30);
+        saidaInput = digiteSenha(titulo);
+        if (!saidaInput.confirmado) return 0;
+        strcpy(senha, saidaInput.valor.c_str());
 
-        cout << "Disciplina: ";
-        cin.getline(novoProfessor.disciplina, 50);
+        saidaInput = digiteDisciplina(titulo);
+        if (!saidaInput.confirmado) return 0;
+        strcpy(novoProfessor.disciplina, saidaInput.valor.c_str());
+
+        string senhaEncriptada = encriptografarSenha(senha, 0);
+        strcpy(novoProfessor.base.senha, senhaEncriptada.c_str());
 
         salvarProfessor(novoProfessor);
 
@@ -187,7 +198,7 @@ namespace Login_mat {
     }
 
     void realizarCadastroAdmin() {
-        Usuario base = {20260001, true, "admin", "admin@gmail.com", "1234567", ADMINISTRADOR, false};
+        Usuario base = {20260001, true, "admin", "admin@gmail.com", "456789:", ADMINISTRADOR, false};
 
         Admin* adminPtr = new Admin;
         (*adminPtr).base = base;
@@ -224,8 +235,9 @@ namespace Login_mat {
         if (verificarUsuarioExistente((*usuarios[0]).id)) {
 
             *usuarios[1] = lerUsuario((*usuarios[0]).id);
+            string senhaDesencriptada = desencriptografarSenha((*usuarios[1]).senha, 0);
 
-            if (strcmp((*usuarios[0]).senha, (*usuarios[1]).senha) == 0 && (*usuarios[1]).ativo) {
+            if (strcmp((*usuarios[0]).senha, senhaDesencriptada.c_str()) == 0 && (*usuarios[1]).ativo) {
                 usuario = *usuarios[1];
                 usuario.logado = true;
                 sucesso = true;
@@ -315,6 +327,31 @@ namespace Login_mat {
         arquivo.seekp((posicao - 1) * sizeof(Admin));
         arquivo.write((const char*)(&admin), sizeof(Admin));
         arquivo.close();
+    }
+
+
+//======================================================================
+// CRIPTORGRAFIA
+//======================================================================
+
+    string encriptografarSenha(string senha, int index) {
+        char c;
+        if(index == senha.length()) {
+            return "";
+        }
+        c = senha[index];
+        c += 3;
+        return c + encriptografarSenha(senha, index + 1);
+    }
+
+    string desencriptografarSenha(string senhaEncriptografada, int index) {
+        char c;
+        if(index == senhaEncriptografada.length()) {
+            return "";
+        }
+        c = senhaEncriptografada[index];
+        c -= 3;
+        return c + desencriptografarSenha(senhaEncriptografada, index + 1);
     }
 
 
@@ -507,7 +544,7 @@ namespace Login_mat {
     bool verificarUsuarioExistente(int id) {
         int posicao = adquirirPosicaoDoId(id);
 
-        if (id > verificarUltimoIdUsuario() || id <= 0)
+        if (id > verificarUltimoIdUsuario() || id <= 20260000)
             return false;
 
         ifstream inUsuarios;
@@ -589,7 +626,7 @@ namespace Login_mat {
         professorVazio.base.categoria = PROFESSOR;
         professorVazio.saldo = 0.0;
         professorVazio.disciplina[0] = '\0';
-        for (int i = 0; i < 5; i++) 
+        for (int i = 0; i < 5; i++)
             professorVazio.turmas[i] = 0;
         return professorVazio;
     }
@@ -654,6 +691,17 @@ namespace Login_mat {
         config.label = "Senha: ";
         config.tipo_entrada = TIPO_SENHA;
         config.tamanho_maximo = 30;
+        return interface_para_entrada_texto(config);
+    }
+
+    saida_entrada_texto digiteDisciplina(string titulo) {
+        ConfigEntradaTexto config;
+        config.titulo = titulo;
+        config.caminho = titulo + " -> DISCIPLINA";
+        config.descricao = "Digite a disciplina";
+        config.label = "Disciplina: ";
+        config.tipo_entrada = TIPO_TEXTO;
+        config.tamanho_maximo = 50;
         return interface_para_entrada_texto(config);
     }
 

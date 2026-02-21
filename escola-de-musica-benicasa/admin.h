@@ -26,16 +26,6 @@ constexpr int FILTRO_AMBOS = 2;
 constexpr int NAO_AUTORIZADO = 0;
 constexpr int AUTORIZADO = 1;
 
-void limparbuffer();
-void pausar();
-void openFile(std::fstream &f, const std::string Nome);
-
-Professor buscaProf(std::fstream &file, int buscaId);
-Disciplina buscaDisciplina(std::fstream &file, int buscaId);
-Aluno buscaAluno(std::fstream &file, int buscaId);
-Instrumento buscarInstrumento(std::fstream &file, int buscaId);
-Produto buscaProduto(std::fstream &file, int buscaId);
-
 int gerarNovoId(std::fstream &file, size_t tamanhoStruct);
 void consultarPendenciasInstrumentos();
 
