@@ -221,7 +221,7 @@
 	"headers.h"
 	"login_matricula.h"
 
-1771653035 source:d:\projects\prog2\escola-de-musica-benicasa\interface_grafica.cpp
+1771655679 source:d:\projects\prog2\escola-de-musica-benicasa\interface_grafica.cpp
 	<iostream>
 	<curses.h>
 	<algorithm>
@@ -272,7 +272,7 @@
 	<iostream>
 	"headers.h"
 
-1771641119 d:\projects\prog2\escola-de-musica-benicasa\eventos.h
+1771683238 d:\projects\prog2\escola-de-musica-benicasa\eventos.h
 	<vector>
 	"headers.h"
 

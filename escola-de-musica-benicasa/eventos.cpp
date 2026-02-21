@@ -212,7 +212,7 @@ void adicionar_evento() {
     }
 }
 
-void editar_evento (vector<Evento>& eventos) {
+void editar_evento(vector<Evento>& eventos) {
     ConfigEntradaTexto configBusca;
     configBusca.titulo = "EDITAR EVENTO";
     configBusca.descricao = "Buscar evento no sistema";
@@ -241,7 +241,6 @@ void editar_evento (vector<Evento>& eventos) {
 
     bool continuar_editando = true;
     while (continuar_editando) {
-        // Menu de opções
         constexpr int qtdOpcoes = 8;
         string opcoes[qtdOpcoes] = {
             "Editar Nome",
@@ -429,7 +428,7 @@ void editar_evento (vector<Evento>& eventos) {
                 }
                 break;
             }
-            case 6: { // Descrição (GRANDE)
+            case 6: { // Descrição
                 ConfigEntradaTexto config;
                 config.titulo = "EDITAR EVENTO - DESCRIÇÃO";
                 config.descricao = "Evento: " + string(e->nome);
@@ -481,6 +480,48 @@ void excluir_evento(int id_excluir) {
         }
     } else {
         mostrar_caixa_informacao("ERRO", "Evento não encontrado!");
+    }
+}
+
+void finalizar_evento() {
+    ConfigEntradaTexto configBusca;
+    configBusca.titulo = "FINALIZAR EVENTO";
+    configBusca.descricao = "Marcar evento como finalizado";
+    configBusca.label = "ID do evento: ";
+    configBusca.tamanho_maximo = 10;
+    configBusca.tipo_entrada = TIPO_NUMERO;
+
+    saida_entrada_texto resBusca = interface_para_entrada_texto(configBusca);
+    if (!resBusca.confirmado) return;
+    
+    int id = atoi(resBusca.valor.c_str());
+
+    Evento* e = nullptr;
+
+    for (auto& ev : eventos) {
+        if (ev.id == id) {
+            e = &ev;
+            break;
+        }
+    }
+
+    if (e == nullptr) {
+        mostrar_caixa_informacao("ERRO", "Evento não encontrado.");
+        return;
+    }
+
+    if (e->finalizado) {
+        mostrar_caixa_informacao("AVISO", "Este evento já foi finalizado!");
+        return;
+    }
+
+    e->finalizado = true;
+
+    if (SalvarEventosNoArquivo(eventos)) {
+        mostrar_caixa_informacao("SUCESSO", 
+            "Evento '" + string(e->nome) + "' finalizado com sucesso!");
+    } else {
+        mostrar_caixa_informacao("ERRO", "Erro ao salvar alterações.");
     }
 }
 
@@ -538,7 +579,6 @@ void listar_eventos(const vector<Evento>& eventos) {
 
     saida_menu resultado = interface_para_menu(qtdOpcoes, opcoes, configMenu);
 
-    // Filtrar eventos conforme a escolha
     vector<Evento> eventos_filtrados;
     bool selecionou_disponiveis = (resultado.indice_da_opcao == 0);
 
@@ -555,7 +595,6 @@ void listar_eventos(const vector<Evento>& eventos) {
         return;
     }
 
-    // Preparar dados para a tabela
     int num_linhas = eventos_filtrados.size();
     constexpr int num_colunas = 6;
     
@@ -597,7 +636,6 @@ void listar_eventos(const vector<Evento>& eventos) {
                                                           const_cast<const string**>(matriz), 
                                                           titulos, 0, configTabela);
 
-    // Mostrar detalhes do evento selecionado
     if (resultado_tabela.indice_linha >= 0 && resultado_tabela.indice_linha < num_linhas) {
         const Evento& e = eventos_filtrados[resultado_tabela.indice_linha];
         
@@ -637,7 +675,6 @@ void listar_eventos(const vector<Evento>& eventos) {
         mostrar_detalhes(topicos, 9, configDetalhes);
     }
 
-    // Liberar memória
     for (int i = 0; i < num_linhas; i++) {
         delete[] matriz[i];
     }
@@ -708,23 +745,20 @@ void inscrever_alunos() {
     }
 }
 
-// =====================================================================
-// SEÇÃO: MENU DE ENTRADA PARA EVENTOS
-// =====================================================================
-
 void menu_eventos() {
     bool continuar = true;
 
     CarregarEventos();
 
-    constexpr int qtdOpcoes = 6;
+    constexpr int qtdOpcoes = 7;
     string opcoes[qtdOpcoes] = {
         "Cadastrar Evento",
         "Editar Evento",
-        "Excluir Evento",
         "Listar Eventos",
         "Listar Alunos Inscritos",
-        "Inscrever Aluno em Evento"
+        "Inscrever Aluno em Evento",
+        "Finalizar Evento",
+        "Voltar"
     };
 
     while (continuar) {
@@ -741,29 +775,20 @@ void menu_eventos() {
             case 1:
                 editar_evento(eventos);
                 break;
-            case 2: {
-                ConfigEntradaTexto config;
-                config.titulo = "EXCLUIR EVENTO";
-                config.descricao = "Digite o ID do evento a ser excluído";
-                config.label = "ID do evento: ";
-                config.tamanho_maximo = 10;
-                config.tipo_entrada = TIPO_NUMERO;
-
-                saida_entrada_texto res = interface_para_entrada_texto(config);
-                if (res.confirmado) {
-                    int id = atoi(res.valor.c_str());
-                    excluir_evento(id);
-                }
-                break;
-            }
-            case 3:
+            case 2:
                 listar_eventos(eventos);
                 break;
-            case 4:
+            case 3:
                 listar_alunos_inscritos();
                 break;
-            case 5:
+            case 4:
                 inscrever_alunos();
+                break;
+            case 5:
+                finalizar_evento();
+                break;
+            case 6:
+                continuar = false;
                 break;
             default:
                 continuar = false;
