@@ -1,0 +1,14 @@
+===== INFORMACOES DO BACKUP =====
+Data e Hora: 21/02/2026 13:41:42
+Arquivos salvos:
+  - usuarios.dat
+  - alunos.dat
+  - professores.dat
+  - administradores.dat
+  - disciplinas.dat
+  - turmas.dat
+  - emprestimos.dat
+  - instrumentos.dat
+  - lanchonete_produtos.dat
+  - lanchonete_creditos.dat
+===================================

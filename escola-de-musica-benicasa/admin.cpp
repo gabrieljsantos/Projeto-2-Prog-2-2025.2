@@ -5,6 +5,11 @@
 #include <sstream>
 #include <iomanip>
 #include <vector>
+#include <sys/stat.h>
+#include <errno.h>
+#ifdef _WIN32
+    #include <direct.h>
+#endif
 #include "admin.h"
 #include "headers.h"
 #include "interface_grafica.h"
@@ -2639,12 +2644,247 @@ void menuCadastroCursos(){
 }
 
 
-    void realizarBackup() {
-        mostrar_caixa_informacao("INFO", "Funcionalidade de backup não implementada");
+    // ===== FUNÇÕES AUXILIARES DE BACKUP =====
+    
+    /**
+     * Copia um arquivo de origem para destino
+     * @param origem Caminho do arquivo de origem
+     * @param destino Caminho do arquivo de destino
+     * @return true se copiado com sucesso, false caso contrário
+     */
+    bool copiarArquivo(const string &origem, const string &destino) {
+        ifstream fileOrigem(origem, ios::binary);
+        if (!fileOrigem) {
+            return false;
+        }
+
+        ofstream fileDestino(destino, ios::binary);
+        if (!fileDestino) {
+            fileOrigem.close();
+            return false;
+        }
+
+        // Copiar arquivo em blocos
+        const size_t TAMANHO_BUFFER = 65536;
+        vector<char> buffer(TAMANHO_BUFFER);
+        
+        while (fileOrigem.read(buffer.data(), TAMANHO_BUFFER) || fileOrigem.gcount() > 0) {
+            fileDestino.write(buffer.data(), fileOrigem.gcount());
+        }
+
+        fileOrigem.close();
+        fileDestino.close();
+        return true;
     }
 
+    /**
+     * Obtém a data e hora atual formatada
+     * @return String com data e hora no formato: dd/mm/yyyy HH:MM:SS
+     */
+    string obterDataHoraAtual() {
+        time_t agora = time(nullptr);
+        tm* timeinfo = localtime(&agora);
+        
+        ostringstream oss;
+        oss << setfill('0')
+            << setw(2) << timeinfo->tm_mday << "/" 
+            << setw(2) << (timeinfo->tm_mon + 1) << "/" 
+            << (timeinfo->tm_year + 1900) << " "
+            << setw(2) << timeinfo->tm_hour << ":"
+            << setw(2) << timeinfo->tm_min << ":"
+            << setw(2) << timeinfo->tm_sec;
+        
+        return oss.str();
+    }
+
+    /**
+     * Cria a pasta de backup se não existir
+     * @return true se a pasta foi criada ou já existe, false caso contrário
+     */
+    bool criarPastaBackup() {
+        string pastaBackup = "backup_restauracao";
+        
+        // Limpa errno antes de fazer a chamada
+        errno = 0;
+        
+        // Tenta criar a pasta
+        #ifdef _WIN32
+            int resultado = _mkdir(pastaBackup.c_str());
+        #else
+            int resultado = mkdir(pastaBackup.c_str(), 0755);
+        #endif
+        
+        // Se conseguiu criar (resultado 0) ou pasta já existe (errno EEXIST), retorna true
+        if (resultado == 0 || errno == EEXIST) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Salva informações sobre o backup (data e hora)
+     * @param dataHora String com a data e hora do backup
+     * @return true se salvo com sucesso
+     */
+    bool salvarInfoBackup(const string &dataHora) {
+        ofstream infoFile("backup_restauracao/backup_info.txt");
+        if (!infoFile) {
+            return false;
+        }
+        
+        infoFile << "===== INFORMACOES DO BACKUP =====" << endl;
+        infoFile << "Data e Hora: " << dataHora << endl;
+        infoFile << "Arquivos salvos:" << endl;
+        infoFile << "  - usuarios.dat" << endl;
+        infoFile << "  - alunos.dat" << endl;
+        infoFile << "  - professores.dat" << endl;
+        infoFile << "  - administradores.dat" << endl;
+        infoFile << "  - disciplinas.dat" << endl;
+        infoFile << "  - turmas.dat" << endl;
+        infoFile << "  - emprestimos.dat" << endl;
+        infoFile << "  - instrumentos.dat" << endl;
+        infoFile << "  - lanchonete_produtos.dat" << endl;
+        infoFile << "  - lanchonete_creditos.dat" << endl;
+        infoFile << "===================================" << endl;
+        
+        infoFile.close();
+        return true;
+    }
+
+    /**
+     * Lê informações sobre o backup anterior
+     * @return String com as informações do backup, ou mensagem padrão se não existir
+     */
+    string lerInfoBackup() {
+        ifstream infoFile("backup_restauracao/backup_info.txt");
+        if (!infoFile) {
+            return "Nenhum backup anterior encontrado.";
+        }
+        
+        string linha;
+        string resultado;
+        while (getline(infoFile, linha)) {
+            resultado += linha + "\n";
+        }
+        infoFile.close();
+        return resultado;
+    }
+
+    // ===== FUNÇÃO PRINCIPAL DE BACKUP =====
+    
+    void realizarBackup() {
+        // Lista de arquivos a fazer backup
+        vector<string> arquivos = {
+            "usuarios.dat",
+            "alunos.dat",
+            "professores.dat",
+            "administradores.dat",
+            "disciplinas.dat",
+            "turmas.dat",
+            "emprestimos.dat",
+            "instrumentos.dat",
+            "lanchonete_produtos.dat",
+            "lanchonete_creditos.dat"
+        };
+
+        // Criar pasta de backup se não existir
+        if (!criarPastaBackup()) {
+            mostrar_caixa_informacao("ERRO", "Nao foi possivel criar/acessar a pasta de backup.");
+            return;
+        }
+
+        // Obter data e hora atual
+        string dataHora = obterDataHoraAtual();
+
+        // Contar quantos arquivos foram copiados com sucesso
+        int copiados = 0;
+        int total = arquivos.size();
+
+        // Copiar cada arquivo
+        for (const string &arquivo : arquivos) {
+            string destino = "backup_restauracao/" + arquivo;
+            if (copiarArquivo(arquivo, destino)) {
+                copiados++;
+            }
+        }
+
+        // Salvar informações do backup
+        if (salvarInfoBackup(dataHora)) {
+            // Montar mensagem de sucesso
+            string mensagem = "Backup realizado com sucesso!\n\n";
+            mensagem += "Data e Hora: " + dataHora + "\n";
+            mensagem += "Arquivos copiados: " + to_string(copiados) + "/" + to_string(total);
+            
+            if (copiados < total) {
+                mensagem += "\n\nAtencao: alguns arquivos nao foram encontrados.";
+            }
+
+            mostrar_caixa_informacao("SUCESSO", mensagem);
+        } else {
+            mostrar_caixa_informacao("AVISO", 
+                "Backup copiado, mas nao foi possivel salvar as informacoes.");
+        }
+    }
+
+    // ===== FUNÇÃO PRINCIPAL DE RESTAURAÇÃO =====
+    
     void restaurarBackup() {
-        mostrar_caixa_informacao("INFO", "Funcionalidade de restauração não implementada");
+        // Verificar se existe backup anterior
+        ifstream testFile("backup_restauracao/backup_info.txt");
+        if (!testFile) {
+            testFile.close();
+            mostrar_caixa_informacao("ERRO", "Nenhum backup foi encontrado para restaurar.");
+            return;
+        }
+        testFile.close();
+
+        // Mostrar informações do backup anterior
+        string infoBackup = lerInfoBackup();
+        
+        // Pedir confirmação do usuário
+        ConfigTexto config;
+        config.titulo = "RESTAURAR BACKUP";
+        
+        mostrar_texto(infoBackup + "\n\nDeseja restaurar este backup?\nOs dados atuais serao sobrescritos.", config);
+
+        // Lista de arquivos a restaurar
+        vector<string> arquivos = {
+            "usuarios.dat",
+            "alunos.dat",
+            "professores.dat",
+            "administradores.dat",
+            "disciplinas.dat",
+            "turmas.dat",
+            "emprestimos.dat",
+            "instrumentos.dat",
+            "lanchonete_produtos.dat",
+            "lanchonete_creditos.dat"
+        };
+
+        // Contar quantos arquivos foram restaurados com sucesso
+        int restaurados = 0;
+        int total = arquivos.size();
+
+        // Restaurar cada arquivo
+        for (const string &arquivo : arquivos) {
+            string origem = "backup_restauracao/" + arquivo;
+            if (copiarArquivo(origem, arquivo)) {
+                restaurados++;
+            }
+        }
+
+        // Mostrar resultado
+        string mensagem = "Restauracao realizada!\n\n";
+        mensagem += "Arquivos restaurados: " + to_string(restaurados) + "/" + to_string(total);
+        
+        if (restaurados == total) {
+            mensagem = "Restauracao concluida com sucesso!\n\n" + mensagem;
+            mostrar_caixa_informacao("SUCESSO", mensagem);
+        } else {
+            mensagem = "Restauracao parcial concluida.\n\n" + mensagem;
+            mostrar_caixa_informacao("AVISO", mensagem);
+        }
     }
 
 }
