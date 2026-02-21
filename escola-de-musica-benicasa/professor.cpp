@@ -3,6 +3,7 @@
 #include "headers.h"
 #include "interface_grafica.h"
 #include "lanchonete.h"
+#include "eventos.h"
 #include <fstream>
 #include <iostream>
 #include <iomanip>
@@ -680,7 +681,7 @@ namespace ModuloProfessor
 }
 
 void abrir_menu_professor(Usuario* usuario) {
-    constexpr int qtdOpcoes = 10;
+    constexpr int qtdOpcoes = 11;
     string opcoes[qtdOpcoes] = {
         "Registrar Notas",
         "Registrar Avaliacoes",
@@ -691,6 +692,7 @@ void abrir_menu_professor(Usuario* usuario) {
         "Registrar Faltas",
         "Consultar Saldo Lanchonete",
         "Solicitar Creditos",
+        "Cadastrar Evento",
         "Logout"
     };
     
@@ -713,7 +715,8 @@ void abrir_menu_professor(Usuario* usuario) {
             case 6: ModuloProfessor::registrarFaltas(usuario->id); break;
             case 7: ModuloProfessor::consultarSaldoLanchonete(usuario->id); break;
             case 8: Lanchonete::solicitarCreditosUsuario(usuario->id, PROFESSOR); break;
-            case 9:
+            case 9: adicionar_evento(); break;
+            case 10:
                 usuario->logado = false;
                 emMenuProfessor = false;
                 break;

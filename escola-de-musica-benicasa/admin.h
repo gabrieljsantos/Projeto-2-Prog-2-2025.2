@@ -28,6 +28,7 @@ constexpr int AUTORIZADO = 1;
 
 int gerarNovoId(std::fstream &file, size_t tamanhoStruct);
 void consultarPendenciasInstrumentos();
+void autorizarEventos();
 
 void exibirMenuAdministrador();
 void abrir_menu_admin(Usuario* usuario);
