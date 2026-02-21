@@ -38,6 +38,10 @@ namespace Login_mat {
     void salvarProfessor(Professor professor); // Salva e sincroniza com "usuarios.dat"
     void salvarAdmin(Admin admin); // Salva e sincroniza com "usuarios.dat"
 
+    // Funções basicas para escriptografar as senhas
+    string encriptografarSenha(string senha, int index);
+    string desencriptografarSenha(string senhaEncriptografada, int index);
+
     // Gera novo ID baseado no arquivo "usuarios.dat"
     int gerarNovoId();
     int adquirirPosicaoDoId(int id);
@@ -74,6 +78,7 @@ namespace Login_mat {
         saida_entrada_texto digiteNome(string titulo);
         saida_entrada_texto digiteEmail(string titulo);
         saida_entrada_texto digiteSenha(string titulo);
+        saida_entrada_texto digiteDisciplina(string titulo);
 }
 
 #endif

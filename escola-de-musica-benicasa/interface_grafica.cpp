@@ -1500,15 +1500,20 @@ saida_entrada_texto interface_para_entrada_texto_grande(
     resultado.confirmado = false;
     resultado.valor = "";
 
-    // Versão para texto grande
+    // Versão para texto grande com caixa 50x5
     ConfigEntradaTexto config_ajustada = config;
-    if (config_ajustada.tamanho_maximo > 200)
-        config_ajustada.tamanho_maximo = 200;
-    else if (config_ajustada.tamanho_maximo == 100)  // Se usar padrão, aumenta para 200
-        config_ajustada.tamanho_maximo = 200;
+    if (config_ajustada.tamanho_maximo > 250)
+        config_ajustada.tamanho_maximo = 250;
+    else if (config_ajustada.tamanho_maximo == 100)
+        config_ajustada.tamanho_maximo = 250;
+
+    // Parâmetros da caixa de texto multi-linha
+    const int LARGURA_CAIXA = 50;  // 50 caracteres de largura
+    const int ALTURA_CAIXA = 5;     // 5 linhas de altura
+    const int MAX_CARACTERES = 250; // Total de caracteres (50*5)
 
     string entrada_atual = config.valor_inicial;
-    int posicao_cursor = entrada_atual.length();  // Posição do cursor no texto
+    int posicao_cursor = entrada_atual.length();  // Posição absoluta no texto
     int tecla;
 
     // ── Inicializar ncurses ─────────────────────────────────
@@ -1559,8 +1564,8 @@ saida_entrada_texto interface_para_entrada_texto_grande(
     linhas_cabecalho += contar_linhas_com_wrap(config.descricao, largura);
     linhas_cabecalho += contar_linhas_com_wrap(config.caminho, largura);
 
-    // Aumenta altura para 3 linhas de entrada (para textos longos)
-    int altura = 2 + linhas_cabecalho + 7;
+    // Altura = cabeçalho + info + caixa de texto (50x5)
+    int altura = 2 + linhas_cabecalho + 2 + (ALTURA_CAIXA + 2);
 
     if (altura  > max_y - 4) altura  = max_y - 4;
     if (largura > max_x - 4) largura = max_x - 4;
@@ -1586,9 +1591,6 @@ saida_entrada_texto interface_para_entrada_texto_grande(
         case TIPO_TELEFONE:   tipo_label = "Telefone"; break;
         case TIPO_SENHA:      tipo_label = "Senha"; break;
     }
-
-    // Calcular largura disponível para exibição (deixa espaço para label e bordas)
-    int largura_campo = largura - 6;  // Espaço para bordas e espaçamento
 
     // ════════════════════════════════════════════════════════
     //  LOOP PRINCIPAL
@@ -1664,17 +1666,20 @@ saida_entrada_texto interface_para_entrada_texto_grande(
             linha++;
         }
 
-        // ── Label de tipo de entrada ────────────────────────
+        // ── Informações de entrada ──────────────────────────
         wattron(win, COLOR_PAIR(config.cores.cor_instrucao));
-        mvwprintw(win, linha, config.x, "Tipo: %s | Caracteres: %zu/200", 
-                  tipo_label.c_str(), entrada_atual.length());
+        // Calcular linha e coluna da posição do cursor
+        int linha_cursor = posicao_cursor / LARGURA_CAIXA;
+        int coluna_cursor = posicao_cursor % LARGURA_CAIXA;
+        mvwprintw(win, linha, config.x, "Tipo: %s | Caracteres: %d/%d | Linha: %d Col: %d", 
+                  tipo_label.c_str(), (int)entrada_atual.length(), MAX_CARACTERES, linha_cursor + 1, coluna_cursor + 1);
         wattroff(win, COLOR_PAIR(config.cores.cor_instrucao));
         linha++;
 
-        // ── Campo de entrada (com scroll) ───────────────────
+        // ── Campo de entrada multi-linha (50x5) ─────────────
         linha++;
-        
-        // Preparar texto a ser exibido (com scroll automático)
+
+        // Preparar texto a ser exibido
         string entrada_exibida = entrada_atual;
         
         // Mascarar se for senha
@@ -1682,43 +1687,46 @@ saida_entrada_texto interface_para_entrada_texto_grande(
         {
             entrada_exibida = string(entrada_atual.length(), '*');
         }
-        
-        // Se o texto é maior que o espaço disponível, faz scroll
-        int posicao_scroll = 0;
-        if ((int)entrada_exibida.length() > largura_campo - (int)config.label.length())
-        {
-            // Mostra sempre os últimos caracteres (scroll à direita)
-            posicao_scroll = (int)entrada_exibida.length() - (largura_campo - (int)config.label.length());
-            if (posicao_scroll < 0) posicao_scroll = 0;
-        }
-        
-        // Extrai substring visível
-        string texto_visivel = entrada_exibida.substr(posicao_scroll);
-        if ((int)texto_visivel.length() > largura_campo - (int)config.label.length())
-        {
-            texto_visivel = texto_visivel.substr(0, largura_campo - (int)config.label.length());
-        }
 
-        // Desenha a caixa de entrada em 3 linhas se necessário
-        wattron(win, COLOR_PAIR(config.cores.cor_opcao_selecionada));
-        
-        // Primeira linha do campo
-        preencher_linha(win, linha, 1, largura - 1, config.cores.cor_opcao_selecionada);
-        mvwprintw(win, linha, config.x, "%s%s", config.label.c_str(), texto_visivel.c_str());
-        
-        // Indicadores visuais
-        string indicadores = "";
-        if (posicao_scroll > 0) 
-            indicadores += " [<< scroll]";
-        if ((int)entrada_exibida.length() > largura_campo - (int)config.label.length())
-            indicadores += " [...continua]";
-        
-        if (!indicadores.empty())
+        // Desenhar a caixa de texto (50 largura x 5 linhas)
+        int campo_y_inicio = linha;
+
+        for (int l = 0; l < ALTURA_CAIXA; l++)
         {
-            mvwprintw(win, linha, largura - (int)indicadores.length() - 2, "%s", indicadores.c_str());
+            wattron(win, COLOR_PAIR(config.cores.cor_opcao_selecionada));
+            
+            // Preencher a linha com espaços
+            for (int c = 0; c < LARGURA_CAIXA; c++)
+            {
+                mvwaddch(win, linha + l, config.x + c, ' ');
+            }
+
+            // Extrair 50 caracteres dessa linha do texto
+            int posicao_inicio_linha = l * LARGURA_CAIXA;
+            string texto_linha = "";
+            
+            if (posicao_inicio_linha < (int)entrada_exibida.length())
+            {
+                int chars_restantes = (int)entrada_exibida.length() - posicao_inicio_linha;
+                int chars_para_exibir = (chars_restantes > LARGURA_CAIXA) ? LARGURA_CAIXA : chars_restantes;
+                texto_linha = entrada_exibida.substr(posicao_inicio_linha, chars_para_exibir);
+            }
+
+            // Desenhar o texto dessa linha
+            mvwprintw(win, linha + l, config.x, "%s", texto_linha.c_str());
+
+            // Desenhar o cursor se estiver nessa linha
+            if (l == linha_cursor)
+            {
+                // Destacar a posição do cursor
+                wattron(win, COLOR_PAIR(config.cores.cor_opcao_selecionada) | A_REVERSE);
+                mvwaddch(win, linha + l, config.x + coluna_cursor, 
+                        (coluna_cursor < (int)texto_linha.length()) ? texto_linha[coluna_cursor] : ' ');
+                wattroff(win, COLOR_PAIR(config.cores.cor_opcao_selecionada) | A_REVERSE);
+            }
+
+            wattroff(win, COLOR_PAIR(config.cores.cor_opcao_selecionada));
         }
-        
-        wattroff(win, COLOR_PAIR(config.cores.cor_opcao_selecionada));
 
         // ── Instrução/Controles ─────────────────────────────
         {
@@ -1726,7 +1734,7 @@ saida_entrada_texto interface_para_entrada_texto_grande(
             move(linha_ctrl, 0);
             clrtoeol();
 
-            string controles = "[ENTER] Confirmar  [ESC] Cancelar  [Setas] Navegar (HOME/END suportadas)";
+            string controles = "[Digitar] Texto  [Setas] Navegar  [ENTER] Confirmar  [ESC] Cancelar";
             attron(COLOR_PAIR(config.cores.cor_controles) | A_DIM);
             mvprintw(
                 linha_ctrl,
@@ -1744,7 +1752,7 @@ saida_entrada_texto interface_para_entrada_texto_grande(
 
         if (tecla >= 32 && tecla <= 126)  // Caracteres imprimíveis
         {
-            if ((int)entrada_atual.length() < config_ajustada.tamanho_maximo)
+            if ((int)entrada_atual.length() < MAX_CARACTERES)
             {
                 // Validar conforme tipo
                 bool valido = true;
@@ -1758,6 +1766,13 @@ saida_entrada_texto interface_para_entrada_texto_grande(
                 {
                     entrada_atual.insert(posicao_cursor, 1, (char)tecla);
                     posicao_cursor++;
+
+                    // Se atingiu 50 caracteres nessa linha, pular para próxima linha automaticamente
+                    int coluna_atual = posicao_cursor % LARGURA_CAIXA;
+                    if (coluna_atual == 0 && posicao_cursor < MAX_CARACTERES)
+                    {
+                        // Já está no início da próxima linha
+                    }
                 }
             }
         }
@@ -1769,7 +1784,7 @@ saida_entrada_texto interface_para_entrada_texto_grande(
                 posicao_cursor--;
             }
         }
-        else if (tecla == KEY_DELETE || tecla == 330)  // Delete
+        else if (tecla == KEY_DC || tecla == 330)  // Delete
         {
             if (posicao_cursor < (int)entrada_atual.length())
             {
@@ -1786,13 +1801,50 @@ saida_entrada_texto interface_para_entrada_texto_grande(
             if (posicao_cursor < (int)entrada_atual.length())
                 posicao_cursor++;
         }
-        else if (tecla == KEY_HOME || tecla == 262)  // Home
+        else if (tecla == KEY_UP || tecla == 259)  // Seta para cima
         {
-            posicao_cursor = 0;
+            int linha_cursor_atual = posicao_cursor / LARGURA_CAIXA;
+            int coluna_cursor_atual = posicao_cursor % LARGURA_CAIXA;
+            
+            if (linha_cursor_atual > 0)
+            {
+                posicao_cursor = (linha_cursor_atual - 1) * LARGURA_CAIXA + coluna_cursor_atual;
+                if (posicao_cursor > (int)entrada_atual.length())
+                    posicao_cursor = entrada_atual.length();
+            }
         }
-        else if (tecla == KEY_END || tecla == 360)  // End
+        else if (tecla == KEY_DOWN || tecla == 258)  // Seta para baixo
         {
-            posicao_cursor = (int)entrada_atual.length();
+            int linha_cursor_atual = posicao_cursor / LARGURA_CAIXA;
+            int coluna_cursor_atual = posicao_cursor % LARGURA_CAIXA;
+            
+            if (linha_cursor_atual < ALTURA_CAIXA - 1)
+            {
+                int nova_posicao = (linha_cursor_atual + 1) * LARGURA_CAIXA + coluna_cursor_atual;
+                if (nova_posicao < (int)entrada_atual.length())
+                    posicao_cursor = nova_posicao;
+                else if ((int)entrada_atual.length() > 0)
+                    posicao_cursor = entrada_atual.length();
+            }
+        }
+        else if (tecla == KEY_HOME || tecla == 262)  // Home - início da linha
+        {
+            int linha_cursor_atual = posicao_cursor / LARGURA_CAIXA;
+            posicao_cursor = linha_cursor_atual * LARGURA_CAIXA;
+        }
+        else if (tecla == KEY_END || tecla == 360)  // End - fim da linha
+        {
+            int linha_cursor_atual = posicao_cursor / LARGURA_CAIXA;
+            int proximo_inicio_linha = (linha_cursor_atual + 1) * LARGURA_CAIXA;
+            
+            if (proximo_inicio_linha <= (int)entrada_atual.length())
+            {
+                posicao_cursor = proximo_inicio_linha - 1;
+            }
+            else
+            {
+                posicao_cursor = entrada_atual.length();
+            }
         }
         else if (tecla == 10)  // ENTER
         {
