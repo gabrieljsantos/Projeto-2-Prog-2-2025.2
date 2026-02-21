@@ -20,7 +20,6 @@ struct Usuario{
 
 struct Aluno {
     Usuario base;
-    double saldo;
     float notas[2];
     float media;
     int faltas;
@@ -31,7 +30,6 @@ struct Aluno {
 
 struct Professor {
     Usuario base;
-    double saldo;
     char disciplina[50];
     int turmas[5];
 };
@@ -143,7 +141,6 @@ struct Evento {
 struct Credito {
     int id_opera = 0;
     int id_user = 0;
-    Funcao tipo_user;
     double saldo = 0; 
     bool realizado = false;
 };

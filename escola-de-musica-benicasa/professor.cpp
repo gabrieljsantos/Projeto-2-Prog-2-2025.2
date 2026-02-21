@@ -193,19 +193,6 @@ namespace ModuloProfessor
         return indicesAluno[resultado.indice_linha];
     }
 
-    void consultarSaldoLanchonete(int id_prof)
-    {
-        Professor prof = Login_mat::lerProfessor(id_prof);
-        string msg = "Saldo: R$ " + to_string(prof.saldo);
-        mostrar_caixa_informacao("SALDO LANCHONETE", msg);
-    }
-
-    void consultarSaldoLanchonete(Professor &prof)
-    {
-        string msg = "Saldo: R$ " + to_string(prof.saldo);
-        mostrar_caixa_informacao("SALDO LANCHONETE", msg);
-    }
-
     void registrarNotas(int id_prof)
     {
         cout << "[DEBUG] registrarNotas: Iniciando registro de notas" << endl;
@@ -681,7 +668,7 @@ namespace ModuloProfessor
 }
 
 void abrir_menu_professor(Usuario* usuario) {
-    constexpr int qtdOpcoes = 11;
+    constexpr int qtdOpcoes = 13;
     string opcoes[qtdOpcoes] = {
         "Registrar Notas",
         "Registrar Avaliacoes",
@@ -691,7 +678,9 @@ void abrir_menu_professor(Usuario* usuario) {
         "Consultar Turma",
         "Registrar Faltas",
         "Consultar Saldo Lanchonete",
-        "Solicitar Creditos",
+        "Ver Produtos Lanchonete",
+        "Realizar Compra Lanchonete",
+        "Solicitar Creditos Lanchonete",
         "Cadastrar Evento",
         "Logout"
     };
@@ -713,10 +702,12 @@ void abrir_menu_professor(Usuario* usuario) {
             case 4: ModuloProfessor::consultarDesempenhoAcademico(usuario->id); break;
             case 5: ModuloProfessor::consultarTurma(usuario->id); break;
             case 6: ModuloProfessor::registrarFaltas(usuario->id); break;
-            case 7: ModuloProfessor::consultarSaldoLanchonete(usuario->id); break;
-            case 8: Lanchonete::solicitarCreditosUsuario(usuario->id, PROFESSOR); break;
-            case 9: adicionar_evento(); break;
-            case 10:
+            case 7: Lanchonete::consultarSaldo(usuario->id); break;
+            case 8: Lanchonete::visualizarProdutos(); break;
+            case 9: Lanchonete::realizarCompra(usuario->id); break;
+            case 10: Lanchonete::solicitarCreditosUsuario(usuario->id); break;
+            case 11: adicionar_evento(); break;
+            case 12:
                 usuario->logado = false;
                 emMenuProfessor = false;
                 break;

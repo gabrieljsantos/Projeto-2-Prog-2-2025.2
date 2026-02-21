@@ -3,22 +3,46 @@
 #include "lanchonete.h"
 #include "interface_grafica.h"
 #include "headers.h"
-#include "login_matricula.h"
 #include <limits>
+#include <cstring>
+#include <string>
 
 using namespace std;
+
+void limparBuffer(){
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+bool converterInt(string valor, int &saida){
+    try{
+        size_t idx = 0;
+        saida = stoi(valor, &idx);
+        return idx == valor.size();
+    }catch(...){
+        return false;
+    }
+}
+
+bool converterDouble(string valor, double &saida){
+    for (int i = 0; i < (int)valor.size(); i++) {
+        if (valor[i] == ',') valor[i] = '.';
+    }
+
+    try{
+        size_t idx = 0;
+        saida = stod(valor, &idx);
+        return idx == valor.size();
+    }catch(...){
+        return false;
+    }
+}
 
 // Observação: sempre que comparamos a posicao com o máximo,
 // como posicaoProduto == MAX_PRODUTOS, quer dizer que não
 // foi possivel encontrá-lo, pois o ultimo valor é MAX_PRODUTOS - 1
 
 namespace Lanchonete {
-
-    void limparBuffer(){
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    }
-
     int proximoIdOperacao(Credito lista[MAX_CREDITOS]){
         int maior = 0;
         for (int i = 0; i < MAX_CREDITOS; i++) {
@@ -27,21 +51,19 @@ namespace Lanchonete {
         return maior + 1;
     }
 
-    double saldoUsuario(Credito lista[MAX_CREDITOS], int idUsuario){
-        double saldo = 0;
-        for (int i = 0; i < MAX_CREDITOS; i++) {
-            if (lista[i].id_user == idUsuario && lista[i].realizado) {
-                saldo = saldo + lista[i].saldo;
-            }
+    double saldoUsuarioRec(Credito lista[MAX_CREDITOS], int idUsuario, int i){
+        if (i == MAX_CREDITOS) return 0;
+
+        double soma = 0;
+        if (lista[i].id_user == idUsuario && lista[i].realizado) {
+            soma = lista[i].saldo;
         }
-        return saldo;
+
+        return soma + saldoUsuarioRec(lista, idUsuario, i + 1);
     }
 
-    Funcao tipoUsuario(Credito lista[MAX_CREDITOS], int idUsuario){
-        for (int i = 0; i < MAX_CREDITOS; i++) {
-            if (lista[i].id_user == idUsuario && lista[i].tipo_user != NENHUMA) return lista[i].tipo_user;
-        }
-        return NENHUMA;
+    double saldoUsuario(Credito lista[MAX_CREDITOS], int idUsuario){
+        return saldoUsuarioRec(lista, idUsuario, 0);
     }
 
     int acharCreditoPorOperacao(Credito lista[MAX_CREDITOS], int idOpera) {
@@ -51,58 +73,153 @@ namespace Lanchonete {
         return MAX_CREDITOS;
     }
 
+    saida_menu exibirMenuLanchoneteAdmin(){
+        const int qtdOpcoes = 6;
+        string opcoes[qtdOpcoes] = {
+            "Adicionar produto",
+            "Remover produto",
+            "Visualizar produtos",
+            "Consultar estoque",
+            "Alterar preco",
+            "Ativar creditos pendentes"
+        };
+
+        ConfigMenu config;
+        config.titulo = "LANCHONETE";
+        config.caminho = "ADMIN -> LANCHONETE";
+        config.descricao = "Gerenciamento da lanchonete";
+        return interface_para_menu(qtdOpcoes, opcoes, config);
+    }
+
+    saida_entrada_texto entradaNumero(string titulo, string descricao, string caminho, string label, int tam){
+        ConfigEntradaTexto config;
+        config.titulo = titulo;
+        config.descricao = descricao;
+        config.caminho = caminho;
+        config.label = label;
+        config.tipo_entrada = TIPO_NUMERO;
+        config.tamanho_maximo = tam;
+        return interface_para_entrada_texto(config);
+    }
+
+    saida_entrada_texto entradaTexto(string titulo, string descricao, string caminho, string label, int tam){
+        ConfigEntradaTexto config;
+        config.titulo = titulo;
+        config.descricao = descricao;
+        config.caminho = caminho;
+        config.label = label;
+        config.tipo_entrada = TIPO_TEXTO;
+        config.tamanho_maximo = tam;
+        return interface_para_entrada_texto(config);
+    }
+
+    int selecionarProduto(Produto lista[MAX_PRODUTOS], string titulo, string caminho, bool mostrarPreco, bool mostrarEstoque){
+        int qtd = 0;
+        for (int i = 0; i < MAX_PRODUTOS; i++) {
+            if (lista[i].ativo == 1 && lista[i].id != 0) qtd++;
+        }
+
+        if (qtd == 0) return 0;
+
+        string *opcoes = new string[qtd];
+        int *ids = new int[qtd];
+
+        int k = 0;
+        for (int i = 0; i < MAX_PRODUTOS; i++) {
+            if (lista[i].ativo == 1 && lista[i].id != 0) {
+                string linha = to_string(lista[i].id) + " - " + string(lista[i].nome);
+                if (mostrarPreco) linha += " (R$ " + to_string(lista[i].preco) + ")";
+                if (mostrarEstoque) linha += " [Estoque: " + to_string(lista[i].estoque) + "]";
+                opcoes[k] = linha;
+                ids[k] = lista[i].id;
+                k++;
+            }
+        }
+
+        ConfigMenu config;
+        config.titulo = titulo;
+        config.descricao = "Selecione o produto";
+        config.caminho = caminho;
+
+        saida_menu saidaMenu = interface_para_menu(qtd, opcoes, config);
+
+        int idRetorno = 0;
+        if (saidaMenu.indice_da_opcao >= 0) {
+            idRetorno = ids[saidaMenu.indice_da_opcao];
+        }
+
+        delete[] opcoes;
+        delete[] ids;
+
+        return idRetorno;
+    }
+
+    int selecionarOperacaoPendente(Credito creditos[MAX_CREDITOS]){
+        int qtd = 0;
+        for (int i = 0; i < MAX_CREDITOS; i++) {
+            if (creditos[i].id_user != 0 && creditos[i].realizado == false) qtd++;
+        }
+
+        if (qtd == 0) return 0;
+
+        string *opcoes = new string[qtd];
+        int *ops = new int[qtd];
+
+        int k = 0;
+        for (int i = 0; i < MAX_CREDITOS; i++) {
+            if (creditos[i].id_user != 0 && creditos[i].realizado == false) {
+                opcoes[k] = "Operacao: " + to_string(creditos[i].id_opera) +
+                " | ID: " + to_string(creditos[i].id_user) +
+                " | Valor: " + to_string(creditos[i].saldo);
+                ops[k] = creditos[i].id_opera;
+                k++;
+            }
+        }
+
+        ConfigMenu config;
+        config.titulo = "CREDITOS PENDENTES";
+        config.descricao = "Selecione a operacao para ativar";
+        config.caminho = "LANCHONETE -> CREDITOS";
+
+        saida_menu saidaMenu = interface_para_menu(qtd, opcoes, config);
+
+        int idOpera = 0;
+        if (saidaMenu.indice_da_opcao >= 0) {
+            idOpera = ops[saidaMenu.indice_da_opcao];
+        }
+
+        delete[] opcoes;
+        delete[] ops;
+
+        return idOpera;
+    }
+
     void menuCadastroProdutos(){
-        char opcao;
+        while (true) {
+            saida_menu saidaMenu = exibirMenuLanchoneteAdmin();
+            if (saidaMenu.indice_da_opcao < 0) return;
 
-        do {
-            system("cls || clear");
-            cout << "========== LANCHONETE ==========\n";
-            cout << "[1] Adicionar produto\n";
-            cout << "[2] Remover produto\n";
-            cout << "[3] Visualizar produtos\n";
-            cout << "[4] Consultar estoque\n";
-            cout << "[5] Alterar preço\n";
-            cout << "[6] Ativar créditos pendentes\n";
-            cout << "===============================\n";
-            cout << "[0] Voltar\n";
-            cout << "Opção: ";
-            cin >> opcao;
-            limparBuffer();
-
-            switch (opcao) {
-                case '1':
+            switch (saidaMenu.indice_da_opcao) {
+                case 0:
                     adicionarProduto();
                     break;
-                case '2':
+                case 1:
                     removerProduto();
                     break;
-                case '3':
+                case 2:
                     visualizarProdutos();
                     break;
-                case '4':
+                case 3:
                     consultarEstoque();
                     break;
-                case '5':
+                case 4:
                     alterarPrecoProduto();
                     break;
-                case '6':
+                case 5:
                     ativarCreditosPendentes();
                     break;
-                case '0':
-                    break;
-                default:
-                    cout << "Opção inválida!\n";
-                    break;
             }
-
-            if(opcao!='0'){
-                cout << "\nAperte ENTER para continuar..."; // pausa simples pra ver o resultado
-                limparBuffer();
-                cin.get();
-            }
-
-        } while (opcao != '0');
-        
+        }
     }
 
     bool bancoExisteProdutos() {
@@ -155,7 +272,6 @@ namespace Lanchonete {
     void lerTodosCreditos(Credito lista[MAX_CREDITOS]) {
         ifstream arquivo(BANCO_CREDITOS, ios::binary);
         Credito vazio = {};
-        vazio.tipo_user = NENHUMA;
 
         if (!arquivo.is_open()) {
             for (int i = 0; i < MAX_CREDITOS; i++) {
@@ -202,31 +318,11 @@ namespace Lanchonete {
         return MAX_PRODUTOS;
     }
 
-    int acharCreditoPorId(Credito lista[MAX_CREDITOS], int idUsuario) {
-        for (int i = 0; i < MAX_CREDITOS; i++) {
-            if (lista[i].id_user == idUsuario) return i;
-        }
-        return MAX_CREDITOS;
-    }
-
     int acharVagaCredito(Credito lista[MAX_CREDITOS]) {
         for (int i = 0; i < MAX_CREDITOS; i++) {
             if (lista[i].id_user == 0) return i;
         }
         return MAX_CREDITOS;
-    }
-
-    void mostrarProdutosRec(Produto lista[MAX_PRODUTOS], int i) {
-        if (i == MAX_PRODUTOS) return;
-
-        if (lista[i].ativo == 1 && lista[i].id != 0) {
-            cout << "ID: " << lista[i].id << "\n";
-            cout << "Nome: " << lista[i].nome << "\n";
-            cout << "Preço: " << lista[i].preco << "\n";
-            cout << "Estoque: " << lista[i].estoque << "\n\n";
-        }
-
-        mostrarProdutosRec(lista, i + 1);
     }
 
     bool bancoDeDados() {
@@ -246,9 +342,8 @@ namespace Lanchonete {
             if (!arquivo.is_open()) return false;
 
             Credito credito_vazio = {};
-            credito_vazio.tipo_user = NENHUMA;
             for (int i = 0; i < MAX_CREDITOS; i++) {
-                arquivo.write((char*)&credito_vazio, sizeof(Credito)); // deixa o arquivo préalocado
+                arquivo.write((char*)&credito_vazio, sizeof(Credito));
             }
             arquivo.close();
         }
@@ -261,27 +356,26 @@ namespace Lanchonete {
     }
 
     void solicitarCreditosUsuario() {
-        if (!bancoDeDados()) {
-            cout << "Erro ao abrir o banco!\n";
-            return;
-        }
+        saida_entrada_texto saidaId = entradaNumero("SOLICITAR CREDITOS", "Digite o ID", "LANCHONETE -> CREDITOS", "ID: ", 10);
+        if (!saidaId.confirmado) return;
 
         int idUsuario;
-        double valor;
-
-        cout << "ID do usuário: ";
-        cin >> idUsuario;
-
-        if (idUsuario <= 0) {
-            cout << "ID inválido!\n";
+        if (!converterInt(saidaId.valor, idUsuario) || idUsuario <= 0) {
+            mostrar_caixa_informacao("ERRO", "ID invalido");
             return;
         }
 
-        cout << "Valor: ";
-        cin >> valor;
+        saida_entrada_texto saidaValor = entradaNumero("SOLICITAR CREDITOS", "Digite o valor", "LANCHONETE -> CREDITOS", "Valor: ", 12);
+        if (!saidaValor.confirmado) return;
 
-        if (valor <= 0) {
-            cout << "Valor inválido!\n";
+        double valor;
+        if (!converterDouble(saidaValor.valor, valor) || valor <= 0) {
+            mostrar_caixa_informacao("ERRO", "Valor invalido");
+            return;
+        }
+
+        if (!bancoDeDados()) {
+            mostrar_caixa_informacao("ERRO", "Erro ao abrir o banco");
             return;
         }
 
@@ -290,45 +384,38 @@ namespace Lanchonete {
 
         int vaga = acharVagaCredito(creditos);
         if (vaga == MAX_CREDITOS) {
-            cout << "Não há espaço para adicionar mais créditos!\n";
+            mostrar_caixa_informacao("ERRO", "Nao ha espaco para novas solicitacoes");
             delete[] creditos;
             return;
         }
 
         creditos[vaga].id_opera = proximoIdOperacao(creditos);
         creditos[vaga].id_user = idUsuario;
-        creditos[vaga].tipo_user = tipoUsuario(creditos, idUsuario);
         creditos[vaga].saldo = valor;
         creditos[vaga].realizado = false;
 
         if (!escreverTodosCreditos(creditos)) {
-            cout << "Erro ao salvar saldo!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao salvar solicitacao");
             delete[] creditos;
             return;
         }
 
-        cout << "Solicitação enviada!\n";
+        mostrar_caixa_informacao("OK", "Solicitacao enviada");
         delete[] creditos;
     }
 
-    void solicitarCreditosUsuario(int idUsuario, Funcao tipo_user) {
-        if (!bancoDeDados()) {
-            cout << "Erro ao abrir o banco!\n";
-            return;
-        }
+    void solicitarCreditosUsuario(int idUsuario) {
+        saida_entrada_texto saidaValor = entradaNumero("SOLICITAR CREDITOS", "Digite o valor", "LANCHONETE -> CREDITOS", "Valor: ", 12);
+        if (!saidaValor.confirmado) return;
 
         double valor;
-
-        if (idUsuario <= 0) {
-            cout << "ID inválido!\n";
+        if (!converterDouble(saidaValor.valor, valor) || valor <= 0) {
+            mostrar_caixa_informacao("ERRO", "Valor invalido");
             return;
         }
 
-        cout << "Valor: ";
-        cin >> valor;
-
-        if (valor <= 0) {
-            cout << "Valor inválido!\n";
+        if (!bancoDeDados()) {
+            mostrar_caixa_informacao("ERRO", "Erro ao abrir o banco");
             return;
         }
 
@@ -337,198 +424,132 @@ namespace Lanchonete {
 
         int vaga = acharVagaCredito(creditos);
         if (vaga == MAX_CREDITOS) {
-            cout << "Não há espaço para adicionar mais créditos!\n";
+            mostrar_caixa_informacao("ERRO", "Nao ha espaco para novas solicitacoes");
             delete[] creditos;
             return;
         }
 
         creditos[vaga].id_opera = proximoIdOperacao(creditos);
         creditos[vaga].id_user = idUsuario;
-        creditos[vaga].tipo_user = tipo_user;
         creditos[vaga].saldo = valor;
         creditos[vaga].realizado = false;
 
-        // DEBUG
-        cout << "\n===== DEBUG: SOLICITACAO DE CREDITOS =====\n";
-        cout << "ID Usuario: " << idUsuario << "\n";
-        cout << "Tipo Usuario: " << tipo_user << "\n";
-        cout << "Valor Solicitado: " << valor << "\n";
-        cout << "ID Operacao: " << creditos[vaga].id_opera << "\n";
-        cout << "Status: PENDENTE (realizado = false)\n";
-        cout << "==========================================\n";
-        cout << "\n[DEBUG] Pressione ENTER para continuar...";
-        limparBuffer();
-        cin.get();
-
         if (!escreverTodosCreditos(creditos)) {
-            cout << "Erro ao salvar saldo!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao salvar solicitacao");
             delete[] creditos;
             return;
         }
 
-        cout << "Solicitação enviada!\n";
-        cout << "\n[DEBUG] Pressione ENTER para retornar...";
-        limparBuffer();
-        cin.get();
+        mostrar_caixa_informacao("OK", "Solicitacao enviada");
         delete[] creditos;
     }
 
     void ativarCreditosPendentes() {
         if (!bancoDeDados()) {
-            cout << "Erro ao abrir o banco!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao abrir o banco");
             return;
         }
 
         Credito *creditos = new Credito[MAX_CREDITOS];
         lerTodosCreditos(creditos);
 
-        int temPendente = 0;
-        for (int i = 0; i < MAX_CREDITOS; i++) {
-            if (creditos[i].id_user != 0 && creditos[i].realizado == false) {
-                cout << "Operação: " << creditos[i].id_opera
-                     << " | ID: " << creditos[i].id_user
-                     << " | Valor: " << creditos[i].saldo << "\n";
-                temPendente = 1;
-            }
-        }
-
-        if (!temPendente) {
-            cout << "Nenhum crédito pendente.\n";
-            delete[] creditos;
-            return;
-        }
-
-        int idOpera;
-        char resposta;
-
-        cout << "\nID da operação para ativar (0 para sair): ";
-        cin >> idOpera;
-
+        int idOpera = selecionarOperacaoPendente(creditos);
         if (idOpera == 0) {
+            mostrar_caixa_informacao("CREDITOS", "Nenhum credito pendente");
             delete[] creditos;
             return;
         }
 
         int posicao = acharCreditoPorOperacao(creditos, idOpera);
         if (posicao == MAX_CREDITOS || creditos[posicao].realizado) {
-            cout << "Operação não encontrada!\n";
+            mostrar_caixa_informacao("ERRO", "Operacao nao encontrada");
             delete[] creditos;
             return;
         }
 
-        cout << "Operação: " << creditos[posicao].id_opera << "\n";
-        cout << "ID: " << creditos[posicao].id_user << "\n";
-        cout << "Valor: " << creditos[posicao].saldo << "\n";
-        cout << "[S] - Confirmar\n";
-        cout << "[x] - Cancelar\n";
-        cout << ">>> ";
-        cin >> resposta;
+        ConfigBotoes cfg;
+        cfg.titulo = "CONFIRMAR";
+        cfg.descricao = "Ativar este credito?";
+        cfg.pergunta = "Confirmar: ";
+        cfg.numero_botoes = 2;
+        cfg.botoes[0] = {'S', "Sim", 1};
+        cfg.botoes[1] = {'N', "Nao", 0};
 
-        if (resposta == 'S' || resposta == 's') {
-            creditos[posicao].realizado = true;
-
-            // DEBUG
-            cout << "\n===== DEBUG: ATIVAR CREDITOS PENDENTES =====\n";
-            cout << "ID Operacao: " << creditos[posicao].id_opera << "\n";
-            cout << "ID Usuario: " << creditos[posicao].id_user << "\n";
-            cout << "Valor: " << creditos[posicao].saldo << "\n";
-            cout << "Status Anterior: PENDENTE\n";
-            cout << "Status Novo: ATIVADO (realizado = true)\n";
-            cout << "=============================================\n";
-            cout << "\n[DEBUG] Pressione ENTER para confirmar salvamento...";
-            limparBuffer();
-            cin.get();
-
-            if (!escreverTodosCreditos(creditos)) {
-                cout << "Erro ao salvar!\n";
-                delete[] creditos;
-                return;
-            }
-
-            // TRANSFERÊNCIA PARA BANCO DE DADOS DO USUÁRIO
-            cout << "\n===== DEBUG: TRANSFERENCIA DE SALDO =====\n";
-            cout << "Tipo de Usuario: " << creditos[posicao].tipo_user << "\n";
-            
-            if (creditos[posicao].tipo_user == ALUNO) {
-                cout << "Lendo ALUNO ID: " << creditos[posicao].id_user << "...\n";
-                Aluno aluno = Login_mat::lerAluno(creditos[posicao].id_user);
-                cout << "Saldo Anterior: " << aluno.saldo << "\n";
-                aluno.saldo += creditos[posicao].saldo;
-                cout << "Saldo Novo: " << aluno.saldo << "\n";
-                Login_mat::salvarAluno(aluno);
-                cout << "ALUNO atualizado com sucesso!\n";
-            } 
-            else if (creditos[posicao].tipo_user == PROFESSOR) {
-                cout << "Lendo PROFESSOR ID: " << creditos[posicao].id_user << "...\n";
-                Professor professor = Login_mat::lerProfessor(creditos[posicao].id_user);
-                cout << "Saldo Anterior: " << professor.saldo << "\n";
-                professor.saldo += creditos[posicao].saldo;
-                cout << "Saldo Novo: " << professor.saldo << "\n";
-                Login_mat::salvarProfessor(professor);
-                cout << "PROFESSOR atualizado com sucesso!\n";
-            }
-            else if (creditos[posicao].tipo_user == ADMINISTRADOR) {
-                cout << "ADMINISTRADOR nao possui saldo. Apenas credito ativado.\n";
-            }
-            
-            cout << "=========================================\n";
-            
-            cout << "\nCrédito ativado!\n";
-            cout << "\n[DEBUG] Pressione ENTER para retornar...";
-            limparBuffer();
-            cin.get();
+        saida_botoes confirm = interface_para_botoes(cfg);
+        if (!confirm.confirmado || confirm.valor_retorno != 1) {
             delete[] creditos;
             return;
         }
 
-        cout << "Operação cancelada!\n";
-        cout << "\n[DEBUG] Pressione ENTER para retornar...";
-        limparBuffer();
-        cin.get();
+        creditos[posicao].realizado = true;
+
+        if (!escreverTodosCreditos(creditos)) {
+            mostrar_caixa_informacao("ERRO", "Erro ao salvar");
+            delete[] creditos;
+            return;
+        }
+
+        mostrar_caixa_informacao("OK", "Credito ativado");
         delete[] creditos;
     }
 
     void adicionarProduto() {
         if (!bancoDeDados()) {
-            cout << "Erro ao criar/abrir o banco!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao abrir o banco");
+            return;
+        }
+
+        saida_entrada_texto saidaId = entradaNumero("ADICIONAR PRODUTO", "Digite o ID do produto", "LANCHONETE -> PRODUTOS", "ID: ", 10);
+        if (!saidaId.confirmado) return;
+
+        int id;
+        if (!converterInt(saidaId.valor, id) || id <= 0) {
+            mostrar_caixa_informacao("ERRO", "ID invalido");
+            return;
+        }
+
+        saida_entrada_texto saidaNome = entradaTexto("ADICIONAR PRODUTO", "Digite o nome do produto", "LANCHONETE -> PRODUTOS", "Nome: ", 50);
+        if (!saidaNome.confirmado) return;
+
+        saida_entrada_texto saidaPreco = entradaNumero("ADICIONAR PRODUTO", "Digite o preco", "LANCHONETE -> PRODUTOS", "Preco: ", 12);
+        if (!saidaPreco.confirmado) return;
+
+        saida_entrada_texto saidaEstoque = entradaNumero("ADICIONAR PRODUTO", "Digite o estoque", "LANCHONETE -> PRODUTOS", "Estoque: ", 10);
+        if (!saidaEstoque.confirmado) return;
+
+        double preco;
+        int estoque;
+
+        if (!converterDouble(saidaPreco.valor, preco) || preco <= 0) {
+            mostrar_caixa_informacao("ERRO", "Preco invalido");
+            return;
+        }
+
+        if (!converterInt(saidaEstoque.valor, estoque) || estoque < 0) {
+            mostrar_caixa_informacao("ERRO", "Estoque invalido");
             return;
         }
 
         Produto *lista = new Produto[MAX_PRODUTOS];
         lerTodosProdutos(lista);
 
+        if (acharProdutoPorId(lista, id) != MAX_PRODUTOS) {
+            mostrar_caixa_informacao("ERRO", "Ja existe produto com esse ID");
+            delete[] lista;
+            return;
+        }
+
         Produto novo;
-
-        cout << "ID do produto: ";
-        cin >> novo.id;
-
-        if (novo.id <= 0) {
-            cout << "ID inválido!\n";
-            delete[] lista;
-            return;
-        }
-
-        if (acharProdutoPorId(lista, novo.id) != MAX_PRODUTOS) {
-            cout << "Já existe produto com esse ID!\n";
-            delete[] lista;
-            return;
-        }
-
-        cout << "Nome: ";
-        cin.ignore();
-        cin.getline(novo.nome, 50);
-
-        cout << "Preço: ";
-        cin >> novo.preco;
-
-        cout << "Estoque: ";
-        cin >> novo.estoque;
-
+        novo.id = id;
         novo.ativo = 1;
+        novo.preco = preco;
+        novo.estoque = estoque;
+        strncpy(novo.nome, saidaNome.valor.c_str(), 49);
+        novo.nome[49] = '\0';
 
         int posicaoVagaProduto = acharVagaProduto(lista);
         if (posicaoVagaProduto == MAX_PRODUTOS) {
-            cout << "Não há espaço para adicionar mais produtos!\n";
+            mostrar_caixa_informacao("ERRO", "Nao ha espaco para mais produtos");
             delete[] lista;
             return;
         }
@@ -536,49 +557,47 @@ namespace Lanchonete {
         lista[posicaoVagaProduto] = novo;
 
         if (!escreverTodosProdutos(lista)) {
-            cout << "Erro ao salvar no arquivo!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao salvar produto");
             delete[] lista;
             return;
         }
 
-        cout << "Produto salvo com sucesso!\n";
+        mostrar_caixa_informacao("OK", "Produto salvo com sucesso");
         delete[] lista;
     }
 
     void alterarPrecoProduto() {
         if (!bancoDeDados()) {
-            cout << "Erro ao abrir o banco!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao abrir o banco");
             return;
         }
 
         Produto *lista = new Produto[MAX_PRODUTOS];
         lerTodosProdutos(lista);
 
-        int idProduto;
-        double novoPreco;
-
-        cout << "ID do produto: ";
-        cin >> idProduto;
-
-        if (idProduto <= 0) {
-            cout << "ID inválido!\n";
+        int idProduto = selecionarProduto(lista, "ALTERAR PRECO", "LANCHONETE -> PRODUTOS -> ALTERAR PRECO", true, false);
+        if (idProduto == 0) {
+            mostrar_caixa_informacao("PRODUTOS", "Nenhum produto cadastrado");
             delete[] lista;
             return;
         }
 
         int posicaoProduto = acharProdutoPorId(lista, idProduto);
         if (posicaoProduto == MAX_PRODUTOS) {
-            cout << "Produto não encontrado!\n";
+            mostrar_caixa_informacao("ERRO", "Produto nao encontrado");
             delete[] lista;
             return;
         }
 
-        cout << "Preço atual: " << lista[posicaoProduto].preco << "\n";
-        cout << "Novo preço: ";
-        cin >> novoPreco;
+        saida_entrada_texto saidaPreco = entradaNumero("ALTERAR PRECO", "Digite o novo preco", "LANCHONETE -> PRODUTOS -> ALTERAR PRECO", "Novo preco: ", 12);
+        if (!saidaPreco.confirmado) {
+            delete[] lista;
+            return;
+        }
 
-        if (novoPreco <= 0) {
-            cout << "Preço inválido!\n";
+        double novoPreco;
+        if (!converterDouble(saidaPreco.valor, novoPreco) || novoPreco <= 0) {
+            mostrar_caixa_informacao("ERRO", "Preco invalido");
             delete[] lista;
             return;
         }
@@ -586,156 +605,169 @@ namespace Lanchonete {
         lista[posicaoProduto].preco = novoPreco;
 
         if (!escreverTodosProdutos(lista)) {
-            cout << "Erro ao salvar no arquivo!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao salvar");
             delete[] lista;
             return;
         }
 
-        cout << "Preço alterado!\n";
+        mostrar_caixa_informacao("OK", "Preco alterado");
         delete[] lista;
     }
 
     void removerProduto() {
         if (!bancoDeDados()) {
-            cout << "Erro ao abrir o banco!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao abrir o banco");
             return;
         }
 
         Produto *lista = new Produto[MAX_PRODUTOS];
         lerTodosProdutos(lista);
 
-        int idProduto;
-        char resposta;
-
-        cout << "ID do produto: ";
-        cin >> idProduto;
-
-        if (idProduto <= 0) {
-            cout << "ID inválido!\n";
+        int idProduto = selecionarProduto(lista, "REMOVER PRODUTO", "LANCHONETE -> PRODUTOS -> REMOVER", false, false);
+        if (idProduto == 0) {
+            mostrar_caixa_informacao("PRODUTOS", "Nenhum produto cadastrado");
             delete[] lista;
             return;
         }
 
         int posicaoProduto = acharProdutoPorId(lista, idProduto);
         if (posicaoProduto == MAX_PRODUTOS) {
-            cout << "Produto não encontrado!\n";
+            mostrar_caixa_informacao("ERRO", "Produto nao encontrado");
             delete[] lista;
             return;
         }
 
-        cout << "ID: " << lista[posicaoProduto].id << "\n";
-        cout << "Nome: " << lista[posicaoProduto].nome << "\n";
-        cout << "[S] - Confirmar\n";
-        cout << "[x] - Cancelar\n";
-        cout << ">>> ";
-        cin >> resposta;
+        ConfigBotoes cfg;
+        cfg.titulo = "CONFIRMAR";
+        cfg.descricao = "Remover este produto?";
+        cfg.pergunta = "Confirmar: ";
+        cfg.numero_botoes = 2;
+        cfg.botoes[0] = {'S', "Sim", 1};
+        cfg.botoes[1] = {'N', "Nao", 0};
 
-        if (resposta == 'S' || resposta == 's') {
-            lista[posicaoProduto].ativo = 0; // marca como removido, não apaga do arquivo
-
-            if (!escreverTodosProdutos(lista)) {
-                cout << "Erro ao salvar no arquivo!\n";
-                delete[] lista;
-                return;
-            }
-
-            cout << "Produto removido!\n";
+        saida_botoes confirm = interface_para_botoes(cfg);
+        if (!confirm.confirmado || confirm.valor_retorno != 1) {
             delete[] lista;
             return;
         }
 
-        cout << "Operação cancelada!\n";
+        lista[posicaoProduto].ativo = 0;
+
+        if (!escreverTodosProdutos(lista)) {
+            mostrar_caixa_informacao("ERRO", "Erro ao salvar");
+            delete[] lista;
+            return;
+        }
+
+        mostrar_caixa_informacao("OK", "Produto removido");
         delete[] lista;
     }
 
     void visualizarProdutos() {
         if (!bancoDeDados()) {
-            cout << "Erro ao abrir o banco!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao abrir o banco");
             return;
         }
 
         Produto *lista = new Produto[MAX_PRODUTOS];
         lerTodosProdutos(lista);
 
+        string texto = "";
         int temProduto = 0;
+
         for (int i = 0; i < MAX_PRODUTOS; i++) {
             if (lista[i].ativo == 1 && lista[i].id != 0) {
                 temProduto = 1;
-                break;
+                texto += "ID: " + to_string(lista[i].id) + "\n";
+                texto += "Nome: " + string(lista[i].nome) + "\n";
+                texto += "Preco: " + to_string(lista[i].preco) + "\n";
+                texto += "Estoque: " + to_string(lista[i].estoque) + "\n\n";
             }
         }
 
-        if (temProduto == 0) {
-            cout << "Nenhum produto cadastrado.\n";
+        if (!temProduto) {
+            mostrar_caixa_informacao("PRODUTOS", "Nenhum produto cadastrado");
             delete[] lista;
             return;
         }
 
-        mostrarProdutosRec(lista, 0);
+        ConfigTexto config;
+        config.titulo = "PRODUTOS";
+        mostrar_texto(texto, config);
+
         delete[] lista;
     }
 
     void consultarEstoque() {
         if (!bancoDeDados()) {
-            cout << "Erro ao abrir o banco!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao abrir o banco");
             return;
         }
 
         Produto *lista = new Produto[MAX_PRODUTOS];
         lerTodosProdutos(lista);
 
+        string texto = "";
         int temProduto = 0;
 
         for (int i = 0; i < MAX_PRODUTOS; i++) {
             if (lista[i].ativo == 1 && lista[i].id != 0) {
-                cout << "ID: " << lista[i].id
-                     << " | Nome: " << lista[i].nome
-                     << " | Estoque: " << lista[i].estoque << "\n";
                 temProduto = 1;
+                texto += "ID: " + to_string(lista[i].id) +
+                " | Nome: " + string(lista[i].nome) +
+                " | Estoque: " + to_string(lista[i].estoque) + "\n";
             }
         }
 
-        if (temProduto == 0)
-            cout << "Nenhum produto cadastrado.\n";
+        if (!temProduto) {
+            mostrar_caixa_informacao("ESTOQUE", "Nenhum produto cadastrado");
+            delete[] lista;
+            return;
+        }
+
+        ConfigTexto config;
+        config.titulo = "ESTOQUE";
+        mostrar_texto(texto, config);
 
         delete[] lista;
     }
 
     void consultarSaldo(int idUsuario) {
         if (!bancoDeDados()) {
-            cout << "Erro ao abrir o banco!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao abrir o banco");
             return;
         }
 
         Credito *creditos = new Credito[MAX_CREDITOS];
         lerTodosCreditos(creditos);
 
-        cout << "Saldo: " << saldoUsuario(creditos, idUsuario) << "\n";
+        string msg = "Saldo: " + to_string(saldoUsuario(creditos, idUsuario));
+        mostrar_caixa_informacao("SALDO", msg);
+
         delete[] creditos;
     }
 
     void removerCredito() {
         if (!bancoDeDados()) {
-            cout << "Erro ao abrir o banco!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao abrir o banco");
             return;
         }
+
+        saida_entrada_texto saidaId = entradaNumero("REMOVER CREDITO", "Digite o ID do usuario", "LANCHONETE -> CREDITOS", "ID: ", 10);
+        if (!saidaId.confirmado) return;
 
         int idUsuario;
-        double valor;
-
-        cout << "ID do usuário: ";
-        cin >> idUsuario;
-
-        if (idUsuario <= 0) {
-            cout << "ID inválido!\n";
+        if (!converterInt(saidaId.valor, idUsuario) || idUsuario <= 0) {
+            mostrar_caixa_informacao("ERRO", "ID invalido");
             return;
         }
 
-        cout << "Valor: ";
-        cin >> valor;
+        saida_entrada_texto saidaValor = entradaNumero("REMOVER CREDITO", "Digite o valor", "LANCHONETE -> CREDITOS", "Valor: ", 12);
+        if (!saidaValor.confirmado) return;
 
-        if (valor <= 0) {
-            cout << "Valor inválido!\n";
+        double valor;
+        if (!converterDouble(saidaValor.valor, valor) || valor <= 0) {
+            mostrar_caixa_informacao("ERRO", "Valor invalido");
             return;
         }
 
@@ -744,66 +776,71 @@ namespace Lanchonete {
 
         double saldoAtual = saldoUsuario(creditos, idUsuario);
         if (saldoAtual < valor) {
-            cout << "Saldo insuficiente!\n";
+            mostrar_caixa_informacao("ERRO", "Saldo insuficiente");
             delete[] creditos;
             return;
         }
 
         int vaga = acharVagaCredito(creditos);
         if (vaga == MAX_CREDITOS) {
-            cout << "Não há espaço para registrar operação!\n";
+            mostrar_caixa_informacao("ERRO", "Nao ha espaco para registrar operacao");
             delete[] creditos;
             return;
         }
 
         creditos[vaga].id_opera = proximoIdOperacao(creditos);
         creditos[vaga].id_user = idUsuario;
-        creditos[vaga].tipo_user = tipoUsuario(creditos, idUsuario);
         creditos[vaga].saldo = -valor;
         creditos[vaga].realizado = true;
 
         if (!escreverTodosCreditos(creditos)) {
-            cout << "Erro ao salvar saldo!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao salvar");
             delete[] creditos;
             return;
         }
 
-        cout << "Crédito removido!\n";
+        mostrar_caixa_informacao("OK", "Credito removido");
         delete[] creditos;
     }
 
     void realizarCompra(int idUsuario) {
         if (!bancoDeDados()) {
-            cout << "Erro ao abrir o banco!\n";
-            return;
-        }
-
-        int idProduto;
-        int qtd;
-
-        cout << "ID do produto: ";
-        cin >> idProduto;
-
-        cout << "Quantidade: ";
-        cin >> qtd;
-
-        if (qtd <= 0) {
-            cout << "Quantidade inválida!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao abrir o banco");
             return;
         }
 
         Produto *produtos = new Produto[MAX_PRODUTOS];
         lerTodosProdutos(produtos);
 
+        int idProduto = selecionarProduto(produtos, "COMPRAR", "LANCHONETE -> COMPRA", true, true);
+        if (idProduto == 0) {
+            mostrar_caixa_informacao("PRODUTOS", "Nenhum produto cadastrado");
+            delete[] produtos;
+            return;
+        }
+
+        saida_entrada_texto saidaQtd = entradaNumero("COMPRAR", "Digite a quantidade", "LANCHONETE -> COMPRA", "Quantidade: ", 10);
+        if (!saidaQtd.confirmado) {
+            delete[] produtos;
+            return;
+        }
+
+        int qtd;
+        if (!converterInt(saidaQtd.valor, qtd) || qtd <= 0) {
+            mostrar_caixa_informacao("ERRO", "Quantidade invalida");
+            delete[] produtos;
+            return;
+        }
+
         int posicaoProduto = acharProdutoPorId(produtos, idProduto);
         if (posicaoProduto == MAX_PRODUTOS) {
-            cout << "Produto não encontrado!\n";
+            mostrar_caixa_informacao("ERRO", "Produto nao encontrado");
             delete[] produtos;
             return;
         }
 
         if (produtos[posicaoProduto].estoque < qtd) {
-            cout << "Estoque insuficiente!\n";
+            mostrar_caixa_informacao("ERRO", "Estoque insuficiente");
             delete[] produtos;
             return;
         }
@@ -815,7 +852,7 @@ namespace Lanchonete {
 
         double saldoAtual = saldoUsuario(creditos, idUsuario);
         if (saldoAtual < total) {
-            cout << "Saldo insuficiente!\n";
+            mostrar_caixa_informacao("ERRO", "Saldo insuficiente");
             delete[] produtos;
             delete[] creditos;
             return;
@@ -823,7 +860,7 @@ namespace Lanchonete {
 
         int vaga = acharVagaCredito(creditos);
         if (vaga == MAX_CREDITOS) {
-            cout << "Não há espaço para registrar operação!\n";
+            mostrar_caixa_informacao("ERRO", "Nao ha espaco para registrar operacao");
             delete[] produtos;
             delete[] creditos;
             return;
@@ -831,27 +868,26 @@ namespace Lanchonete {
 
         creditos[vaga].id_opera = proximoIdOperacao(creditos);
         creditos[vaga].id_user = idUsuario;
-        creditos[vaga].tipo_user = tipoUsuario(creditos, idUsuario);
         creditos[vaga].saldo = -total;
         creditos[vaga].realizado = true;
 
         produtos[posicaoProduto].estoque = produtos[posicaoProduto].estoque - qtd;
 
         if (!escreverTodosCreditos(creditos)) {
-            cout << "Erro ao salvar saldo!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao salvar saldo");
             delete[] produtos;
             delete[] creditos;
             return;
         }
 
         if (!escreverTodosProdutos(produtos)) {
-            cout << "Erro ao salvar produtos!\n";
+            mostrar_caixa_informacao("ERRO", "Erro ao salvar produtos");
             delete[] produtos;
             delete[] creditos;
             return;
         }
 
-        cout << "Compra realizada!\n";
+        mostrar_caixa_informacao("OK", "Compra realizada");
         delete[] produtos;
         delete[] creditos;
     }

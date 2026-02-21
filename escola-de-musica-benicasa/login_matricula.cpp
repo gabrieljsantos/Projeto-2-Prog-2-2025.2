@@ -609,7 +609,6 @@ namespace Login_mat {
         Aluno alunoVazio;
         alunoVazio.base = inicializarUsuarioVazio();
         alunoVazio.base.categoria = ALUNO;
-        alunoVazio.saldo = 0.0;
         alunoVazio.notas[0] = 0;
         alunoVazio.notas[1] = 0;
         alunoVazio.faltas = 0;
@@ -624,7 +623,6 @@ namespace Login_mat {
         Professor professorVazio;
         professorVazio.base = inicializarUsuarioVazio();
         professorVazio.base.categoria = PROFESSOR;
-        professorVazio.saldo = 0.0;
         professorVazio.disciplina[0] = '\0';
         for (int i = 0; i < 5; i++)
             professorVazio.turmas[i] = 0;

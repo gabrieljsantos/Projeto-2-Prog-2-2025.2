@@ -15,7 +15,7 @@ namespace Lanchonete {
     bool verificarAtividade(Usuario pessoa);
     void menuCadastroProdutos();
     void solicitarCreditosUsuario();
-    void solicitarCreditosUsuario(int idUsuario, Funcao tipo_user);
+    void solicitarCreditosUsuario(int idUsuario);
     void ativarCreditosPendentes();
     void consultarEstoque();
     void adicionarProduto();

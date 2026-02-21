@@ -6,6 +6,7 @@
 #include <vector>
 #include "aluno.h"
 #include "headers.h"
+#include "lanchonete.h"
 #include "interface_grafica.h"
 #include "instrumentos.h"
 #include "eventos.h"
@@ -491,159 +492,11 @@ namespace Modulo_aluno {
     void consultarMeusEmprestimos(int idAluno) {
         listarMeusEmprestimos(idAluno);
     }
-
-    // ===== LANCHONETE =====
-    void visualizarProdutos() {
-        system("cls || clear");
-        cout << "------ PRODUTOS DISPONIVEIS ------\n";
-
-        ifstream arq("lanchonete.dat", ios::binary);
-
-        if (!arq) {
-            cout << "Arquivo lanchonete.dat nao encontrado.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-            return;
-        }
-
-        Produto p;
-        bool encontrou = false;
-
-        while (arq.read((char*)&p, sizeof(Produto))) {
-            if (p.ativo) {
-                cout << "ID: " << p.id << " - " << p.nome 
-                     << " - R$ " << p.preco 
-                     << " (Estoque: " << p.estoque << ")\n";
-                encontrou = true;
-            }
-        }
-
-        if (!encontrou)
-            cout << "Nenhum produto disponivel.\n";
-
-        cout << "\nPressione ENTER para voltar...";
-        cin.get();
-    }
-
-    void comprarProduto(int idAluno) {
-        try {
-            Aluno aluno = carregarAluno(idAluno);
-
-            system("cls || clear");
-            cout << "------ REALIZAR COMPRA ------\n";
-
-            int id;
-            cout << "Digite o ID do produto: ";
-            cin >> id;
-            limparBuffer();
-
-            fstream arq("lanchonete.dat", ios::binary | ios::in | ios::out);
-
-            if (!arq) {
-                cout << "Arquivo lanchonete.dat nao encontrado.\n";
-                cout << "\nPressione ENTER para voltar...";
-                cin.get();
-                return;
-            }
-
-            Produto p;
-
-            while (arq.read((char*)&p, sizeof(Produto))) {
-                if (p.id == id && p.ativo) {
-                    if (p.estoque <= 0) {
-                        cout << "Produto sem estoque.\n";
-                        cout << "\nPressione ENTER para voltar...";
-                        cin.get();
-                        return;
-                    }
-
-                    if (aluno.saldo >= p.preco) {
-                        aluno.saldo -= p.preco;
-                        p.estoque--;
-
-                        // Atualiza aluno
-                        salvarAluno(aluno);
-
-                        // Atualiza produto
-                        arq.seekp(-sizeof(Produto), ios::cur);
-                        arq.write((char*)&p, sizeof(Produto));
-
-                        cout << "Compra realizada com sucesso!\n";
-                        cout << "Novo saldo: R$ " << aluno.saldo << endl;
-                    } else {
-                        cout << "Saldo insuficiente! Seu saldo: R$ " << aluno.saldo << endl;
-                    }
-
-                    cout << "\nPressione ENTER para voltar...";
-                    cin.get();
-                    return;
-                }
-            }
-
-            cout << "Produto nao encontrado.\n";
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-        } catch (const exception &e) {
-            cout << "Erro: " << e.what() << endl;
-            cout << "Pressione ENTER para voltar...";
-            cin.get();
-        }
-    }
-
-    void consultarSaldo(int idAluno) {
-        try {
-            Aluno aluno = carregarAluno(idAluno);
-
-            system("cls || clear");
-            cout << "----------- MEU SALDO -----------\n";
-            cout << "Saldo atual: R$ " << aluno.saldo << endl;
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-        } catch (const exception &e) {
-            cout << "Erro: " << e.what() << endl;
-            cout << "Pressione ENTER para voltar...";
-            cin.get();
-        }
-    }
-
-    void solicitarCreditos(int idAluno) {
-        try {
-            Aluno aluno = carregarAluno(idAluno);
-
-            system("cls || clear");
-            cout << "------ SOLICITAR CREDITOS ------\n";
-
-            double valor;
-            cout << "Digite o valor que deseja adicionar: R$ ";
-            cin >> valor;
-            limparBuffer();
-
-            if (valor <= 0) {
-                cout << "Valor invalido.\n";
-                cout << "\nPressione ENTER para voltar...";
-                cin.get();
-                return;
-            }
-
-            aluno.saldo += valor;
-            salvarAluno(aluno);
-
-            cout << "Credito adicionado com sucesso!\n";
-            cout << "Novo saldo: R$ " << aluno.saldo << endl;
-            cout << "\nPressione ENTER para voltar...";
-            cin.get();
-        } catch (const exception &e) {
-            cout << "Erro: " << e.what() << endl;
-            cout << "Pressione ENTER para voltar...";
-            cin.get();
-        }
-    }
-
 }
 
 // ===== PONTO DE ENTRADA DO MENU ALUNO =====
 void abrir_menu_aluno(Usuario* usuario) {
-    constexpr int qtdOpcoes = 14;
+    constexpr int qtdOpcoes = 15;
     string opcoes[qtdOpcoes] = {
         "Consultar Notas",
         "Consultar Medias",
@@ -657,7 +510,8 @@ void abrir_menu_aluno(Usuario* usuario) {
         "Meus Emprestimos",
         "Consultar Saldo Lanchonete",
         "Ver Produtos Lanchonete",
-        "Realizar Compra",
+        "Realizar Compra Lanchonete",
+        "Solicitar Creditos Lanchonete",
         "Logout"
     };
     
@@ -681,10 +535,11 @@ void abrir_menu_aluno(Usuario* usuario) {
             case 7: Modulo_aluno::solicitarEmprestimo(usuario->id); break;
             case 8: Modulo_aluno::realizarDevolucao(usuario->id); break;
             case 9: Modulo_aluno::consultarMeusEmprestimos(usuario->id); break;
-            case 10: Modulo_aluno::consultarSaldo(usuario->id); break;
-            case 11: Modulo_aluno::visualizarProdutos(); break;
-            case 12: Modulo_aluno::comprarProduto(usuario->id); break;
-            case 13:
+            case 10: Lanchonete::consultarSaldo(usuario->id); break;
+            case 11: Lanchonete::visualizarProdutos(); break;
+            case 12: Lanchonete::realizarCompra(usuario->id); break;
+            case 13: Lanchonete::solicitarCreditosUsuario(usuario->id); break;
+            case 14:
                 usuario->logado = false;
                 emMenuAluno = false;
                 break;
