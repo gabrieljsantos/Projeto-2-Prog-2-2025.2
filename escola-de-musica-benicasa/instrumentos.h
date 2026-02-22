@@ -1,14 +1,29 @@
 #ifndef INSTRUMENTOS_H
 #define INSTRUMENTOS_H
-void menuCadastroInstrumentos();
-void deleteInstrumentos();
-void mostrarInstrumentosCadastrados();
-void openFile();
-struct Instrumentos{
-    int id;
-    char nome[20];
-    bool disponivel;
-    char responsavel[50];
-};
-#endif
 
+#include <iostream>
+#include "headers.h"
+#include "login_matricula.h"
+
+#define TAM_NOME 30
+
+void inicializarInstrumentos();
+void finalizarInstrumentos();
+
+void cadastrarInstrumento();
+void listarInstrumentos();
+void excluirInstrumento();
+
+void salvarEmprestimo(Emprestimo emp);
+void realizarEmprestimo();
+void realizarEmprestimo(int idAluno);
+void realizarDevolucao();
+void realizarDevolucao(int idAluno);
+void listarInstrumentosDisponiveis();
+void listarMeusEmprestimos(int idAluno);
+
+void editarInstrumento();
+
+void menuInstrumentos();
+
+#endif

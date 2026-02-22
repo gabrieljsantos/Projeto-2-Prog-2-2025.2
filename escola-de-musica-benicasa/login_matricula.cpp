@@ -3,78 +3,63 @@
 #include <cstring>
 #include <iomanip>
 #include "login_matricula.h"
-#include "headers.h"
 
 namespace Login_mat {
 
-//======================================================================
-// Arquivos
-//======================================================================
-    // Feito por Luiz Felipe
     void inicializarArquivoUsuario() {
         if (verificarArquivoExistente(ARQUIVO_USUARIOS))
             return;
 
         Usuario usuarioVazio = inicializarUsuarioVazio();
 
-        ofstream outUsuarios;
-        outUsuarios.open(ARQUIVO_USUARIOS, ios::out | ios::binary);
+        ofstream outUsuarios(ARQUIVO_USUARIOS, ios::out | ios::binary);
 
         if (outUsuarios.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
             exit(1);
         }
 
         for (int i = 0; i < 100; i++)
-            outUsuarios.write((const char *)(&usuarioVazio), sizeof(Usuario));
+            outUsuarios.write((const char*)(&usuarioVazio), sizeof(Usuario));
 
         outUsuarios.close();
     }
 
-    // Feito por Luiz Felipe
     void inicializarArquivoAluno() {
         if (verificarArquivoExistente(ARQUIVO_ALUNOS))
             return;
 
         Aluno alunoVazio = inicializarAlunoVazio();
 
-        ofstream outAlunos;
-        outAlunos.open(ARQUIVO_ALUNOS, ios::out | ios::binary);
+        ofstream outAlunos(ARQUIVO_ALUNOS, ios::out | ios::binary);
 
         if (outAlunos.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
             exit(1);
         }
 
-        for (int i = 0; i < 100; i++)  //Como o id tem o formato 0000 não seriam 1000?
-            outAlunos.write((const char *)(&alunoVazio), sizeof(Aluno));
+        for (int i = 0; i < 100; i++)
+            outAlunos.write((const char*)(&alunoVazio), sizeof(Aluno));
 
         outAlunos.close();
     }
 
-    // Feito por Clara
     void inicializarArquivoProfessor() {
         if (verificarArquivoExistente(ARQUIVO_PROFESSORES))
             return;
 
         Professor professorVazio = inicializarProfessorVazio();
 
-        ofstream outProfessores;
-        outProfessores.open(ARQUIVO_PROFESSORES, ios::out|ios::binary);
+        ofstream outProfessores(ARQUIVO_PROFESSORES, ios::out | ios::binary);
 
-        if(outProfessores.fail()){
-            cout << "A abertura do aquivo falhou!\n";
+        if (outProfessores.fail()) {
             exit(1);
         }
 
-        for(int i=0; i<100; i++) {
+        for (int i = 0; i < 100; i++)
             outProfessores.write((const char*)(&professorVazio), sizeof(Professor));
-        }
 
         outProfessores.close();
     }
 
-    // Feito por Luiz Felipe
     void inicializarArquivoAdmin() {
         if (verificarArquivoExistente(ARQUIVO_ADMINISTRADORES))
             return;
@@ -85,7 +70,6 @@ namespace Login_mat {
         outAdmin.open(ARQUIVO_ADMINISTRADORES, ios::out|ios::binary);
 
         if(outAdmin.fail()){
-            cout << "A abertura do aquivo falhou!\n";
             exit(1);
         }
 
@@ -113,28 +97,13 @@ namespace Login_mat {
         return false;
     }
 
-//======================================================================
-// Cadastro
-//======================================================================
+    int realizarCadastro() {
+        saida_menu saidaCategoria;
+        int idNovoUsuario = 0;
 
-    void realizarCadastro() {
-        int opcaoCategoria = -1;
-        int idNovoUsuario;
+        saidaCategoria = exibirSelecionarCategoria();
 
-        cout << "\n┌─────────── CATEGORIA ───────────┐\n";
-        cout << "│                                 │\n";
-        cout << "│ [0] Aluno                       │\n";
-        cout << "│ [1] Professor                   │\n";
-        cout << "│                                 │\n";
-        cout << "└─────────────────────────────────┘\n";
-
-        do {
-            cout << "\nEscolha: ";
-            cin >> opcaoCategoria;
-            cin.ignore();
-        } while (opcaoCategoria < 0 || opcaoCategoria > 1);
-
-        switch (opcaoCategoria) {
+        switch (saidaCategoria.indice_da_opcao) {
             case 0: {
                 idNovoUsuario = realizarCadastroAluno();
                 break;
@@ -145,15 +114,9 @@ namespace Login_mat {
             }
         }
 
-        cout << "\n┌──────────── SUCESSO ─────────────┐\n";
-        cout << "│                                  │\n";
-        cout << "│ Cadastro realizada com sucesso!  │\n";
-        cout << "│ ID: " << left << setw(29) << idNovoUsuario << "│\n";
-        cout << "│                                  │\n";
-        cout << "└──────────────────────────────────┘\n";
+        return idNovoUsuario;
     }
 
-    //Feito por Jeanderson, auxiliado por Luiz Felipe
     int realizarCadastroAluno() {
         Aluno* alunoPtr = new Aluno;
         *alunoPtr = inicializarAlunoVazio();
@@ -161,17 +124,21 @@ namespace Login_mat {
         (*alunoPtr).base.id = novoId;
         (*alunoPtr).base.ativo = true;
         char senha[30] = "";
+        string titulo = "CADASTRO ALUNO";
 
-        cout << "\n───────── CADASTRO ALUNO ─────────\n";
-        cout << "\nNome: ";
-        cin.getline((*alunoPtr).base.nome, 100);
+        saida_entrada_texto saidaInput = digiteNome(titulo);
+        if (!saidaInput.confirmado) return 0;
+        strcpy((*alunoPtr).base.nome, saidaInput.valor.c_str());
 
-        cout << "Email: ";
-        cin.getline((*alunoPtr).base.email, 100);
+        saidaInput = digiteEmail(titulo);
+        if (!saidaInput.confirmado) return 0;
+        strcpy((*alunoPtr).base.email, saidaInput.valor.c_str());
 
-        cout << "Senha: ";
-        cin.getline(senha, 30);
-        string senhaEncriptada = encriptografarSenha(senha);
+        saidaInput = digiteSenha(titulo);
+        if (!saidaInput.confirmado) return 0;
+        strcpy(senha, saidaInput.valor.c_str());
+
+        string senhaEncriptada = encriptografarSenha(senha, 0);
         strcpy((*alunoPtr).base.senha, senhaEncriptada.c_str());
 
         salvarAluno(*alunoPtr);
@@ -182,27 +149,31 @@ namespace Login_mat {
         return novoId;
     }
 
-    // Feito por Clara
     int realizarCadastroProfessor(){
         Professor novoProfessor = inicializarProfessorVazio();
         int novoId = gerarNovoId();
         novoProfessor.base.id = novoId;
         char senha[30] = "";
+        string titulo = "CADASTRO PROFESSOR";
 
-        cout << "\n──────── CADASTRO PROFESSOR ────────\n";
-        cout << "\nNome: ";
-        cin.getline(novoProfessor.base.nome, 100);
+        saida_entrada_texto saidaInput = digiteNome(titulo);
+        if (!saidaInput.confirmado) return 0;
+        strcpy(novoProfessor.base.nome, saidaInput.valor.c_str());
 
-        cout << "Email: ";
-        cin.getline(novoProfessor.base.email, 100);
+        saidaInput = digiteEmail(titulo);
+        if (!saidaInput.confirmado) return 0;
+        strcpy(novoProfessor.base.email, saidaInput.valor.c_str());
 
-        cout << "Senha: ";
-        cin.getline(senha, 30);
-        string senhaEncriptada = encriptografarSenha(senha);
+        saidaInput = digiteSenha(titulo);
+        if (!saidaInput.confirmado) return 0;
+        strcpy(senha, saidaInput.valor.c_str());
+
+        saidaInput = digiteDisciplina(titulo);
+        if (!saidaInput.confirmado) return 0;
+        strcpy(novoProfessor.disciplina, saidaInput.valor.c_str());
+
+        string senhaEncriptada = encriptografarSenha(senha, 0);
         strcpy(novoProfessor.base.senha, senhaEncriptada.c_str());
-
-        cout << "Disciplina: ";
-        cin.getline(novoProfessor.disciplina, 50);
 
         salvarProfessor(novoProfessor);
 
@@ -221,10 +192,6 @@ namespace Login_mat {
         adminPtr = nullptr;
     }
 
-
-//======================================================================
-// Login
-//======================================================================
     bool realizarLogin(Usuario &usuario) {
         bool sucesso = false;
         Usuario** usuarios = new Usuario*[2];
@@ -232,17 +199,22 @@ namespace Login_mat {
             usuarios[i] = new Usuario;
         }
 
-        cout << "\n───────────── LOGIN ──────────────\n";
-        cout << "\nID: ";
-        cin >> (*usuarios[0]).id;
-        cin.ignore();
-        cout << "Senha: ";
-        cin.getline((*usuarios[0]).senha, 30);
+        string titulo = "LOGIN";
+
+        saida_entrada_texto saidaInput = digiteId(titulo);
+        if (saidaInput.confirmado)
+            (*usuarios[0]).id = stoi(saidaInput.valor);
+        else
+            (*usuarios[0]).id = 0;
+
+        saidaInput = digiteSenha(titulo);
+        if (saidaInput.confirmado)
+            strcpy((*usuarios[0]).senha, saidaInput.valor.c_str());
 
         if (verificarUsuarioExistente((*usuarios[0]).id)) {
 
             *usuarios[1] = lerUsuario((*usuarios[0]).id);
-            string senhaDesencriptada = desencriptografarSenha((*usuarios[1]).senha);
+            string senhaDesencriptada = desencriptografarSenha((*usuarios[1]).senha, 0);
 
             if (strcmp((*usuarios[0]).senha, senhaDesencriptada.c_str()) == 0 && (*usuarios[1]).ativo) {
                 usuario = *usuarios[1];
@@ -260,11 +232,6 @@ namespace Login_mat {
         return sucesso;
     }
 
-
-//======================================================================
-// Salvar
-//======================================================================
-
     void salvarUsuario(Usuario usuario) {
         int posicao = adquirirPosicaoDoId(usuario.id);
 
@@ -273,7 +240,6 @@ namespace Login_mat {
         arquivo.open(ARQUIVO_USUARIOS, ios::in | ios::out | ios::binary);
 
          if (arquivo.fail()){
-            cout << "A abertura do arquivo falhou!\n";
             exit(1);
         }
 
@@ -291,7 +257,6 @@ namespace Login_mat {
         arquivo.open(ARQUIVO_ALUNOS, ios::in | ios::out| ios::binary);
 
         if (arquivo.fail()) {
-            cout << "A abertura do arquivo falhou!\n";
             exit(1);
         }
 
@@ -309,7 +274,6 @@ namespace Login_mat {
         arquivo.open(ARQUIVO_PROFESSORES, ios::in | ios::out| ios::binary);
 
         if (arquivo.fail()) {
-            cout << "A abertura do arquivo falhou!\n";
             exit(1);
         }
 
@@ -327,7 +291,6 @@ namespace Login_mat {
         arquivo.open(ARQUIVO_ADMINISTRADORES, ios::in | ios::out| ios::binary);
 
         if (arquivo.fail()) {
-            cout << "A abertura do arquivo falhou!\n";
             exit(1);
         }
 
@@ -336,10 +299,25 @@ namespace Login_mat {
         arquivo.close();
     }
 
+    string encriptografarSenha(string senha, int index) {
+        char c;
+        if(index == senha.length()) {
+            return "";
+        }
+        c = senha[index];
+        c += 3;
+        return c + encriptografarSenha(senha, index + 1);
+    }
 
-//======================================================================
-// Gerar novo ID e encriptrografar senhas
-//======================================================================
+    string desencriptografarSenha(string senhaEncriptografada, int index) {
+        char c;
+        if(index == senhaEncriptografada.length()) {
+            return "";
+        }
+        c = senhaEncriptografada[index];
+        c -= 3;
+        return c + desencriptografarSenha(senhaEncriptografada, index + 1);
+    }
 
     int gerarNovoId() {
         return verificarUltimoIdUsuario() + 1;
@@ -349,7 +327,6 @@ namespace Login_mat {
         return id - 20260000;
     }
 
-    //Feito por Luiz Felipe
     int verificarUltimoIdUsuario() {
         int ultimoId = 20260000;
         Usuario usuario;
@@ -357,7 +334,6 @@ namespace Login_mat {
         inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary);
 
         if (inUsuarios.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
             exit(1);
         }
 
@@ -370,31 +346,6 @@ namespace Login_mat {
         return ultimoId;
     }
 
-    string encriptografarSenha(string senha) {
-        string senhaEncriptografada;
-        for (size_t i = 0; i < senha.length(); i++) {
-            char c = senha[i];
-            c += 3; // Desloca o caractere 3 posições na tabela ASCII
-            senhaEncriptografada += c;
-        }
-        return senhaEncriptografada;
-    }
-
-    string desencriptografarSenha(string senhaEncriptografada) {
-        string senhaDesecriptografada;
-        for (size_t i = 0; i < senhaEncriptografada.length(); i++) {
-            char c = senhaEncriptografada[i];
-            c -= 3; // Desloca o caractere 3 posições na tabela ASCII
-            senhaDesecriptografada += c;
-        }
-        return senhaDesecriptografada;
-    }
-
-
-//======================================================================
-// Ler X (usuarios, alunos, professores ou admin)
-//======================================================================
-    // Feito por Luiz Felipe
     Usuario lerUsuario(int id) {
         Usuario usuario = inicializarUsuarioVazio();
         int posicao = adquirirPosicaoDoId(id);
@@ -406,7 +357,6 @@ namespace Login_mat {
         inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary);
 
         if (inUsuarios.fail()) {
-            cout << "A abertura do arquivo de entrada falhou.\n";
             exit(1);
         }
 
@@ -417,7 +367,6 @@ namespace Login_mat {
         return usuario;
     }
 
-    // Feito por Luiz Felipe
     Aluno lerAluno(int id) {
         Aluno aluno = inicializarAlunoVazio();
         int posicao = adquirirPosicaoDoId(id);
@@ -426,7 +375,7 @@ namespace Login_mat {
         inAlunos.open(ARQUIVO_ALUNOS, ios::in | ios::binary);
 
         if (inAlunos.fail()) {
-            cout << "A abertura do arquivo de entrada falhou.\n";
+
             exit(1);
         }
 
@@ -437,7 +386,6 @@ namespace Login_mat {
         return aluno;
     }
 
-    // Feito por Clara
     Professor lerProfessor(int id) {
         Professor professor = inicializarProfessorVazio();
         int posicao = adquirirPosicaoDoId(id);
@@ -446,7 +394,7 @@ namespace Login_mat {
         inProfessores.open(ARQUIVO_PROFESSORES, ios::in | ios::binary);
 
         if(inProfessores.fail()){
-            cout << "A abertura do arquivo falhou!\n";
+
             exit(1);
         }
 
@@ -457,12 +405,8 @@ namespace Login_mat {
         return professor;
     }
 
-//======================================================================
-// Atualizar
-//======================================================================
     void atualizar(int id, Professor professor) {
         if (!verificarUsuarioExistente(id)) {
-            cout << "O usuário não existe";
             return;
         }
 
@@ -470,12 +414,10 @@ namespace Login_mat {
         professor.base.categoria = PROFESSOR;
 
         salvarProfessor(professor);
-        cout << "Usuário atualizado com sucesso!";
     }
 
     void atualizar(int id, Aluno aluno) {
         if (!verificarUsuarioExistente(id)) {
-            cout << "O usuário não existe";
             return;
         }
 
@@ -483,20 +425,13 @@ namespace Login_mat {
         aluno.base.categoria = ALUNO;
 
         salvarAluno(aluno);
-        cout << "Usuário atualizado com sucesso!";
     }
 
-
-//======================================================================
-// Verificar quantos X (usuarios, alunos, professores ou admin)
-//======================================================================
-    // Feito por Luiz Felipe
     int verificarQuantosUsuarios() {
         int idUltimoUsuario = verificarUltimoIdUsuario();
         return adquirirPosicaoDoId(idUltimoUsuario);
     }
 
-    // Feito por Luiz Felipe
     int verificarQuantosAlunos() {
         int contador = 0;
         Aluno aluno;
@@ -504,7 +439,6 @@ namespace Login_mat {
         inAlunos.open(ARQUIVO_ALUNOS, ios::in | ios::binary);
 
         if (inAlunos.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
             exit(1);
         }
 
@@ -517,7 +451,6 @@ namespace Login_mat {
         return contador;
     }
 
-    // Feito por Clara
     int verificarQuantosProfessores() {
         int contador = 0;
         Professor professor;
@@ -525,7 +458,6 @@ namespace Login_mat {
         inProfessores.open(ARQUIVO_PROFESSORES, ios::in | ios::binary);
 
         if(inProfessores.fail()){
-            cout << "A abertura do arquivo falhou!\n";
             exit(1);
         }
 
@@ -538,22 +470,16 @@ namespace Login_mat {
         return contador;
     }
 
-
-//======================================================================
-// Verificar se usuario existe
-//======================================================================
-    //Feito por Jeanderson
     bool verificarUsuarioExistente(int id) {
         int posicao = adquirirPosicaoDoId(id);
 
-        if (id > verificarUltimoIdUsuario() || id <= 0)
+        if (id > verificarUltimoIdUsuario() || id <= 20260000)
             return false;
 
         ifstream inUsuarios;
         inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary );
 
         if (inUsuarios.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
             return false;
         }
 
@@ -570,19 +496,17 @@ namespace Login_mat {
         return false;
     }
 
-    //Feito por Jhones
     bool verificarUsuarioExistente(const char nome[100]) {
         ifstream inUsuarios;
         inUsuarios.open(ARQUIVO_USUARIOS, ios::in | ios::binary);
 
         if (inUsuarios.fail()) {
-            cout << "A abertura do arquivo falhou.\n";
             return false;
         }
 
         Usuario u;
         while (inUsuarios.read((char*)(&u), sizeof(Usuario))) {
-            // ignora registros vazios
+
             if (u.id != 20260000) {
                 if (strncmp(u.nome, nome, 100) == 0) {
                     inUsuarios.close();
@@ -595,49 +519,102 @@ namespace Login_mat {
         return false;
     }
 
-
-
-//======================================================================
-// Inicializadores de variaveis
-//======================================================================
-    //Feito por Luiz Felipe
      Usuario inicializarUsuarioVazio() {
         Usuario usuarioVazio = {20260000, false, "", "", "", NENHUMA, false};
         return usuarioVazio;
     }
 
-    // Feito por Luiz Felipe
     Aluno inicializarAlunoVazio() {
         Aluno alunoVazio;
         alunoVazio.base = inicializarUsuarioVazio();
         alunoVazio.base.categoria = ALUNO;
-        alunoVazio.saldo = 0.0;
         alunoVazio.notas[0] = 0;
         alunoVazio.notas[1] = 0;
         alunoVazio.faltas = 0;
         alunoVazio.instrumento = 0;
-        for (int i = 0; i < 10; i++)
-            alunoVazio.turmasId[i] = 0;
+        alunoVazio.idInstrumento = 0;
+        alunoVazio.turma = 0;
         return alunoVazio;
     }
 
-    // Feito por Clara
     Professor inicializarProfessorVazio(){
         Professor professorVazio;
         professorVazio.base = inicializarUsuarioVazio();
         professorVazio.base.categoria = PROFESSOR;
-        professorVazio.saldo = 0.0;
         professorVazio.disciplina[0] = '\0';
         for (int i = 0; i < 5; i++)
-            professorVazio.turmasId[i] = 0;
+            professorVazio.turmas[i] = 0;
         return professorVazio;
     }
 
-    //Feito por Luiz Felipe
     Admin inicializarAdminVazio() {
         Admin adminVazio;
         adminVazio.base = inicializarUsuarioVazio();
         return adminVazio;
+    }
+
+    saida_menu exibirSelecionarCategoria() {
+        const int qtdOpcoes = 2;
+        string opcoes[qtdOpcoes] = {"Aluno", "Professor"};
+        ConfigMenu config;
+        config.titulo = "REALIZAR CADASTRO";
+        config.caminho = "MENU DE ACESSO -> REALIZAR CADASTRO";
+        return interface_para_menu(qtdOpcoes, opcoes, config);
+    }
+
+    saida_entrada_texto digiteId(string titulo) {
+        ConfigEntradaTexto config;
+        config.titulo = titulo;
+        config.descricao = "Digite o seu ID";
+        config.caminho = titulo + " -> ID";
+        config.label = "ID: ";
+        config.tipo_entrada = TIPO_NUMERO;
+        config.tamanho_maximo = 8;
+        return interface_para_entrada_texto(config);
+    }
+
+    saida_entrada_texto digiteNome(string titulo) {
+        ConfigEntradaTexto config;
+        config.titulo = titulo;
+        config.descricao = "Digite o seu nome";
+        config.caminho = titulo + " -> NOME";
+        config.label = "Nome: ";
+        config.tipo_entrada = TIPO_TEXTO;
+        config.tamanho_maximo = 100;
+        return interface_para_entrada_texto(config);
+    }
+
+    saida_entrada_texto digiteEmail(string titulo) {
+        ConfigEntradaTexto config;
+        config.titulo = titulo;
+        config.descricao = "Digite o seu e-mail";
+        config.caminho = titulo + " -> EMAIL";
+        config.label = "Email: ";
+        config.tipo_entrada = TIPO_EMAIL;
+        config.tamanho_maximo = 100;
+        return interface_para_entrada_texto(config);
+    }
+
+    saida_entrada_texto digiteSenha(string titulo) {
+        ConfigEntradaTexto config;
+        config.titulo = titulo;
+        config.caminho = titulo + " -> SENHA";
+        config.descricao = "Digite o sua senha";
+        config.label = "Senha: ";
+        config.tipo_entrada = TIPO_SENHA;
+        config.tamanho_maximo = 30;
+        return interface_para_entrada_texto(config);
+    }
+
+    saida_entrada_texto digiteDisciplina(string titulo) {
+        ConfigEntradaTexto config;
+        config.titulo = titulo;
+        config.caminho = titulo + " -> DISCIPLINA";
+        config.descricao = "Digite a disciplina";
+        config.label = "Disciplina: ";
+        config.tipo_entrada = TIPO_TEXTO;
+        config.tamanho_maximo = 50;
+        return interface_para_entrada_texto(config);
     }
 
 }
