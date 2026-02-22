@@ -1,0 +1,17 @@
+*.layout
+*.depend
+
+*.objs/
+*.vscode/
+
+bin/Debug/
+obj/Debug/
+
+*.o
+*.exe
+
+/escola-de-musica-benicasa/escola-de-musica-benicasa
+/escola-de-musica-benicasa/escola-de-musica-benicasa.layout
+
+.DS_Store
+Thumbs.db
