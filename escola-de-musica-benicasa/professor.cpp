@@ -316,6 +316,23 @@ namespace ModuloProfessor
             configTab.num_colunas = 6;
             interface_para_tabela(totalAlunos, 6, (const string**)dadosAlunos_ptr, titulos, 0, configTab);
         }
+
+        cout << "Media da turma: " << soma / total << "\n";
+        cout << "Aprovados: " << aprovados << "\n";
+        cout << "Reprovados por nota: " << reprovadosNota << "\n";
+        cout << "Reprovados por falta: " << reprovadosFalta << "\n";
+
+        if (qtd > 0)
+        {
+            cout << "Alunos em situacao critica:\n";
+            for (int i = 0; i < qtd; i++)
+                cout << "- " << (*criticos[i]).base.nome
+                     << " | Media: " << (*criticos[i]).media
+                     << " | Faltas: " << (*criticos[i]).faltas
+                     << "\n";
+        }
+
+        delete[] criticos;
     }
 
     void consultarDesempenhoAcademico(int id_prof)
