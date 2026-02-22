@@ -18,16 +18,15 @@
 #include "lanchonete.h"
 #include "login_matricula.h"
 
-using namespace std;
+namespace mod_ADM{
 
 void openFile(std::fstream &f, const std::string Nome){
     f.open(Nome, std::ios::in | std::ios::out | std::ios::binary);
 
-    if (!f)
-    {
-        f.open(Nome, std::ios::out | std::ios::binary);
-        f.close();
-        f.open(Nome, std::ios::in | std::ios::out | std::ios::binary);
+    void pausar() {
+        std::cout << "\nPressione ENTER para continuar...";
+        std::cin.get();
+        limparbuffer();
     }
 }
 
@@ -51,7 +50,6 @@ Professor buscaProf(std::fstream &file,int buscaId){
     else{
         return prof;
     }
-}
 
 Disciplina buscaDisciplina(std::fstream &file, int buscaId){
     Disciplina disc{};
@@ -71,7 +69,6 @@ Disciplina buscaDisciplina(std::fstream &file, int buscaId){
     else{
         return disc;
     }
-}
 
 Aluno buscaAluno(std::fstream &file, int buscaId){
     Aluno aluno{};
@@ -1226,6 +1223,8 @@ namespace mod_ADM {
                     continuar = false;
                     break;
             }
+            default:
+                std::cout << "Opcao invalida!\n";
         }
     }
 
