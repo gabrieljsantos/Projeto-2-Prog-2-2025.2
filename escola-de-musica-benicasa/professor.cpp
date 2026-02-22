@@ -320,39 +320,74 @@ namespace ModuloProfessor
 
     void consultarDesempenhoAcademico(int id_prof)
     {
-        int turma_index = selecionarTurma(id_prof);
-        if (turma_index == -1) return;
+        int turma_index;
+        cout << "Numero da turma: ";
+        cin >> turma_index;
+
+        if (!turmaPermitida(id_prof, turma_index))
+        {
+            cout << "Turma nao pertence ao professor.\n";
+            return;
+        }
 
         Turma turma;
-        if (!lerTurma(turma_index, turma)) return;
+        if (!lerTurma(turma_index, turma))
+            return;
 
-        int aprovados = 0, reprovadosNota = 0, reprovadosFalta = 0, total = 0;
+        Aluno **criticos = new Aluno *[MAX_ALUNOS];
+        int qtd = 0;
+
+        int aprovados = 0, reprovadosNota = 0, reprovadosFalta = 0;
         float soma = 0;
-        TopicDetalhes topicos[MAX_ALUNOS + 4];
-        int numTopicos = 0;
+        int total = 0;
 
         for (int i = 0; i < MAX_ALUNOS; i++)
         {
-            if (turma.alunos[i].base.id == 0) continue;
-            total++;
-            soma += turma.alunos[i].media;
+            Aluno *aluno = &turma.alunos[i];
 
-            if (turma.alunos[i].faltas > FALTAS_MAXIMAS) reprovadosFalta++;
-            else if (turma.alunos[i].media >= MEDIA_MINIMA) aprovados++;
-            else reprovadosNota++;
+            if ((*aluno).base.id == 0)
+                continue;
+
+            total++;
+            soma += (*aluno).media;
+
+            if ((*aluno).faltas > FALTAS_MAXIMAS)
+            {
+                reprovadosFalta++;
+                criticos[qtd++] = aluno;
+            }
+            else if ((*aluno).media >= MEDIA_MINIMA)
+                aprovados++;
+            else
+            {
+                reprovadosNota++;
+                criticos[qtd++] = aluno;
+            }
         }
 
-        if (total == 0) { mostrar_caixa_informacao("INFO", "Sem alunos."); return; }
+        if (total == 0)
+        {
+            cout << "Nenhum aluno.\n";
+            delete[] criticos;
+            return;
+        }
 
-        topicos[numTopicos++] = {"Media da Turma", to_string(soma / total)};
-        topicos[numTopicos++] = {"Aprovados", to_string(aprovados)};
-        topicos[numTopicos++] = {"Reprovados (Nota)", to_string(reprovadosNota)};
-        topicos[numTopicos++] = {"Reprovados (Falta)", to_string(reprovadosFalta)};
+        cout << "Media da turma: " << soma / total << "\n";
+        cout << "Aprovados: " << aprovados << "\n";
+        cout << "Reprovados por nota: " << reprovadosNota << "\n";
+        cout << "Reprovados por falta: " << reprovadosFalta << "\n";
 
-        ConfigDetalhes configDet;
-        configDet.titulo = "DESEMPENHO";
-        configDet.cores.cor_borda = 6;
-        mostrar_detalhes(topicos, numTopicos, configDet);
+        if (qtd > 0)
+        {
+            cout << "Alunos em situacao critica:\n";
+            for (int i = 0; i < qtd; i++)
+                cout << "- " << (*criticos[i]).base.nome
+                     << " | Media: " << (*criticos[i]).media
+                     << " | Faltas: " << (*criticos[i]).faltas
+                     << "\n";
+        }
+
+        delete[] criticos;
     }
 
     void registrarFaltas(int id_prof)
