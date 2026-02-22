@@ -506,6 +506,62 @@ namespace mod_ADM {
         }
     }
 
+    // Versão com alocação dinâmica - Demonstração de uso de 'new'
+    int listar_usuarios_especificos_dinamico(Funcao tipo_usuario, int ativo, string**& dados){
+            int contador = 0;
+            
+            // Aloca array dinâmico 2D: 100 linhas x 6 colunas
+            dados = new string*[100];
+            for(int i = 0; i < 100; i++) {
+                dados[i] = new string[6];
+            }
+            
+            switch (tipo_usuario)
+            {
+            case ALUNO: {
+                std::fstream file;
+                openFile(file, "alunos.dat");
+                Aluno aluno;
+                file.seekg(0);
+                while(file.read((char*)&aluno, sizeof(Aluno)) && contador < 100) {
+                    if ((aluno.base.id > USUARIO_VAZIO_ID) && (ativo == 2 || aluno.base.ativo == (ativo == 1))) {
+                        dados[contador][0] = to_string(aluno.base.id); 
+                        dados[contador][1] = aluno.base.nome;
+                        dados[contador][2] = aluno.base.email;
+                        dados[contador][3] = to_string(aluno.base.categoria);
+                        dados[contador][4] = aluno.base.ativo ? "Ativo" : "Inativo";
+                        contador++;
+                    }
+                }
+                file.close();
+                break;
+            }
+            case PROFESSOR: {
+                std::fstream file;
+                openFile(file, "professores.dat");
+                Professor prof;
+                file.seekg(0);
+                while(file.read((char*)&prof, sizeof(Professor)) && contador < 100) {
+                    if ((prof.base.id > USUARIO_VAZIO_ID) && (ativo == 2 || prof.base.ativo == (ativo == 1))) {
+                        dados[contador][0] = to_string(prof.base.id); 
+                        dados[contador][1] = prof.base.nome;
+                        dados[contador][2] = prof.base.email;
+                        dados[contador][3] = to_string(prof.base.categoria);
+                        dados[contador][4] = prof.base.ativo ? "Ativo" : "Inativo";
+                        contador++;
+                    }
+                }
+                file.close();
+                break;
+            }
+
+            default:
+                break;
+            }
+            return contador;
+    }
+
+    // Versão original com alocação estática (mantida para compatibilidade)
     int listar_usuarios_especificos(Funcao tipo_usuario, int ativo, string dados[100][6]){
             int contador = 0;
             
