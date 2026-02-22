@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <cstdlib>
+#include <ctime>
+#include <curses.h>
 #include "headers.h"
 #include "login_matricula.h"
 #include "admin.h"
@@ -9,146 +12,75 @@
 #include "eventos.h"
 #include "instrumentos.h"
 #include "lanchonete.h"
+#include "interface_grafica.h"
 
 using namespace std;
 
 void pausar();
-void exibirCabecalhoSistema();
-void exibirMenuLogin();
-void exibirMenuAdministrador();
-void exibirMenuProfessor();
-void exibirMenuAluno();
+void exibirCabecalhoEscola();
+
+saida_menu exibirMenuLogin();
 
 int main() {
+    exibirCabecalhoEscola();
+    
     Usuario usuario;
-    int opcaoLogin;
+    saida_menu saidaLogin;
     bool executando = true;
 
     Login_mat::inicializarArquivos();
     Login_mat::realizarCadastroAdmin();
 
-    exibirCabecalhoSistema();
-
     while (executando) {
         if (!usuario.logado) {
-            exibirMenuLogin();
-            cin >> opcaoLogin;
-            cin.ignore();
+            saidaLogin = exibirMenuLogin();
 
-            switch (opcaoLogin) {
-                case 1: {
+            switch (saidaLogin.indice_da_opcao) {
+                case 0: {
                     bool login = Login_mat::realizarLogin(usuario);
+                    string informacao;
 
                     if (login) {
-                        cout << "\nBem-vindo(a), " << usuario.nome << "!" << endl;
-                        pausar();
+                        informacao = "Bem-vindo(a), " + string(usuario.nome) + "!";
+                        mostrar_caixa_informacao("AVISO", informacao);
                     } else {
-                        cout << "\nFalha no login. Verifique se o usuário existe e está ativo!" << endl;
-                        pausar();
+                        mostrar_caixa_informacao("ERRO", "Falha no login. Verifique suas credenciais.");
                     }
                     break;
                 }
-                case 2: {
-                    Login_mat::realizarCadastro();
-                    pausar();
+                case 1: {
+                    int idNovoUsuario = Login_mat::realizarCadastro();
+                    string informacao = "Sucesso! Seu ID: " + to_string(idNovoUsuario);
+
+                    if (idNovoUsuario != 0)
+                        mostrar_caixa_informacao("AVISO", informacao);
                     break;
                 }
-                case 0:
+                case 2:
+                case -1:
                     executando = false;
                     break;
-                default:
-                    cout << "\nOpcao invalida!" << endl;
-                    pausar();
             }
         } else {
             switch (usuario.categoria) {
                 case ADMINISTRADOR: {
-                    int opcao;
-                    exibirMenuAdministrador();
-                    cin >> opcao;
-                    cin.ignore();
-
-                    switch (opcao) {
-                        /*
-                        case 1: mod_ADM::menuCadastroUsuarios(); break;
-                        case 2: mod_ADM::menuGerenciarUsuarios(); break;
-                        case 3: mod_ADM::menuCadastroCursos(); break;
-                        case 4: mod_ADM::consultarRelatoriosAcademicos(); break;
-                        case 5: mod_ADM::menuCadastroEventos(); break;
-                        case 6: mod_ADM::autorizarEventos(); break;
-                        case 7: mod_ADM::listarTodosEventos(); break;
-                        case 8: mod_ADM::menuCadastroInstrumentos(); break;
-                        case 9: mod_ADM::liberarInstrumentos(); break;
-                        case 10: mod_ADM::consultarPendenciasInstrumentos(); break;
-                        */
-                        case 11: Lanchonete::menuCadastroProdutos(); break;
-                        case 12: Lanchonete::ativarCreditosPendentes(); break;
-                        case 13: Lanchonete::consultarEstoque(); break;
-                        case 14: mod_ADM::gerarRelatorioFinanceiro(); break;
-                        case 15: mod_ADM::gerarRelatorioPatrimonial(); break;
-                        case 16: mod_ADM::realizarBackup(); break;
-                        case 17: mod_ADM::restaurarBackup(); break;
-                        case 0: usuario.logado = false; break;
-                        default: cout << "\nOpcao invalida!" << endl;
-                    }
+                    abrir_menu_admin(&usuario);
                     if (usuario.logado) pausar();
                     break;
                 }
                 case PROFESSOR: {
-                    int opcao;
-                    float notas[10];
-                    int n = 2;
-                    exibirMenuProfessor();
-                    cin >> opcao;
-                    cin.ignore();
-
-                    switch (opcao) {
-                        case 1: Modulo_professor::registrarNotas(usuario.id, notas, n); break;
-                        case 2: Modulo_professor::registrarAvaliacoes(usuario.id); break;
-                        case 3: Modulo_professor::consultarAlunosMatriculados(usuario.id); break;
-                        case 4: Modulo_professor::calcularMediasTurma(usuario.id); break;
-                        case 5: Modulo_professor::consultarDesempenhoAcademico(usuario.id); break;
-                        case 6: Modulo_professor::consultarEventosDisponiveis(); break;
-                        case 7: Modulo_professor::consultarInstrumentosDisponiveis(); break;
-                        case 8: Lanchonete::consultarSaldo(usuario.id); break;
-                        case 9: Lanchonete::solicitarCreditosUsuario(usuario.id, usuario.categoria); break;
-                        case 0: usuario.logado = false; break;
-                        default: cout << "\nOpcao invalida!" << endl;
-                    }
+                    abrir_menu_professor(&usuario);
                     if (usuario.logado) pausar();
                     break;
                 }
                 case ALUNO: {
-                    int opcao;
-                    exibirMenuAluno();
-                    cin >> opcao;
-                    cin.ignore();
-
-                    switch (opcao) {
-                        case 1: Modulo_aluno::consultarNotas(usuario.id); break;
-                        case 2: Modulo_aluno::consultarMedias(usuario.id); break;
-                        case 3: Modulo_aluno::consultarSituacaoAcademica(usuario.id); break;
-                        case 4: Modulo_aluno::visualizarEventosDisponiveis(); break;
-                        case 5: Modulo_aluno::inscreverEmEvento(usuario.id); break;
-                        case 6: Modulo_aluno::consultarMinhasInscricoes(usuario.id); break;
-                        case 7: Modulo_aluno::visualizarInstrumentosDisponiveis(); break;
-                        case 8: Modulo_aluno::solicitarEmprestimo(usuario.id); break;
-                        case 9: Modulo_aluno::realizarDevolucao(usuario.id); break;
-                        case 10: Modulo_aluno::consultarMeusEmprestimos(usuario.id); break;
-                        case 11: Lanchonete::consultarSaldo(usuario.id); break;
-                        case 12: Lanchonete::visualizarProdutos(); break;
-                        case 13: Lanchonete::realizarCompra(usuario.id); break;
-                        case 14: Lanchonete::solicitarCreditosUsuario(usuario.id, usuario.categoria); break;
-                        case 0: usuario.logado = false; break;
-                        default: cout << "\nOpcao invalida!" << endl;
-                    }
+                    abrir_menu_aluno(&usuario);
                     if (usuario.logado) pausar();
                     break;
                 }
                 default:
-                    cout << "\nPerfil invalido!" << endl;
+                    mostrar_caixa_informacao("ERRO", "Perfil invalido!");
                     usuario.logado = false;
-                    pausar();
             }
         }
     }
@@ -157,85 +89,118 @@ int main() {
 }
 
 void pausar() {
-    cout << "\nPressione ENTER para continuar..." << endl;
-    cin.get();
+
 }
 
-void exibirCabecalhoSistema() {
-    cout << "============================================" << endl;
-    cout << "   SISTEMA DE GESTAO - ESCOLA DE MUSICA    " << endl;
-    cout << "============================================" << endl;
+void exibirCabecalhoEscola() {
+    setlocale(LC_ALL, "pt_BR.UTF-8");
+    initscr();
+    noecho();
+    cbreak();
+    curs_set(0);
+
+    if (has_colors()) {
+        start_color();
+        init_pair(1, COLOR_CYAN, COLOR_BLACK);
+        init_pair(2, COLOR_GREEN, COLOR_BLACK);
+        init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+        init_pair(4, COLOR_WHITE, COLOR_BLACK);
+    }
+
+    int max_y, max_x;
+    getmaxyx(stdscr, max_y, max_x);
+
+    clear();
+
+    srand(time(0));
+    int padrao_escolhido = rand() % 4;
+    
+
+    attron(COLOR_PAIR(4) | A_DIM);
+    
+    for (int y = 0; y < max_y; y++) {
+        string linha;
+        
+        switch (padrao_escolhido) {
+            case 0: {
+                for (int x = 0; x < max_x; x++) {
+                    if ((x + y) % 2 == 0) {
+                        linha += ".";
+                    } else {
+                        linha += " ";
+                    }
+                }
+                break;
+            }
+            case 1: {
+                string base = (y % 2 == 0) ? ". . . . " : "  .  .  ";
+                while ((int)linha.length() < max_x) {
+                    linha += base;
+                }
+                linha = linha.substr(0, max_x);
+                break;
+            }
+            case 2: {
+                for (int x = 0; x < max_x; x++) {
+                    int diagonal = (x + y) % 4;
+                    if (diagonal == 0 || diagonal == 1) {
+                        linha += ".";
+                    } else {
+                        linha += " ";
+                    }
+                }
+                break;
+            }
+            case 3: {
+                for (int x = 0; x < max_x; x++) {
+                    if (x % 3 == 0) {
+                        linha += ".";
+                    } else {
+                        linha += " ";
+                    }
+                }
+                break;
+            }
+        }
+        
+        mvprintw(y, 0, "%s", linha.c_str());
+    }
+    attroff(COLOR_PAIR(4) | A_DIM);
+
+    string titulo = "ESCOLA DE MUSICA BENICASA";
+    int pos_titulo = (max_x - titulo.length()) / 2;
+
+    attron(COLOR_PAIR(1) | A_BOLD);
+    mvprintw(max_y / 2 - 2, pos_titulo, "%s", titulo.c_str());
+    attroff(COLOR_PAIR(1) | A_BOLD);
+
+    string subtitulo = "Sistema de Gestao";
+    int pos_subtitulo = (max_x - subtitulo.length()) / 2;
+
+    attron(COLOR_PAIR(2));
+    mvprintw(max_y / 2, pos_subtitulo, "%s", subtitulo.c_str());
+    attroff(COLOR_PAIR(2));
+
+    string aviso = "Pressione ENTER para continuar...";
+    int pos_aviso = (max_x - aviso.length()) / 2;
+
+    attron(COLOR_PAIR(3));
+    mvprintw(max_y - 3, pos_aviso, "%s", aviso.c_str());
+    attroff(COLOR_PAIR(3));
+
+    refresh();
+
+    int ch;
+    while ((ch = getch()) != '\n' && ch != KEY_ENTER) {}
+
+    endwin();
 }
 
-void exibirMenuLogin() {
-    cout << "\nMENU DE ACESSO" << endl;
-    cout << "============================================" << endl;
-    cout << "1. Fazer Login" << endl;
-    cout << "2. Realizar Cadastro" << endl;
-    cout << "0. Sair do Sistema" << endl;
-    cout << "Opcao: ";
-}
-
-void exibirMenuAdministrador() {
-    system("cls || clear");
-    cout << "AREA DO ADMINISTRADOR" << endl;
-    cout << "============================================" << endl;
-    cout << "1. Cadastrar Usuarios" << endl;
-    cout << "2. Gerenciar Usuarios" << endl;
-    cout << "3. Cadastrar Cursos" << endl;
-    cout << "4. Relatorios Academicos" << endl;
-    cout << "5. Cadastrar Eventos" << endl;
-    cout << "6. Autorizar Eventos" << endl;
-    cout << "7. Listar Todos os Eventos" << endl;
-    cout << "8. Cadastrar Instrumentos" << endl;
-    cout << "9. Liberar Instrumentos" << endl;
-    cout << "10. Consultar Pendencias" << endl;
-    cout << "11. Cadastrar Produtos" << endl;
-    cout << "12. Ativar Creditos Pendentes" << endl;
-    cout << "13. Consultar Estoque" << endl;
-    cout << "14. Relatorio Financeiro" << endl;
-    cout << "15. Relatorio Patrimonial" << endl;
-    cout << "16. Realizar Backup" << endl;
-    cout << "17. Restaurar Backup" << endl;
-    cout << "0. Logout" << endl;
-    cout << "Opcao: ";
-}
-
-void exibirMenuProfessor() {
-    system("cls || clear");
-    cout << "AREA DO PROFESSOR" << endl;
-    cout << "============================================" << endl;
-    cout << "1. Registrar Notas" << endl;
-    cout << "2. Registrar Avaliacoes" << endl;
-    cout << "3. Consultar Alunos Matriculados" << endl;
-    cout << "4. Calcular Medias da Turma" << endl;
-    cout << "5. Consultar Desempenho Academico" << endl;
-    cout << "6. Consultar Eventos" << endl;
-    cout << "7. Consultar Instrumentos" << endl;
-    cout << "8. Consultar Saldo Lanchonete" << endl;
-    cout << "9. Solicitar Creditos" << endl;
-    cout << "0. Logout" << endl;
-    cout << "Opcao: ";
-}
-
-void exibirMenuAluno() {
-    system("cls || clear");
-    cout << "AREA DO ALUNO" << endl;
-    cout << "============================================" << endl;
-    cout << "1. Consultar Notas" << endl;
-    cout << "2. Consultar Medias" << endl;
-    cout << "3. Consultar Situacao Academica" << endl;
-    cout << "4. Ver Eventos Disponiveis" << endl;
-    cout << "5. Inscrever-se em Evento" << endl;
-    cout << "6. Minhas Inscricoes" << endl;
-    cout << "7. Ver Instrumentos Disponiveis" << endl;
-    cout << "8. Solicitar Emprestimo" << endl;
-    cout << "9. Realizar Devolucao" << endl;
-    cout << "10. Meus Emprestimos" << endl;
-    cout << "11. Consultar Saldo" << endl;
-    cout << "12. Ver Produtos" << endl;
-    cout << "13. Realizar Compra" << endl;
-    cout << "14. Solicitar Creditos" << endl;
-    cout << "0. Logout" << endl;
-    cout << "Opcao: ";
+saida_menu exibirMenuLogin() {
+    constexpr int qtdOpcoes = 3;
+    string opcoes[qtdOpcoes] = {"Fazer Login", "Realizar Cadastro", "Sair do Sistema"};
+    ConfigMenu config;
+    config.titulo = "SISTEMA DE GESTAO - ESCOLA DE MUSICA";
+    config.descricao = "MENU DE ACESSO";
+    return interface_para_menu(qtdOpcoes, opcoes, config);
 }

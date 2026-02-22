@@ -20,19 +20,16 @@ struct Usuario{
 
 struct Aluno {
     Usuario base;
-    double saldo;
     float notas[2];
     float media;
     int faltas;
     int instrumento;
-    int turmasId[10];
     int idInstrumento;
     int turma;
 };
 
 struct Professor {
     Usuario base;
-    double saldo;
     char disciplina[50];
     int turmas[5];
 };
@@ -42,12 +39,25 @@ struct Admin {
 };
 
 #define MAX_ALUNOS 20
-struct Turma // Por que nao usa A GERAL?????????
+#define MAX_AVALIACOES 10
+
+struct Avaliacao
 {
+    char data[12];
+    char descricao[100];
+};
+
+struct Turma {
     int id;
+    int ativo;
+    int idDisciplina;
+    int idProfessor;
     char nome[100];
     int id_prof;
     Aluno alunos[MAX_ALUNOS];
+    int qtdAlunos;
+    Avaliacao avaliacoes[MAX_AVALIACOES];
+    int qtdAvaliacoes;
 };
 
 struct Disciplina {
@@ -56,6 +66,7 @@ struct Disciplina {
     char nome[50];
     int cargaHoraria;
 };
+
 struct Produto {
     char nome[50];
     int id;
@@ -63,47 +74,70 @@ struct Produto {
     double preco;
     int estoque;
 };
+
 struct Instrumento {
     int id;
-    int ativo;          // 1 = ativo, 0 = removido
-    int autorizado;     // 0 = não autorizado, 1 = autorizado
+    int ativo;
+    int autorizado;
     char nome[30];
-    bool disponivel;     // 1 = disponível, 0 = indisponível
+    bool disponivel;
     int estoque;
+    int idAluno;
 };
 
 struct Emprestimo {
-    int idEmprestimo;        // Identificador único do empréstimo
-    int idAluno;             // ID do aluno que realizou o empréstimo
+    int idEmprestimo;
+    int idAluno;
     char nome_Alu[100];
 
-    int idInstrumento;       // ID do instrumento emprestado
+    int idInstrumento;
     char nome_In[15];
 
-    char dataEmprestimo[11]; // Data do empréstimo (dd/mm/aaaa)
-    char dataPrevista[11];   // Data prevista para devolução
+    char dataEmprestimo[11];
+    char dataPrevista[11];
 
 };
+
+struct Horario {
+    int hora;
+    int minuto;
+};
+
+struct Data {
+    int dia;
+    int mes;
+    int ano;
+};
+
 struct Evento {
-    int id = 0;            // Identificador único
-    int ativo = 0 ;               // 1 = ativo no sistema, 0 = removido
 
-    char nome[50] ="";           // Nome do evento
-    char descricao[100]="";     // Descrição
-    char data[11]="";           // Data (dd/mm/aaaa)
-    char local[50]="";          // Local do evento
+    int id = 0;            
+    int ativo = 0 ;               
+    int autorizado = 0;          
 
-    int totalVagas=0;          // Número total de vagas
-    int vagasOcupadas=0;       // Quantidade já inscrita
+    char nome[100] = "";           
+    char descricao[200] = "";     
+    char local[100] = "";          
+    char professorResponsavel[100] = "";
+    
 
-    int autorizado=0;          // 0 = não autorizado | 1 = autorizado
+    Data data;           
+    Horario horario;
+
+    int totalVagas = 0;
+    int vagasOcupadas = 0;
+    int vagasDisponiveis = 0;
+    int totalinscritos = 0;
+    
+
+    bool finalizado = false;
+    char alunos[100][100];
 };
 
 struct Credito {
     int id_opera = 0;
     int id_user = 0;
-    Funcao tipo_user;
-    double saldo = 0;
+    double saldo = 0; 
     bool realizado = false;
 };
 
